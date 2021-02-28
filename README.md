@@ -7,5 +7,6 @@ Stay Tuned!
 
 https://github.com/Magnitus-/gogcli
 
-![gogcli_main](https://user-images.githubusercontent.com/19166041/109370993-af18f800-78f2-11eb-933b-51910c74648a.png)
+![gogcli_main_2](https://user-images.githubusercontent.com/19166041/109405320-5f543280-79bf-11eb-821a-60f634b8cc7e.png)
+
 
