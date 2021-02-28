@@ -12,7 +12,7 @@
 
 ; FUNCTIONS
 ; MainGUI()
-; FillTheGamesList(), ParseTheGamelist(), SetTheColumnWidths()
+; ClearFieldValues(), FillTheGamesList(), ParseTheGamelist(), SetTheColumnWidths()
 
 #include <Constants.au3>
 #include <GUIConstantsEx.au3>
@@ -25,24 +25,30 @@
 #include <GuiListView.au3>
 #include <Misc.au3>
 #include <File.au3>
+#include <Inet.au3>
+#include <ScreenCapture.au3>
+#include <GDIPlus.au3>
+#include <WinAPI.au3>
 
 _Singleton("gog-cli-gui-timboli")
 
-Global $Button_dest, $Button_down, $Button_exit, $Button_fold, $Button_get, $Button_info, $Button_log, $Button_pic, $Checkbox_alpha
-Global $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug
-Global $Input_title, $Input_ups, $Label_bed, $Label_cat, $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups
-Global $Listview_games, $Pic_cover
+Global $Button_dest, $Button_down, $Button_exit, $Button_fold, $Button_game, $Button_get, $Button_info, $Button_log, $Button_man
+Global $Button_pic, $Button_web, $Checkbox_alpha, $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $Input_cat
+Global $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Label_bed, $Label_cat, $Label_dlc, $Label_mid
+Global $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $a, $ans, $array, $blackjpg, $category, $cookies, $DLC, $entries, $entry, $gamelist, $games, $gamesini, $gogcli, $GOGcliGUI
-Global $height, $icoD, $icoF, $icoI, $icoS, $icoT, $icoX, $ID, $image, $inifle, $left, $line, $lines, $logfle, $OSes, $p, $part
-Global $parts, $read, $res, $row, $s, $shell, $slug, $splash, $split, $splits, $style, $title, $titlist, $top, $updates, $URL
-Global $user, $version, $width, $winpos
+Global $a, $ans, $array, $bigpic, $blackjpg, $category, $cookies, $DLC, $entries, $entry, $gamelist, $games, $gamesini, $gogcli, $GOGcliGUI
+Global $height, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $image, $imgfle, $inifle, $left, $line, $lines, $link, $logfle, $OSes
+Global $p, $part, $parts, $read, $res, $row, $s, $shell, $slug, $splash, $split, $splits, $style, $title, $titlist, $top, $updates
+Global $URL, $user, $version, $width, $winpos
 
+$bigpic = @ScriptDir & "\Big.jpg"
 $blackjpg = @ScriptDir & "\Black.jpg"
 $cookies = @ScriptDir & "\Cookie.txt"
 $gamelist = @ScriptDir & "\Games.txt"
 $gamesini = @ScriptDir & "\Games.ini"
 $gogcli = @ScriptDir & "\gogcli.exe"
+$imgfle = @ScriptDir & "\Image.jpg"
 $inifle = @ScriptDir & "\Settings.ini"
 $logfle = @ScriptDir & "\Log.txt"
 $splash = @ScriptDir & "\Splash.jpg"
@@ -54,7 +60,32 @@ MainGUI()
 Exit
 
 Func MainGUI()
+	Local $display, $dll, $mpos, $xpos, $ypos
+	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
+	;
+	If Not FileExists($blackjpg) Then
+		Local $hBitmap, $hGraphic, $hImage
+		_GDIPlus_Startup()
+		$hBitmap = _ScreenCapture_Capture("", 0, 0, 100, 100, False)
+		$hImage = _GDIPlus_BitmapCreateFromHBITMAP($hBitmap)
+		$hGraphic = _GDIPlus_ImageGetGraphicsContext($hImage)
+		_GDIPlus_GraphicsClear($hGraphic, 0xFF000000)
+		_GDIPlus_ImageSaveToFile($hImage, $blackjpg)
+		_GDIPlus_GraphicsDispose($hGraphic)
+		_GDIPlus_ImageDispose($hImage)
+		_WinAPI_DeleteObject($hBitmap)
+		_GDIPlus_ShutDown()
+		If Not FileExists($blackjpg) Then
+			If FileExists($splash) Then SplashOff()
+			MsgBox(262192, "Program Error", "This program requires an image file named" _
+				& @LF & "'Black.jpg' for the default cover image file." _
+				& @LF & "It needs to be in the main program folder." _
+				& @LF & @LF & "This program will now exit.", 0)
+			Exit
+		EndIf
+	EndIf
+	;
 	$width = 590
 	$height = 405
 	$left = IniRead($inifle, "Program Window", "left", @DesktopWidth - $width - 25)
@@ -116,41 +147,65 @@ Func MainGUI()
 	GUICtrlSetTip($Checkbox_show, "Show the cover image!")
 	;
 	;$Button_get = GuiCtrlCreateButton("RETRIEVE LIST" & @LF & "OF GAMES", 390, 180, 105, 40, $BS_MULTILINE)
-	$Button_get = GuiCtrlCreateButton("CHECK or GET" & @LF & "GAMES LIST", 390, 180, 100, 40, $BS_MULTILINE)
+	$Button_get = GuiCtrlCreateButton("CHECK or GET" & @LF & "GAMES LIST", 390, 180, 100, 35, $BS_MULTILINE)
 	GUICtrlSetFont($Button_get, 7, 600, 0, "Small Fonts")
 	GUICtrlSetTip($Button_get, "Get game titles from GOG library!")
 	;
-	$Button_down = GuiCtrlCreateButton("DOWNLOAD", 500, 180, 80, 40)
+	$Button_down = GuiCtrlCreateButton("DOWNLOAD", 500, 180, 80, 35)
 	GUICtrlSetFont($Button_down, 7, 600, 0, "Small Fonts")
 	GUICtrlSetTip($Button_down, "Download the selected game!")
 	;
-	$Label_cat = GuiCtrlCreateLabel("Genre", 390, 230, 43, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	$Label_cat = GuiCtrlCreateLabel("Genre", 390, 224, 43, 19, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetBkColor($Label_cat, $COLOR_BLUE)
 	GUICtrlSetColor($Label_cat, $COLOR_WHITE)
-	$Input_cat = GUICtrlCreateInput("", 433, 230, 147, 20, $ES_READONLY)
+	GUICtrlSetFont($Label_cat, 8, 400)
+	$Input_cat = GUICtrlCreateInput("", 433, 224, 147, 19, $ES_READONLY)
 	GUICtrlSetBkColor($Input_cat, 0xBBFFBB)
+	GUICtrlSetFont($Input_cat, 8, 400)
 	GUICtrlSetTip($Input_cat, "Game categories!")
 	;
-	$Label_OS = GuiCtrlCreateLabel("OS", 390, 255, 29, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	$Label_OS = GuiCtrlCreateLabel("OS", 390, 248, 29, 19, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetBkColor($Label_OS, $COLOR_BLUE)
 	GUICtrlSetColor($Label_OS, $COLOR_WHITE)
-	$Input_OS = GUICtrlCreateInput("", 419, 255, 110, 20, $ES_READONLY)
+	GUICtrlSetFont($Label_OS, 8, 400)
+	$Input_OS = GUICtrlCreateInput("", 419, 248, 110, 19, $ES_READONLY)
 	GUICtrlSetBkColor($Input_OS, 0xBBFFBB)
+	GUICtrlSetFont($Input_OS, 8, 400)
 	GUICtrlSetTip($Input_OS, "Game OSes!")
 	;
-	$Label_dlc = GuiCtrlCreateLabel("DLC", 534, 255, 31, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	$Label_dlc = GuiCtrlCreateLabel("DLC", 534, 248, 31, 19, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetBkColor($Label_dlc, $COLOR_BLUE)
 	GUICtrlSetColor($Label_dlc, $COLOR_WHITE)
-	$Input_dlc = GUICtrlCreateInput("", 565, 255, 15, 20, $ES_READONLY)
+	GUICtrlSetFont($Label_dlc, 8, 400)
+	$Input_dlc = GUICtrlCreateInput("", 565, 248, 15, 19, $ES_READONLY)
 	GUICtrlSetBkColor($Input_dlc, 0xBBFFBB)
+	GUICtrlSetFont($Input_dlc, 8, 400)
 	GUICtrlSetTip($Input_dlc, "Game DLC!")
 	;
-	$Label_ups = GuiCtrlCreateLabel("Updates", 390, 280, 50, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	$Label_ups = GuiCtrlCreateLabel("Updates", 390, 272, 52, 19, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetBkColor($Label_ups, $COLOR_BLUE)
 	GUICtrlSetColor($Label_ups, $COLOR_WHITE)
-	$Input_ups = GUICtrlCreateInput("", 440, 280, 20, 20, $ES_READONLY)
+	GUICtrlSetFont($Label_ups, 8, 400)
+	$Input_ups = GUICtrlCreateInput("", 442, 272, 18, 19, $ES_READONLY)
 	GUICtrlSetBkColor($Input_ups, 0xBBFFBB)
+	GUICtrlSetFont($Input_ups, 8, 400)
 	GUICtrlSetTip($Input_ups, "Game updates!")
+	;
+	$Button_game = GuiCtrlCreateButton("GAME DETAILS", 470, 271, 110, 21)
+	GUICtrlSetFont($Button_game, 7, 600, 0, "Small Fonts")
+	GUICtrlSetTip($Button_game, "View details of selected game!")
+	;
+	$Button_man = GuiCtrlCreateButton("ADD TO" & @LF & "MANIFEST", 390, 300, 80, 35, $BS_MULTILINE)
+	GUICtrlSetFont($Button_man, 7, 600, 0, "Small Fonts")
+	GUICtrlSetTip($Button_man, "Add selected game to manifest!")
+	;
+	$Button_setup = GuiCtrlCreateButton("SETUP", 480, 300, 55, 35)
+	GUICtrlSetFont($Button_setup, 7, 600, 0, "Small Fonts")
+	GUICtrlSetTip($Button_setup, "View the Setup window!")
+	;
+	$Button_web = GuiCtrlCreateButton("WEB", 545, 300, 35, 35, $BS_ICON)
+	GUICtrlSetFont($Button_web, 7, 600, 0, "Small Fonts")
+	GUICtrlSetTip($Button_web, "Visit the online page of selected game!")
 	;
 	$Button_log = GuiCtrlCreateButton("Log", 410, 345, 50, 50, $BS_ICON)
 	GUICtrlSetTip($Button_log, "Log Record!")
@@ -173,8 +228,10 @@ Func MainGUI()
 	$icoI = -5
 	$icoS = -23
 	$icoT = -71
+	$icoW = -14
 	$icoX = -4
 	;GUICtrlSetImage($Button_find, $shell, $icoS, 0)
+	GUICtrlSetImage($Button_web, $shell, $icoW, 0)
 	GUICtrlSetImage($Button_dest, $shell, $icoF, 0)
 	GUICtrlSetImage($Button_fold, $shell, $icoD, 0)
 	GUICtrlSetImage($Button_log, $shell, $icoT, 1)
@@ -185,11 +242,37 @@ Func MainGUI()
 	GUICtrlSetData($Combo_dest, "Slug|Title", "Slug")
 	;
 	If Not FileExists($gogcli) Or Not FileExists($cookies) Then
+		GUICtrlSetState($Button_pic, $GUI_DISABLE)
+		GUICtrlSetState($Checkbox_show, $GUI_DISABLE)
 		GUICtrlSetState($Button_get, $GUI_DISABLE)
 		GUICtrlSetState($Button_down, $GUI_DISABLE)
+		GUICtrlSetState($Button_game, $GUI_DISABLE)
+		GUICtrlSetState($Button_man, $GUI_DISABLE)
+		;GUICtrlSetState($Button_setup, $GUI_DISABLE)
+		GUICtrlSetState($Button_web, $GUI_DISABLE)
+		GUICtrlSetState($Combo_dest, $GUI_DISABLE)
+		GUICtrlSetState($Checkbox_alpha, $GUI_DISABLE)
+		GUICtrlSetState($Button_dest, $GUI_DISABLE)
+		GUICtrlSetState($Button_fold, $GUI_DISABLE)
 	EndIf
 	;
+	$display = IniRead($inifle, "Cover Image", "show", "")
+	If $display = "" Then
+		$display = 4
+		IniWrite($inifle, "Cover Image", "show", $display)
+	EndIf
+	GUICtrlSetState($Checkbox_show, $display)
+	;
 	FillTheGamesList()
+	$ID = ""
+	$title = ""
+	$slug = ""
+	$image = ""
+	$URL = ""
+	$category = ""
+	$OSes = ""
+	$DLC = ""
+	$updates = ""
 	;
 	If FileExists($splash) Then SplashOff()
 
@@ -217,6 +300,68 @@ Func MainGUI()
 			;
 			GUIDelete($GOGcliGUI)
 			ExitLoop
+		Case $msg = $Button_web
+			; Visit the online page of selected game
+			If $URL = "" Then
+				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+			Else
+				$link = "https://www.gog.com" & $URL
+				ShellExecute($link)
+			EndIf
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Button_pic
+			; Download the selected image
+			If $image = "" Then
+				MsgBox(262192, "Title Error", "A game is not selected!", $wait, $GOGcliGUI)
+			Else
+				$link = "https:" & $image & ".jpg"
+				$ans = MsgBox(262177 + 256, "Save Query", _
+					"Save cover image to game folder?" & @LF & @LF & _
+					"CANCEL = Save to program folder.", 0, $GOGcliGUI)
+				;SplashTextOn("", "Saving!", 200, 120, Default, Default, 33)
+				GUICtrlSetData($Label_mid, "Saving!")
+				If $ans = 1 Then
+					$gamepic = ""
+;~ 						$gamesfold = GUICtrlRead($Input_dest)
+;~ 						$gamefold = $gamesfold & "\" & $title
+;~ 						If $alpha = 1 Then
+;~ 							$alf = StringUpper(StringLeft($title, 1))
+;~ 							$gamefold = $gamefold & "\" & $alf
+;~ 						EndIf
+;~ 						If FileExists($gamefold) Then
+;~ 							$gamepic = $gamefold & "\Folder.jpg"
+;~ 						Else
+;~ 							MsgBox(262192, "Save Error", "Game folder not found!", 2, $GOGcliGUI)
+;~ 						EndIf
+				Else
+					$gamepic = $title & ".jpg"
+					$gamepic = StringReplace($gamepic, ": ", " - ")
+					$gamepic = StringReplace($gamepic, "?", "")
+					$gamepic = StringReplace($gamepic, "*", "")
+					$gamepic = StringReplace($gamepic, "|", "")
+					$gamepic = StringReplace($gamepic, "/", "")
+					$gamepic = StringReplace($gamepic, "\", "")
+					$gamepic = StringReplace($gamepic, "<", "")
+					$gamepic = StringReplace($gamepic, ">", "")
+					$gamepic = StringReplace($gamepic, '"', '')
+					$gamepic = @ScriptDir & "\" & $gamepic
+				EndIf
+				If $gamepic <> "" Then
+					InetGet($link, $gamepic, 1, 0)
+					If Not FileExists($gamepic) Then
+						InetGet($link, $gamepic, 0, 0)
+						If Not FileExists($gamepic) Then
+							InetGet($link, $gamepic, 0, 1)
+						EndIf
+					EndIf
+				EndIf
+				GUICtrlSetData($Label_mid, "")
+				;SplashOff()
+			EndIf
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Button_man
+			; Add selected game to manifest
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_log
 			; Log Record
 			If FileExists($logfle) Then ShellExecute($logfle)
@@ -238,7 +383,25 @@ Func MainGUI()
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_get
 			; Get game titles from GOG library
+			ClearFieldValues()
 			ParseTheGamelist()
+		Case $msg = $Button_game
+			; View details of selected game
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Button_down
+			; Download the selected game
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Checkbox_show
+			; Show the cover image
+			If GUICtrlRead($Checkbox_show) = $GUI_CHECKED Then
+				$display = 1
+				ShowCorrectImage()
+			Else
+				$display = 4
+				GUICtrlSetImage($Pic_cover, $blackjpg)
+			EndIf
+			IniWrite($inifle, "Cover Image", "show", $display)
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Listview_games Or $msg > $lowid
 			; List of games
 			$ind = _GUICtrlListView_GetSelectedIndices($Listview_games, False)
@@ -250,8 +413,11 @@ Func MainGUI()
 			GUICtrlSetData($Input_title, $title)
 			$slug = IniRead($gamesini, $ID, "slug", "")
 			GUICtrlSetData($Input_slug, $slug)
-			;$image = IniRead($gamesini, $ID, "image", "")
-			;$URL = IniRead($gamesini, $ID, "URL", "")
+			$image = IniRead($gamesini, $ID, "image", "")
+			If $display = 1 Then
+				ShowCorrectImage()
+			EndIf
+			$URL = IniRead($gamesini, $ID, "URL", "")
 			$category = IniRead($gamesini, $ID, "category", "")
 			GUICtrlSetData($Input_cat, $category)
 			$OSes = IniRead($gamesini, $ID, "OSes", "")
@@ -260,12 +426,64 @@ Func MainGUI()
 			GUICtrlSetData($Input_dlc, $DLC)
 			$updates = IniRead($gamesini, $ID, "updates", "")
 			GUICtrlSetData($Input_ups, $updates)
+		Case $msg = $Pic_cover
+			; Cover Image - Click For Large Preview
+			If $imgfle <> "" Then
+				If $image <> "" Then
+					;SplashTextOn("", "Please Wait!", 200, 120, Default, Default, 33)
+					GUICtrlSetData($Label_mid, "Please Wait!")
+					If FileExists($bigpic) Then FileDelete($bigpic)
+					$link = "https:" & $image & ".jpg"
+					InetGet($link, $bigpic, 1, 0)
+					If FileExists($bigpic) Then
+						GUICtrlSetState($Pic_cover, $GUI_DISABLE)
+						SplashImageOn("", $bigpic, 900, 450, Default, Default, 17)
+						Sleep(300)
+						$mpos = MouseGetPos()
+						$xpos = $mpos[0]
+						$ypos = $mpos[1]
+						Sleep(300)
+						$dll = DllOpen("user32.dll")
+						While 1
+							$mpos = MouseGetPos()
+							If $mpos[0] > $xpos + 40 Or $mpos[0] < $xpos - 40 Then ExitLoop
+							If $mpos[1] > $ypos + 40 Or $mpos[1] < $ypos - 40 Then ExitLoop
+							If _IsPressed("01", $dll) Then ExitLoop
+							Sleep(300)
+						WEnd
+						DllClose($dll)
+						SplashOff()
+						GUICtrlSetState($Pic_cover, $GUI_ENABLE)
+					EndIf
+					GUICtrlSetData($Label_mid, "")
+					;SplashOff()
+				EndIf
+			EndIf
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case Else
 			;;;
 		EndSelect
 	WEnd
 EndFunc ;=> MainGUI
 
+
+Func ClearFieldValues()
+	$ID = ""
+	$title = ""
+	GUICtrlSetData($Input_title, $title)
+	$slug = ""
+	GUICtrlSetData($Input_slug, $slug)
+	$image = ""
+	$URL = ""
+	$category = ""
+	GUICtrlSetData($Input_cat, $category)
+	$OSes = ""
+	GUICtrlSetData($Input_OS, $OSes)
+	$DLC = ""
+	GUICtrlSetData($Input_dlc, $DLC)
+	$updates = ""
+	GUICtrlSetData($Input_ups, $updates)
+EndFunc ;=> ClearFieldValues
 
 Func FillTheGamesList()
 	If FileExists($titlist) Then
@@ -403,3 +621,20 @@ Func SetTheColumnWidths()
 	;_GUIScrollBars_EnableScrollBar($GOGcliGUI, $SB_HORZ, $ESB_DISABLE_BOTH)
 	;_GUICtrlListView_Scroll($Listview_games, 0, 0)
 EndFunc ;=> SetTheColumnWidths
+
+Func ShowCorrectImage()
+	If $image <> "" Then
+		GUICtrlSetData($Label_mid, "Please Wait")
+		$link = "https:" & $image & "_196.jpg"
+		If FileExists($imgfle) Then FileDelete($imgfle)
+		InetGet($link, $imgfle, 1, 0)
+		If FileExists($imgfle) Then
+			GUICtrlSetImage($Pic_cover, $imgfle)
+		Else
+			GUICtrlSetImage($Pic_cover, $blackjpg)
+		EndIf
+		GUICtrlSetData($Label_mid, "")
+	Else
+		GUICtrlSetImage($Pic_cover, $blackjpg)
+	EndIf
+EndFunc ;=> ShowCorrectImage
