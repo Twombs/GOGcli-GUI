@@ -11,8 +11,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; FUNCTIONS
-; MainGUI()
-; ClearFieldValues(), FillTheGamesList(), ParseTheGamelist(), SetTheColumnWidths()
+; MainGUI(), SetupGUI()
+; ClearFieldValues(), FillTheGamesList(), FixTitle($text), ParseTheGamelist(), SetStateOfControls($state, $which)
+; SetTheColumnWidths(), ShowCorrectImage()
 
 #include <Constants.au3>
 #include <GUIConstantsEx.au3>
@@ -33,27 +34,35 @@
 _Singleton("gog-cli-gui-timboli")
 
 Global $Button_dest, $Button_down, $Button_exit, $Button_fold, $Button_game, $Button_get, $Button_info, $Button_log, $Button_man
-Global $Button_pic, $Button_web, $Checkbox_alpha, $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $Input_cat
-Global $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Label_bed, $Label_cat, $Label_dlc, $Label_mid
-Global $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
+Global $Button_pic, $Button_setup, $Button_web, $Checkbox_alpha, $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games
+Global $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Label_bed, $Label_cat, $Label_dlc
+Global $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $a, $ans, $array, $bigpic, $blackjpg, $category, $cookies, $DLC, $entries, $entry, $gamelist, $games, $gamesini, $gogcli, $GOGcliGUI
-Global $height, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $image, $imgfle, $inifle, $left, $line, $lines, $link, $logfle, $OSes
-Global $p, $part, $parts, $read, $res, $row, $s, $shell, $slug, $splash, $split, $splits, $style, $title, $titlist, $top, $updates
-Global $URL, $user, $version, $width, $winpos
+Global $a, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $category, $cookies, $covers, $covimg, $dest, $details, $DLC
+Global $entries, $entry, $flag, $fold, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $gogcli, $GOGcliGUI
+Global $height, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $image, $imgfle, $inifle, $json, $keep, $left, $line, $lines
+Global $link, $logfle, $manifest, $minimize, $n, $name, $num, $OSes, $p, $params, $part, $parts, $pid, $ping, $pth, $read, $res
+Global $row, $s, $SetupGUI, $shell, $slug, $splash, $split, $splits, $state, $style, $text, $title, $titlist, $top, $type, $types
+Global $updates, $URL, $user, $version, $which, $width, $winpos
 
 $bigpic = @ScriptDir & "\Big.jpg"
 $blackjpg = @ScriptDir & "\Black.jpg"
 $cookies = @ScriptDir & "\Cookie.txt"
+$covers = @ScriptDir & "\Covers"
+$details = @ScriptDir & "\Detail.txt"
 $gamelist = @ScriptDir & "\Games.txt"
 $gamesini = @ScriptDir & "\Games.ini"
 $gogcli = @ScriptDir & "\gogcli.exe"
 $imgfle = @ScriptDir & "\Image.jpg"
 $inifle = @ScriptDir & "\Settings.ini"
+$json = @ScriptDir & "\manifest.json"
 $logfle = @ScriptDir & "\Log.txt"
+$manifest = @ScriptDir & "\Manifest.txt"
 $splash = @ScriptDir & "\Splash.jpg"
 $titlist = @ScriptDir & "\Titles.txt"
 $version = "v1.0"
+
+If Not FileExists($covers) Then DirCreate($covers)
 
 MainGUI()
 
@@ -112,7 +121,8 @@ Func MainGUI()
 	GUICtrlSetBkColor($Input_slug, 0xBBFFBB)
 	GUICtrlSetTip($Input_slug, "Game Slug!")
 	;
-	$Group_dest = GuiCtrlCreateGroup("Download Destination - Games Folder && Naming Types", 10, 341, 390, 52)
+	;$Group_dest = GuiCtrlCreateGroup("Download Destination - Games Folder && Naming Types", 10, 341, 390, 52)
+	$Group_dest = GuiCtrlCreateGroup("Download Destination - Games Folder && Sub-Folder Options", 10, 341, 390, 52)
 	$Combo_dest = GUICtrlCreateCombo("", 20, 361, 48, 21)
 	GUICtrlSetBkColor($Combo_dest, 0xFFFFB0)
 	GUICtrlSetTip($Combo_dest, "Type of game folder name!")
@@ -137,7 +147,7 @@ Func MainGUI()
 	GUICtrlSetBkColor($Label_mid, $GUI_BKCOLOR_TRANSPARENT)
 	GUICtrlSetColor($Label_mid, $COLOR_WHITE)
 	$Label_bed = GuiCtrlCreateLabel("", 405, 100, 160, 20, $SS_CENTER + $SS_CENTERIMAGE)
-	GUICtrlSetFont($Label_bed, 9, 600)
+	GUICtrlSetFont($Label_bed, 8, 600)
 	GUICtrlSetBkColor($Label_bed, $GUI_BKCOLOR_TRANSPARENT)
 	GUICtrlSetColor($Label_bed, $COLOR_WHITE)
 	$Button_pic = GuiCtrlCreateButton("Download Cover", 400, 135, 120, 25)
@@ -239,21 +249,37 @@ Func MainGUI()
 	GUICtrlSetImage($Button_exit, $user, $icoX, 1)
 	;
 	; SETTINGS
-	GUICtrlSetData($Combo_dest, "Slug|Title", "Slug")
+	$types = "Slug|Title"
+	$type = IniRead($inifle, "Game Folder Names", "type", "")
+	If $type = "" Then
+		$type = "Slug"
+		IniWrite($inifle, "Game Folder Names", "type", $type)
+	EndIf
+	GUICtrlSetData($Combo_dest, $types, $type)
+	$dest = IniRead($inifle, "Main Games Folder", "path", "")
+	If $dest = "" Then
+		$dest = @ScriptDir & "\GAMES"
+		IniWrite($inifle, "Main Games Folder", "path", $dest)
+		If Not FileExists($dest) Then DirCreate($dest)
+	EndIf
+	GUICtrlSetData($Input_dest, $dest)
+	$gamesfold = $dest
+	$alpha = IniRead($inifle, "Game Folder Names", "alpha", "")
+	If $alpha = "" Then
+		$alpha = 4
+		IniWrite($inifle, "Game Folder Names", "alpha", $alpha)
+	EndIf
+	GUICtrlSetState($Checkbox_alpha, $alpha)
 	;
 	If Not FileExists($gogcli) Or Not FileExists($cookies) Then
-		GUICtrlSetState($Button_pic, $GUI_DISABLE)
-		GUICtrlSetState($Checkbox_show, $GUI_DISABLE)
-		GUICtrlSetState($Button_get, $GUI_DISABLE)
-		GUICtrlSetState($Button_down, $GUI_DISABLE)
-		GUICtrlSetState($Button_game, $GUI_DISABLE)
-		GUICtrlSetState($Button_man, $GUI_DISABLE)
-		;GUICtrlSetState($Button_setup, $GUI_DISABLE)
-		GUICtrlSetState($Button_web, $GUI_DISABLE)
-		GUICtrlSetState($Combo_dest, $GUI_DISABLE)
-		GUICtrlSetState($Checkbox_alpha, $GUI_DISABLE)
-		GUICtrlSetState($Button_dest, $GUI_DISABLE)
-		GUICtrlSetState($Button_fold, $GUI_DISABLE)
+		If Not FileExists($gogcli) Then GUICtrlSetState($Button_setup, $GUI_DISABLE)
+		SetStateOfControls($GUI_DISABLE)
+	EndIf
+	;
+	$minimize = IniRead($inifle, "DOS Console", "minimize", "")
+	If $minimize = "" Then
+		$minimize = 4
+		IniWrite($inifle, "DOS Console", "minimize", $minimize)
 	EndIf
 	;
 	$display = IniRead($inifle, "Cover Image", "show", "")
@@ -262,6 +288,11 @@ Func MainGUI()
 		IniWrite($inifle, "Cover Image", "show", $display)
 	EndIf
 	GUICtrlSetState($Checkbox_show, $display)
+	$keep = IniRead($inifle, "Cover Image", "keep", "")
+	If $keep = "" Then
+		$keep = 1
+		IniWrite($inifle, "Cover Image", "keep", $keep)
+	EndIf
 	;
 	FillTheGamesList()
 	$ID = ""
@@ -309,58 +340,141 @@ Func MainGUI()
 				ShellExecute($link)
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Button_setup
+			; Setup window
+			GuiSetState(@SW_DISABLE, $GOGcliGUI)
+			SetupGUI()
+			GuiSetState(@SW_ENABLE, $GOGcliGUI)
+			$window = $GOGcliGUI
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_pic
 			; Download the selected image
 			If $image = "" Then
-				MsgBox(262192, "Title Error", "A game is not selected!", $wait, $GOGcliGUI)
+				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
 			Else
-				$link = "https:" & $image & ".jpg"
-				$ans = MsgBox(262177 + 256, "Save Query", _
-					"Save cover image to game folder?" & @LF & @LF & _
-					"CANCEL = Save to program folder.", 0, $GOGcliGUI)
-				;SplashTextOn("", "Saving!", 200, 120, Default, Default, 33)
-				GUICtrlSetData($Label_mid, "Saving!")
-				If $ans = 1 Then
-					$gamepic = ""
-;~ 						$gamesfold = GUICtrlRead($Input_dest)
-;~ 						$gamefold = $gamesfold & "\" & $title
-;~ 						If $alpha = 1 Then
-;~ 							$alf = StringUpper(StringLeft($title, 1))
-;~ 							$gamefold = $gamefold & "\" & $alf
-;~ 						EndIf
-;~ 						If FileExists($gamefold) Then
-;~ 							$gamepic = $gamefold & "\Folder.jpg"
-;~ 						Else
-;~ 							MsgBox(262192, "Save Error", "Game folder not found!", 2, $GOGcliGUI)
-;~ 						EndIf
-				Else
-					$gamepic = $title & ".jpg"
-					$gamepic = StringReplace($gamepic, ": ", " - ")
-					$gamepic = StringReplace($gamepic, "?", "")
-					$gamepic = StringReplace($gamepic, "*", "")
-					$gamepic = StringReplace($gamepic, "|", "")
-					$gamepic = StringReplace($gamepic, "/", "")
-					$gamepic = StringReplace($gamepic, "\", "")
-					$gamepic = StringReplace($gamepic, "<", "")
-					$gamepic = StringReplace($gamepic, ">", "")
-					$gamepic = StringReplace($gamepic, '"', '')
-					$gamepic = @ScriptDir & "\" & $gamepic
-				EndIf
-				If $gamepic <> "" Then
-					InetGet($link, $gamepic, 1, 0)
-					If Not FileExists($gamepic) Then
-						InetGet($link, $gamepic, 0, 0)
-						If Not FileExists($gamepic) Then
-							InetGet($link, $gamepic, 0, 1)
+				$ping = Ping("gog.com", 4000)
+				If $ping > 0 Then
+					$link = "https:" & $image & ".jpg"
+					$ans = MsgBox(262179 + 256, "Save Query", _
+						"YES = Save cover image to game folder." & @LF & _
+						"NO = Save cover image to games folder." & @LF & _
+						"CANCEL = Save to program folder.", 0, $GOGcliGUI)
+					;SplashTextOn("", "Saving!", 200, 120, Default, Default, 33)
+					GUICtrlSetData($Label_mid, "Saving!")
+					If $ans = 6 Then
+						$gamepic = ""
+						$gamefold = $gamesfold
+						If $type = "Slug" Then
+							$name = $slug
+						ElseIf $type = "Title" Then
+							$name = FixTitle($title)
+						EndIf
+						If $alpha = 1 Then
+							$alf = StringUpper(StringLeft($name, 1))
+							$gamefold = $gamefold & "\" & $alf
+						EndIf
+						$gamefold = $gamefold & "\" & $name
+						If FileExists($gamefold) Then
+							$gamepic = $gamefold & "\Folder.jpg"
+						Else
+							MsgBox(262192, "Save Error", "Game folder not found!", 0, $GOGcliGUI)
+						EndIf
+					Else
+						$gamepic = FixTitle($title)
+						$gamepic = $gamepic & ".jpg"
+						If $ans = 2 Then
+							$gamepic = @ScriptDir & "\" & $gamepic
+						ElseIf $ans = 7 Then
+							If FileExists($gamesfold) Then
+								$gamepic = $gamesfold & "\" & $gamepic
+							Else
+								$gamepic = ""
+								MsgBox(262192, "Save Error", "Games folder not found!", 0, $GOGcliGUI)
+							EndIf
 						EndIf
 					EndIf
+					If $gamepic <> "" Then
+						InetGet($link, $gamepic, 1, 0)
+						If Not FileExists($gamepic) Then
+							InetGet($link, $gamepic, 0, 0)
+							If Not FileExists($gamepic) Then
+								InetGet($link, $gamepic, 0, 1)
+							EndIf
+						EndIf
+					EndIf
+					GUICtrlSetData($Label_mid, "")
+					;SplashOff()
+				Else
+					MsgBox(262192, "Web Error", "No connection detected!", 0, $GOGcliGUI)
 				EndIf
-				GUICtrlSetData($Label_mid, "")
-				;SplashOff()
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_man
 			; Add selected game to manifest
+			If _IsPressed("10") Then
+				; SHIFT
+				If FileExists($json) Then Run(@ProgramFilesDir & "\Windows NT\Accessories\wordpad.exe " & $json)
+			ElseIf _IsPressed("11") Then
+				; CTRL
+				If FileExists($manifest) Then Run(@ProgramFilesDir & "\Windows NT\Accessories\wordpad.exe " & $manifest)
+			Else
+				If $title = "" Then
+					MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+				Else
+					If FileExists($cookies) Then
+						$res = _FileReadToArray($cookies, $array)
+						If $res = 1 Then
+							For $a = 1 To $array[0]
+								$line = $array[$a]
+								If $line <> "" Then
+									If StringLeft($line, 7) = "gog-al=" Then
+										SetStateOfControls($GUI_DISABLE, "all")
+										$ping = Ping("gog.com", 4000)
+										If $ping > 0 Then
+											GUICtrlSetImage($Pic_cover, $blackjpg)
+											GUICtrlSetData($Label_mid, "Adding Game to Manifest")
+											If $minimize = 1 Then
+												$flag = @SW_MINIMIZE
+											Else
+												$flag = @SW_SHOW
+											EndIf
+											FileChangeDir(@ScriptDir)
+											$params = "-c Cookie.txt manifest generate -l english -o windows linux mac -i " & $title
+											$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params, @ScriptDir, $flag)
+											Sleep(1000)
+											If FileExists($json) Then
+												$game = FileRead($json)
+												If $game <> "" Then
+													If FileExists($manifest) Then
+														$read = FileRead($manifest)
+														If StringInStr($read, $title) < 1 Then
+															FileWrite($manifest, @LF & $game)
+														EndIf
+													Else
+														FileCopy($json, $manifest)
+													EndIf
+												EndIf
+											EndIf
+											GUICtrlSetData($Label_mid, "")
+										Else
+											MsgBox(262192, "Web Error", "No connection detected!", 0, $GOGcliGUI)
+										EndIf
+										SetStateOfControls($GUI_ENABLE, "all")
+										GUICtrlSetState($Listview_games, $GUI_FOCUS)
+										_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+										ContinueLoop 2
+									EndIf
+								EndIf
+							Next
+							MsgBox(262192, "Cookie Error", "The 'Cookie.txt' file doesn't contain a line starting with 'gog-al='.", 0, $GOGcliGUI)
+						Else
+							MsgBox(262192, "Content Error", "The 'Cookie.txt' file appears to be empty!", 0, $GOGcliGUI)
+						EndIf
+					Else
+						MsgBox(262192, "File Error", "The 'Cookie.txt' file is missing!", 0, $GOGcliGUI)
+					EndIf
+				EndIf
+			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_log
 			; Log Record
@@ -383,14 +497,175 @@ Func MainGUI()
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_get
 			; Get game titles from GOG library
-			ClearFieldValues()
-			ParseTheGamelist()
+			If FileExists($cookies) Then
+				$res = _FileReadToArray($cookies, $array)
+				If $res = 1 Then
+					For $a = 1 To $array[0]
+						$line = $array[$a]
+						If $line <> "" Then
+							If StringLeft($line, 7) = "gog-al=" Then
+								SetStateOfControls($GUI_DISABLE, "all")
+								$ping = Ping("gog.com", 4000)
+								If $ping > 0 Then
+									GUICtrlSetImage($Pic_cover, $blackjpg)
+									GUICtrlSetData($Label_top, "100 Games per Page")
+									GUICtrlSetData($Label_mid, "Obtaining Games List")
+									GUICtrlSetData($Label_bed, "Page 1")
+									ClearFieldValues()
+									If $minimize = 1 Then
+										$flag = @SW_MINIMIZE
+									Else
+										$flag = @SW_SHOW
+									EndIf
+									FileChangeDir(@ScriptDir)
+									$params = "-c Cookie.txt gog-api owned-games -p "
+									$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params & '1 >"' & $gamelist & '"', @ScriptDir, $flag)
+									If FileExists($gamelist) Then
+										$res = _FileReadToArray($gamelist, $lines)
+										If $res = 1 Then
+											For $l = 1 To $lines[0]
+												$line = $lines[$l]
+												If $line <> "" Then
+													If StringLeft($line, 11) = "TotalPages:" Then
+														$line = StringReplace($line, "TotalPages:", "")
+														$num = StringStripWS($line, 3)
+														If StringIsDigit($num) Then
+															If $num > 1 Then
+																For $n = 2 To $num
+																	Sleep(500)
+																	GUICtrlSetData($Label_bed, "Page " & $n)
+																	$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params & $n & ' >>"' & $gamelist & '"', @ScriptDir, $flag)
+																Next
+																GUICtrlSetData($Label_top, "")
+																GUICtrlSetData($Label_bed, "")
+															EndIf
+															Sleep(1000)
+															ParseTheGamelist()
+															GUICtrlSetState($Button_setup, $GUI_ENABLE)
+															SetStateOfControls($GUI_ENABLE)
+															ContinueLoop 3
+														EndIf
+													EndIf
+												EndIf
+											Next
+											MsgBox(262192, "List Error", "The 'Game.txt' file appears to be empty!", 0, $GOGcliGUI)
+										EndIf
+									EndIf
+									GUICtrlSetData($Label_top, "")
+									GUICtrlSetData($Label_mid, "")
+									GUICtrlSetData($Label_bed, "")
+								Else
+									MsgBox(262192, "Web Error", "No connection detected!", 0, $GOGcliGUI)
+								EndIf
+								SetStateOfControls($GUI_ENABLE, "all")
+								ContinueLoop 2
+							EndIf
+						EndIf
+					Next
+					MsgBox(262192, "Cookie Error", "The 'Cookie.txt' file doesn't contain a line starting with 'gog-al='.", 0, $GOGcliGUI)
+				Else
+					MsgBox(262192, "Content Error", "The 'Cookie.txt' file appears to be empty!", 0, $GOGcliGUI)
+				EndIf
+			Else
+				MsgBox(262192, "File Error", "The 'Cookie.txt' file is missing!", 0, $GOGcliGUI)
+			EndIf
 		Case $msg = $Button_game
 			; View details of selected game
+			If $ID = "" Then
+				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+			Else
+				If FileExists($cookies) Then
+					$res = _FileReadToArray($cookies, $array)
+					If $res = 1 Then
+						For $a = 1 To $array[0]
+							$line = $array[$a]
+							If $line <> "" Then
+								If StringLeft($line, 7) = "gog-al=" Then
+									SetStateOfControls($GUI_DISABLE, "all")
+									$ping = Ping("gog.com", 4000)
+									If $ping > 0 Then
+										GUICtrlSetImage($Pic_cover, $blackjpg)
+										GUICtrlSetData($Label_mid, "Retrieving Game Detail")
+										If $minimize = 1 Then
+											$flag = @SW_MINIMIZE
+										Else
+											$flag = @SW_SHOW
+										EndIf
+										FileChangeDir(@ScriptDir)
+										$params = "-c Cookie.txt gog-api game-details -i " & $ID
+										$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params & ' >"' & $details & '"', @ScriptDir, $flag)
+										Sleep(1000)
+										If FileExists($details) Then
+											_ReplaceStringInFile($details, @LF, @CRLF)
+											Sleep(500)
+											ShellExecute($details)
+										EndIf
+										GUICtrlSetData($Label_mid, "")
+									Else
+										MsgBox(262192, "Web Error", "No connection detected!", 0, $GOGcliGUI)
+									EndIf
+									SetStateOfControls($GUI_ENABLE, "all")
+									GUICtrlSetState($Listview_games, $GUI_FOCUS)
+									_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+									ContinueLoop 2
+								EndIf
+							EndIf
+						Next
+						MsgBox(262192, "Cookie Error", "The 'Cookie.txt' file doesn't contain a line starting with 'gog-al='.", 0, $GOGcliGUI)
+					Else
+						MsgBox(262192, "Content Error", "The 'Cookie.txt' file appears to be empty!", 0, $GOGcliGUI)
+					EndIf
+				Else
+					MsgBox(262192, "File Error", "The 'Cookie.txt' file is missing!", 0, $GOGcliGUI)
+				EndIf
+			EndIf
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Button_fold
+			; Open the selected destination folder
+			If FileExists($gamesfold) Then
+				GUISetState(@SW_MINIMIZE, $GOGcliGUI)
+				If $title <> "" Then
+					$gamefold = $gamesfold
+					If $type = "Slug" Then
+						$name = $slug
+					ElseIf $type = "Title" Then
+						$name = FixTitle($title)
+					EndIf
+					If $alpha = 1 Then
+						$alf = StringUpper(StringLeft($name, 1))
+						$gamefold = $gamefold & "\" & $alf
+					EndIf
+					$gamefold = $gamefold & "\" & $name
+					If FileExists($gamefold) Then
+						Run(@WindowsDir & "\Explorer.exe " & $gamefold)
+					Else
+						Run(@WindowsDir & "\Explorer.exe " & $gamesfold)
+					EndIf
+				Else
+					Run(@WindowsDir & "\Explorer.exe " & $gamesfold)
+				EndIf
+			Else
+				MsgBox(262192, "Path Error", "Game folder does not exist!", 0, $GOGcliGUI)
+			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_down
 			; Download the selected game
+			MsgBox(262192, "Download Error", "This feature is not yet supported!", 0, $GOGcliGUI)
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Button_dest
+			; Browse to set the destination folder
+			If $dest = "" Then
+				$fold = @ScriptDir
+			Else
+				$fold = $dest
+			EndIf
+			$pth = FileSelectFolder("Browse to set the main games folder.", $fold, 7, $dest, $GOGcliGUI)
+			If Not @error And StringMid($pth, 2, 2) = ":\" Then
+				$dest = $pth
+				IniWrite($inifle, "Main Games Folder", "path", $dest)
+				GUICtrlSetData($Input_dest, $dest)
+				$gamesfold = $dest
+			EndIf
 		Case $msg = $Checkbox_show
 			; Show the cover image
 			If GUICtrlRead($Checkbox_show) = $GUI_CHECKED Then
@@ -401,6 +676,11 @@ Func MainGUI()
 				GUICtrlSetImage($Pic_cover, $blackjpg)
 			EndIf
 			IniWrite($inifle, "Cover Image", "show", $display)
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Combo_dest
+			; Type of game folder name
+			$type = GUICtrlRead($Combo_dest)
+			IniWrite($inifle, "Game Folder Names", "type", $type)
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Listview_games Or $msg > $lowid
 			; List of games
@@ -433,11 +713,24 @@ Func MainGUI()
 					;SplashTextOn("", "Please Wait!", 200, 120, Default, Default, 33)
 					GUICtrlSetData($Label_mid, "Please Wait!")
 					If FileExists($bigpic) Then FileDelete($bigpic)
-					$link = "https:" & $image & ".jpg"
-					InetGet($link, $bigpic, 1, 0)
-					If FileExists($bigpic) Then
+					$bigcover = ""
+					$ping = Ping("gog.com", 4000)
+					If $ping > 0 Then
+						$link = "https:" & $image & ".jpg"
+						InetGet($link, $bigpic, 1, 0)
+						If FileExists($bigpic) Then
+							$bigcover = $bigpic
+						EndIf
+					Else
+						MsgBox(262192, "Web Error", "No connection detected!", 0, $GOGcliGUI)
+						;$covimg = $covers & "\" & $slug & ".jpg"
+						;If FileExists($covimg) Then
+						;	$bigcover = $covimg
+						;EndIf
+					EndIf
+					If $bigcover <> "" Then
 						GUICtrlSetState($Pic_cover, $GUI_DISABLE)
-						SplashImageOn("", $bigpic, 900, 450, Default, Default, 17)
+						SplashImageOn("", $bigcover, 900, 450, Default, Default, 17)
 						Sleep(300)
 						$mpos = MouseGetPos()
 						$xpos = $mpos[0]
@@ -466,6 +759,131 @@ Func MainGUI()
 	WEnd
 EndFunc ;=> MainGUI
 
+Func SetupGUI()
+	Local $Button_close, $Button_cookie, $Checkbox_dos, $Checkbox_keep, $Label_info
+	Local $above, $high, $side, $wide
+	;
+	$wide = 230
+	$high = 405
+	$side = IniRead($inifle, "Setup Window", "left", $left)
+	$above = IniRead($inifle, "Setup Window", "top", $top)
+	$SetupGUI = GuiCreate("Setup", $wide, $high, $side, $above, $WS_OVERLAPPED + $WS_CAPTION + $WS_SYSMENU _
+											+ $WS_VISIBLE + $WS_CLIPSIBLINGS, $WS_EX_TOPMOST, $GOGcliGUI)
+	GUISetBkColor(0xFFFFB0, $SetupGUI)
+	;
+	; CONTROLS
+	$Label_info = GuiCtrlCreateLabel("Before using 'gogcli.exe' to download your" _
+		& @LF & "games, update etc, you need a cookie file." _
+		& @LF & "The 'Cookie.txt' file must be located inside" _
+		& @LF & "the main program folder and contain some" _
+		& @LF & "required content to pass an authentication" _
+		& @LF & "check when connecting to GOG." & @LF _
+		& @LF & "At this current point in time, 'gogcli.exe' is" _
+		& @LF & "unable to obtain the necessary data your" _
+		& @LF & "cookie file needs, so you need to obtain" _
+		& @LF & "it manually, or with the help of a browser" _
+		& @LF & "addon (recommended)." & @LF _
+		& @LF & "To assist you, this program can create an" _
+		& @LF & "empty 'Cookie.txt' file, to which you copy" _
+		& @LF & "the required entry(s).", 11, 10, 210, 215)
+	;
+	$Button_cookie = GuiCtrlCreateButton("CREATE COOKIE", 10, 235, 140, 50)
+	GUICtrlSetFont($Button_cookie, 9, 600)
+	GUICtrlSetTip($Button_cookie, "Create the basic cookie file!")
+	;
+	$Button_close = GuiCtrlCreateButton("EXIT", 160, 235, 60, 50, $BS_ICON)
+	GUICtrlSetTip($Button_close, "Exit / Close / Quit the window!")
+	;
+	$Checkbox_keep = GUICtrlCreateCheckbox("Save cover images locally when shown", 14, 295, 210, 20)
+	GUICtrlSetTip($Checkbox_keep, "Save cover images locally when obtained!")
+	;
+	$Checkbox_dos = GUICtrlCreateCheckbox("Minimize DOS Console window process", 14, 315, 210, 20)
+	GUICtrlSetTip($Checkbox_dos, "Minimize a DOS Console window process when it starts!")
+	;
+	; SETTINGS
+	GUICtrlSetImage($Button_close, $user, $icoX, 1)
+	;
+	GUICtrlSetState($Checkbox_keep, $keep)
+	GUICtrlSetState($Checkbox_dos, $minimize)
+	;
+	$window = $SetupGUI
+
+
+	GuiSetState(@SW_SHOW, $SetupGUI)
+	While 1
+		$msg = GuiGetMsg()
+		Select
+		Case $msg = $GUI_EVENT_CLOSE Or $msg = $Button_close
+			; Exit / Close / Quit the window
+			$winpos = WinGetPos($SetupGUI, "")
+			$side = $winpos[0]
+			If $side < 0 Then
+				$side = 2
+			ElseIf $side > @DesktopWidth - $wide Then
+				$side = @DesktopWidth - $wide - 25
+			EndIf
+			IniWrite($inifle, "Setup Window", "left", $side)
+			$above = $winpos[1]
+			If $above < 0 Then
+				$above = 2
+			ElseIf $above > @DesktopHeight - ($high + 20) Then
+				$above = @DesktopHeight - $high - 60
+			EndIf
+			IniWrite($inifle, "Setup Window", "top", $above)
+			;
+			GUIDelete($SetupGUI)
+			ExitLoop
+		Case $msg = $Button_cookie
+			; Create the cookie file
+			If FileExists($cookies) Then
+				$ans = MsgBox(262177 + 256, "Replace Query", _
+					"The 'Cookie.txt' file already exists." & @LF & @LF & _
+					"OK = Replace with a new empty one." & @LF & _
+					"CANCEL = Abort any replace.", 0, $SetupGUI)
+			Else
+				$ans = 1
+			EndIf
+			If $ans = 1 Then
+				If Not FileExists($cookies) And FileExists($gogcli) Then
+					GUISwitch($GOGcliGUI)
+					GUICtrlSetState($Button_pic, $GUI_ENABLE)
+					GUICtrlSetState($Checkbox_show, $GUI_ENABLE)
+					GUICtrlSetState($Button_get, $GUI_ENABLE)
+					GUICtrlSetState($Button_down, $GUI_ENABLE)
+					GUICtrlSetState($Button_game, $GUI_ENABLE)
+					GUICtrlSetState($Button_man, $GUI_ENABLE)
+					;GUICtrlSetState($Button_setup, $GUI_ENABLE)
+					GUICtrlSetState($Button_web, $GUI_ENABLE)
+					GUICtrlSetState($Combo_dest, $GUI_ENABLE)
+					GUICtrlSetState($Checkbox_alpha, $GUI_ENABLE)
+					GUICtrlSetState($Button_dest, $GUI_ENABLE)
+					GUICtrlSetState($Button_fold, $GUI_ENABLE)
+					GUISwitch($SetupGUI)
+				EndIf
+				_FileCreate($cookies)
+			EndIf
+		Case $msg = $Checkbox_keep
+			; Save cover images locally when obtained & shown
+			If GUICtrlRead($Checkbox_keep) = $GUI_CHECKED Then
+				$keep = 1
+			Else
+				$keep = 4
+			EndIf
+			IniWrite($inifle, "Cover Image", "keep", $keep)
+		Case $msg = $Checkbox_dos
+			; Minimize DOS Console window process
+			If GUICtrlRead($Checkbox_dos) = $GUI_CHECKED Then
+				$minimize = 1
+			Else
+				$minimize = 4
+			EndIf
+			IniWrite($inifle, "DOS Console", "minimize", $minimize)
+		Case Else
+			;;;
+		EndSelect
+	WEnd
+EndFunc ;=> SetupGUI
+
 
 Func ClearFieldValues()
 	$ID = ""
@@ -489,7 +907,7 @@ Func FillTheGamesList()
 	If FileExists($titlist) Then
 		$res = _FileReadToArray($titlist, $array)
 		If $res = 1 Then
-			GUICtrlSetData($Label_mid, "Loading!")
+			GUICtrlSetData($Label_mid, "Loading the List")
 			;_ArrayDisplay($array)
 			_ArraySort($array, 0, 1)
 			;_ArrayDisplay($array)
@@ -519,14 +937,29 @@ Func FillTheGamesList()
 			;_GUICtrlListView_SetItemSelected($Listview_games, -1, False, False)
 			GUICtrlSetData($Label_mid, "")
 		EndIf
+	Else
+		ParseTheGamelist()
 	EndIf
 EndFunc ;=> FillTheGamesList
+
+Func FixTitle($text)
+	$text = StringReplace($text, ": ", " - ")
+	$text = StringReplace($text, "?", "")
+	$text = StringReplace($text, "*", "")
+	$text = StringReplace($text, "|", "")
+	$text = StringReplace($text, "/", "")
+	$text = StringReplace($text, "\", "")
+	$text = StringReplace($text, "<", "")
+	$text = StringReplace($text, ">", "")
+	$text = StringReplace($text, '"', '')
+	Return $text
+EndFunc ;=> FixTitle
 
 Func ParseTheGamelist()
 	If FileExists($gamelist) Then
 		; Parse for titles
 		;SplashTextOn("", "Please Wait!", 140, 120, Default, Default, 33)
-		GUICtrlSetData($Label_mid, "Please Wait!")
+		GUICtrlSetData($Label_mid, "Parsing Games List")
 		_GUICtrlListView_BeginUpdate($Listview_games)
 		_GUICtrlListView_DeleteAllItems($Listview_games)
 		_GUICtrlListView_EndUpdate($Listview_games)
@@ -592,12 +1025,12 @@ Func ParseTheGamelist()
 				$entries = $entries & @CRLF & "URL=" & $URL & @CRLF & "category=" & $category & @CRLF & "OSes=" & $OSes & @CRLF & "DLC=" & $DLC
 				$entries = $entries & @CRLF & "updates=" & $updates
 			Next
+			_FileCreate($titlist)
 			If $lines <> "" Then
-				_FileCreate($titlist)
 				FileWrite($titlist, $lines)
 			EndIf
+			_FileCreate($gamesini)
 			If $entries <> "" Then
-				_FileCreate($gamesini)
 				FileWrite($gamesini, $entries)
 			EndIf
 			FillTheGamesList()
@@ -610,6 +1043,27 @@ Func ParseTheGamelist()
 		MsgBox(48 + 262144, "Path Error", "The 'Games.txt' file wasn't found.")
 	EndIf
 EndFunc ;=> ParseTheGamelist
+
+Func SetStateOfControls($state, $which = "")
+	GUICtrlSetState($Button_pic, $state)
+	GUICtrlSetState($Checkbox_show, $state)
+	GUICtrlSetState($Button_get, $state)
+	GUICtrlSetState($Button_down, $state)
+	GUICtrlSetState($Button_game, $state)
+	GUICtrlSetState($Button_man, $state)
+	GUICtrlSetState($Button_web, $state)
+	GUICtrlSetState($Combo_dest, $state)
+	GUICtrlSetState($Checkbox_alpha, $state)
+	GUICtrlSetState($Button_dest, $state)
+	GUICtrlSetState($Button_fold, $state)
+	If $which = "all" Then
+		GUICtrlSetState($Listview_games, $state)
+		GUICtrlSetState($Button_setup, $state)
+		GUICtrlSetState($Button_log, $state)
+		GUICtrlSetState($Button_info, $state)
+		GUICtrlSetState($Button_exit, $state)
+	EndIf
+EndFunc ;=> SetStateOfControls
 
 Func SetTheColumnWidths()
 	;_GUICtrlListView_HideColumn($Listview_games, 0)
@@ -624,16 +1078,26 @@ EndFunc ;=> SetTheColumnWidths
 
 Func ShowCorrectImage()
 	If $image <> "" Then
-		GUICtrlSetData($Label_mid, "Please Wait")
-		$link = "https:" & $image & "_196.jpg"
-		If FileExists($imgfle) Then FileDelete($imgfle)
-		InetGet($link, $imgfle, 1, 0)
-		If FileExists($imgfle) Then
-			GUICtrlSetImage($Pic_cover, $imgfle)
+		$covimg = $covers & "\" & $slug & ".jpg"
+		If FileExists($covimg) Then
+			GUICtrlSetImage($Pic_cover, $covimg)
 		Else
-			GUICtrlSetImage($Pic_cover, $blackjpg)
+			GUICtrlSetData($Label_mid, "Please Wait")
+			$link = "https:" & $image & "_196.jpg"
+			If FileExists($imgfle) Then FileDelete($imgfle)
+			InetGet($link, $imgfle, 1, 0)
+			If FileExists($imgfle) Then
+				If $keep = 1 Then
+					FileMove($imgfle, $covimg)
+					GUICtrlSetImage($Pic_cover, $covimg)
+				Else
+					GUICtrlSetImage($Pic_cover, $imgfle)
+				EndIf
+			Else
+				GUICtrlSetImage($Pic_cover, $blackjpg)
+			EndIf
+			GUICtrlSetData($Label_mid, "")
 		EndIf
-		GUICtrlSetData($Label_mid, "")
 	Else
 		GUICtrlSetImage($Pic_cover, $blackjpg)
 	EndIf

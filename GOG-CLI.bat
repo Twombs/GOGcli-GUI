@@ -1,11 +1,47 @@
 @echo off
 
-goto GAMELIST
+goto SAVEHELP
 
 :HELP
+echo "BASIC HELP COMMANDS"
 gogcli.exe -h
+echo -----------------------
+echo .
+echo "API HELP COMMANDS"
 gogcli.exe gog-api -h
-goto END
+echo -----------------------
+echo .
+echo "DOWNLOAD URL HELP COMMANDS"
+gogcli.exe gog-api download-url-path -h
+echo -----------------------
+echo .
+echo "GAME DETAILS HELP COMMANDS"
+gogcli.exe gog-api game-details -h
+echo -----------------------
+echo .
+echo "OWNED GAMES HELP COMMANDS"
+gogcli.exe gog-api owned-games -h
+echo -----------------------
+echo .
+echo "GAME FILENAME HELP COMMANDS"
+gogcli.exe gog-api url-path-filename -h
+echo -----------------------
+echo .
+echo "URL PATH INFO HELP COMMANDS"
+gogcli.exe gog-api url-path-info -h
+echo -----------------------
+echo .
+echo "USER INFO HELP COMMANDS"
+gogcli.exe gog-api user-info -h
+echo -----------------------
+echo .
+echo "STORAGE VALIDATION HELP COMMANDS"
+gogcli.exe storage validate -h
+echo -----------------------
+echo .
+echo "MANIFEST HELP COMMANDS"
+gogcli.exe manifest -h
+oto END
 
 :USERINFO
 gogcli.exe gog-api user-info -c Cookie.txt
@@ -48,20 +84,47 @@ goto END
 gogcli.exe -c Cookie.txt manifest generate -l english -o windows linux -i Descent: Freespace Battle Pack
 goto END
 
-:TESTING
-gogcli.exe gog-api download-url-path -h
-echo -----------------------
-gogcli.exe gog-api game-details -h
-echo -----------------------
-gogcli.exe gog-api owned-games -h
-echo -----------------------
-gogcli.exe gog-api url-path-filename -h
-echo -----------------------
-gogcli.exe gog-api url-path-info -h
-echo -----------------------
-gogcli.exe gog-api user-info -h
-echo -----------------------
-gogcli.exe storage validate -h
+:SAVEHELP
+echo "BASIC HELP COMMANDS" > Help.wri
+gogcli.exe -h >> Help.wri
+echo ----------------------- >> Help.wri
+echo . >> Help.wri
+echo "API HELP COMMANDS" >> Help.wri
+gogcli.exe gog-api -h >> Help.wri
+echo ----------------------- >> Help.wri
+echo . >> Help.wri
+echo "DOWNLOAD URL HELP COMMANDS" >> Help.wri
+gogcli.exe gog-api download-url-path -h >> Help.wri
+echo ----------------------- >> Help.wri
+echo . >> Help.wri
+echo "GAME DETAILS HELP COMMANDS" >> Help.wri
+gogcli.exe gog-api game-details -h >> Help.wri
+echo ----------------------- >> Help.wri
+echo . >> Help.wri
+echo "OWNED GAMES HELP COMMANDS" >> Help.wri
+gogcli.exe gog-api owned-games -h >> Help.wri
+echo ----------------------- >> Help.wri
+echo . >> Help.wri
+echo "GAME FILENAME HELP COMMANDS" >> Help.wri
+gogcli.exe gog-api url-path-filename -h >> Help.wri
+echo ----------------------- >> Help.wri
+echo . >> Help.wri
+echo "URL PATH INFO HELP COMMANDS" >> Help.wri
+gogcli.exe gog-api url-path-info -h >> Help.wri
+echo ----------------------- >> Help.wri
+echo . >> Help.wri
+echo "USER INFO HELP COMMANDS" >> Help.wri
+gogcli.exe gog-api user-info -h >> Help.wri
+echo ----------------------- >> Help.wri
+echo . >> Help.wri
+echo "STORAGE VALIDATION HELP COMMANDS" >> Help.wri
+gogcli.exe storage validate -h >> Help.wri
+echo ----------------------- >> Help.wri
+echo . >> Help.wri
+echo "MANIFEST HELP COMMANDS" >> Help.wri
+gogcli.exe manifest -h >> Help.wri
+echo . >> Help.wri
+gogcli.exe manifest generate -h >> Help.wri
 goto END
 
 :END
