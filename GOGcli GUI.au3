@@ -11,8 +11,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; FUNCTIONS
-; MainGUI(), SetupGUI()
-; ClearFieldValues(), FillTheGamesList(), FixTitle($text), ParseTheGamelist(), SetStateOfControls($state, $which)
+; MainGUI(), SetupGUI(), FileSelectorGUI()
+; ClearFieldValues(), FillTheGamesList(), FixTitle($text), GetTheSize(), ParseTheGamelist(), SetStateOfControls($state, $which)
 ; SetTheColumnWidths(), ShowCorrectImage()
 
 #include <Constants.au3>
@@ -38,12 +38,12 @@ Global $Button_pic, $Button_setup, $Button_web, $Checkbox_alpha, $Checkbox_show,
 Global $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Label_bed, $Label_cat, $Label_dlc
 Global $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $a, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $category, $cookies, $covers, $covimg, $dest, $details, $DLC
-Global $entries, $entry, $flag, $fold, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $gogcli, $GOGcliGUI
-Global $height, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $image, $imgfle, $inifle, $json, $keep, $left, $line, $lines
-Global $link, $logfle, $manifest, $minimize, $n, $name, $num, $OSes, $p, $params, $part, $parts, $pid, $ping, $pth, $read, $res
-Global $row, $s, $SetupGUI, $shell, $slug, $splash, $split, $splits, $state, $style, $text, $title, $titlist, $top, $type, $types
-Global $updates, $URL, $user, $version, $which, $width, $winpos
+Global $a, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $category, $cookie, $cookies, $covers, $covimg, $dest, $details
+Global $DLC, $entries, $entry, $flag, $fold, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli
+Global $GOGcliGUI, $head, $height, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json
+Global $keep, $lang, $left, $line, $lines, $link, $logfle, $manifest, $minimize, $n, $name, $num, $OS, $OSes, $params, $part, $parts
+Global $pid, $ping, $pth, $read, $res, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $splash, $split, $splits, $state
+Global $style, $tail, $text, $title, $titlist, $top, $type, $types, $updates, $URL, $user, $version, $which, $width, $winpos
 
 $bigpic = @ScriptDir & "\Big.jpg"
 $blackjpg = @ScriptDir & "\Black.jpg"
@@ -294,6 +294,34 @@ Func MainGUI()
 		IniWrite($inifle, "Cover Image", "keep", $keep)
 	EndIf
 	;
+	$lang = IniRead($inifle, "Manifest Inclusion", "language", "none")
+	If $lang = "none" Then
+		$lang = "english"
+		IniWrite($inifle, "Manifest Inclusion", "language", $lang)
+	EndIf
+	$second = IniRead($inifle, "Manifest Inclusion", "language_2", "none")
+	If $second = "none" Then
+		$second = ""
+		IniWrite($inifle, "Manifest Inclusion", "language_2", $second)
+	EndIf
+	;
+	$OS = IniRead($inifle, "Manifest Inclusion", "OS", "")
+	If $OS = "" Then
+		$OS = "windows"
+		IniWrite($inifle, "Manifest Inclusion", "OS", $OS)
+	EndIf
+	;
+	$getlatest = IniRead($inifle, "Download Options", "get_latest", "")
+	If $getlatest = "" Then
+		$getlatest = 4
+		IniWrite($inifle, "Download Options", "get_latest", $getlatest)
+	EndIf
+	$selector = IniRead($inifle, "Download Options", "selector", "")
+	If $selector = "" Then
+		$selector = 1
+		IniWrite($inifle, "Download Options", "selector", $selector)
+	EndIf
+	;
 	FillTheGamesList()
 	$ID = ""
 	$title = ""
@@ -414,9 +442,17 @@ Func MainGUI()
 			If _IsPressed("10") Then
 				; SHIFT
 				If FileExists($json) Then Run(@ProgramFilesDir & "\Windows NT\Accessories\wordpad.exe " & $json)
-			ElseIf _IsPressed("11") Then
-				; CTRL
+			ElseIf _IsPressed("A2") Then
+				; Left CTRL
 				If FileExists($manifest) Then Run(@ProgramFilesDir & "\Windows NT\Accessories\wordpad.exe " & $manifest)
+			ElseIf _IsPressed("A3") Then
+				; Right CTRL
+				If FileExists($json) Then
+					$read = FileRead($json)
+					$read = StringSplit($read, '"Id": ', 1)
+					$read = $read[0]
+					MsgBox(262208, "Manifest Information", $read & " games are listed.", 0, $GOGcliGUI)
+				EndIf
 			Else
 				If $title = "" Then
 					MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
@@ -439,19 +475,44 @@ Func MainGUI()
 												$flag = @SW_SHOW
 											EndIf
 											FileChangeDir(@ScriptDir)
-											$params = "-c Cookie.txt manifest generate -l english -o windows linux mac -i " & $title
+											$params = "-c Cookie.txt manifest generate -l " & $params & ' -o ' & $OS & ' -i "' & $title & '"'
+											;$params = "-c Cookie.txt manifest generate -l english -o windows linux mac -i " & $title
 											$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params, @ScriptDir, $flag)
 											Sleep(1000)
 											If FileExists($json) Then
 												$game = FileRead($json)
 												If $game <> "" Then
-													If FileExists($manifest) Then
-														$read = FileRead($manifest)
-														If StringInStr($read, $title) < 1 Then
-															FileWrite($manifest, @LF & $game)
+													; Something was returned, check for game ID in the return.
+													$identry = '"Id": ' & $ID & ','
+													If StringInStr($game, $identry) > 0 Then
+														If FileExists($manifest) Then
+															$read = FileRead($manifest)
+															If StringInStr($read, $identry) < 1 Then
+																; Add to manifest
+																FileWrite($manifest, @LF & $game)
+															Else
+																; Replace in manifest
+																GUICtrlSetData($Label_mid, "Replacing Game in Manifest")
+																FileCopy($manifest, $manifest & ".bak", 1)
+																$head = StringSplit($read, $identry, 1)
+																$tail = $head[2]
+																$tail = StringSplit($tail, @LF & "}", 1)
+																$tail = $tail[2]
+																$head = $head[1]
+																$game = StringSplit($game, $identry, 1)
+																$game = $game[2]
+																$read = $head & $identry & $game & $tail
+																_FileCreate($manifest)
+																FileWrite($manifest, $read)
+															EndIf
+															Sleep(1000)
+														Else
+															; Start the manifest
+															FileCopy($json, $manifest)
 														EndIf
 													Else
-														FileCopy($json, $manifest)
+														; Game ID not found in return.
+														MsgBox(262192, "Add Error", "Retrieval failed!", 0, $GOGcliGUI)
 													EndIf
 												EndIf
 											EndIf
@@ -541,8 +602,7 @@ Func MainGUI()
 															EndIf
 															Sleep(1000)
 															ParseTheGamelist()
-															GUICtrlSetState($Button_setup, $GUI_ENABLE)
-															SetStateOfControls($GUI_ENABLE)
+															SetStateOfControls($GUI_ENABLE, "all")
 															ContinueLoop 3
 														EndIf
 													EndIf
@@ -650,8 +710,149 @@ Func MainGUI()
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_down
 			; Download the selected game
-			MsgBox(262192, "Download Error", "This feature is not yet supported!", 0, $GOGcliGUI)
+			MsgBox(262192, "Download Error", "This feature is not yet supported!", 1.5, $GOGcliGUI)
+			If $title = "" Then
+				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+			Else
+				SetStateOfControls($GUI_DISABLE, "all")
+				GUICtrlSetImage($Pic_cover, $blackjpg)
+				$game = ""
+				$retrieve = ""
+				GUICtrlSetData($Label_mid, "Retrieving Game File Data")
+				If $getlatest = 1 Then
+					; Retrieve game file data
+					$retrieve = 1
+				Else
+					If FileExists($json) Then
+						$game = FileRead($json)
+						If $game <> "" Then
+							;$titentry = '"Title": "' & $title & '",'
+							;If StringInStr($read, $titentry) < 1 Then
+							$identry = '"Id": ' & $ID & ','
+							If StringInStr($game, $identry) < 1 Then
+								$game = ""
+								If FileExists($manifest) Then
+									$read = FileRead($manifest)
+									If StringInStr($read, $identry) < 1 Then
+										; Retrieve game file data
+										$retrieve = 1
+									Else
+										; Extract just the relevant game entry
+										$game = StringSplit($read, $identry, 1)
+										$game = $game[2]
+										$game = StringSplit($game, '"Id":', 1)
+										$game = $game[1]
+									EndIf
+								Else
+									; Retrieve game file data
+									$retrieve = 1
+								EndIf
+							EndIf
+						Else
+							; Retrieve game file data
+							$retrieve = 1
+						EndIf
+					Else
+						; Retrieve game file data
+						$retrieve = 1
+					EndIf
+				EndIf
+				If $retrieve = 1 Then
+					; Download game file data from GOG
+					$cookie = ""
+					If FileExists($cookies) Then
+						$res = _FileReadToArray($cookies, $array)
+						If $res = 1 Then
+							For $a = 1 To $array[0]
+								$line = $array[$a]
+								If $line <> "" Then
+									If StringLeft($line, 7) = "gog-al=" Then
+										$cookie = 1
+										$ping = Ping("gog.com", 4000)
+										If $ping > 0 Then
+											GUICtrlSetData($Label_mid, "Downloading Game Data")
+											If $minimize = 1 Then
+												$flag = @SW_MINIMIZE
+											Else
+												$flag = @SW_SHOW
+											EndIf
+											FileChangeDir(@ScriptDir)
+											$params = StringStripWS($lang & " " & $second, 3)
+											$params = "-c Cookie.txt manifest generate -l " & $params & " -o " & $OS & ' -i "' & $title & '"'
+											;$params = "-c Cookie.txt manifest generate -l english -o windows linux mac -i " & $title
+											$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params, @ScriptDir, $flag)
+											Sleep(1000)
+											If FileExists($json) Then
+												$game = FileRead($json)
+												If $game <> "" Then
+													; Something was returned, check for game ID in the return.
+													$identry = '"Id": ' & $ID & ','
+													If StringInStr($game, $identry) > 0 Then
+														If FileExists($manifest) Then
+															$read = FileRead($manifest)
+															If StringInStr($read, $identry) < 1 Then
+																; Add to manifest
+																GUICtrlSetData($Label_mid, "Adding Game to Manifest")
+																FileWrite($manifest, @LF & $game)
+															Else
+																; Replace in manifest
+																GUICtrlSetData($Label_mid, "Replacing Game in Manifest")
+																FileCopy($manifest, $manifest & ".bak", 1)
+																$head = StringSplit($read, $identry, 1)
+																$tail = $head[2]
+																$tail = StringSplit($tail, @LF & "}", 1)
+																$tail = $tail[2]
+																$head = $head[1]
+																$game = StringSplit($game, $identry, 1)
+																$game = $game[2]
+																$read = $head & $identry & $game & $tail
+																_FileCreate($manifest)
+																FileWrite($manifest, $read)
+															EndIf
+															Sleep(1000)
+														Else
+															; Start the manifest
+															FileCopy($json, $manifest)
+														EndIf
+													Else
+														; Game ID not found in return.
+														$game = ""
+														MsgBox(262192, "Add Error", "Retrieval failed!", 0, $GOGcliGUI)
+													EndIf
+												EndIf
+											EndIf
+										Else
+											MsgBox(262192, "Web Error", "No connection detected!", 0, $GOGcliGUI)
+										EndIf
+										ExitLoop
+									EndIf
+								EndIf
+							Next
+							If $cookie = "" Then
+								MsgBox(262192, "Cookie Error", "The 'Cookie.txt' file doesn't contain a line starting with 'gog-al='.", 0, $GOGcliGUI)
+							EndIf
+						Else
+							MsgBox(262192, "Content Error", "The 'Cookie.txt' file appears to be empty!", 0, $GOGcliGUI)
+						EndIf
+					Else
+						MsgBox(262192, "File Error", "The 'Cookie.txt' file is missing!", 0, $GOGcliGUI)
+					EndIf
+				EndIf
+				If $game <> "" Then
+					If $selector = 1 Then
+						GUICtrlSetData($Label_mid, "Game Files Selector")
+						FileSelectorGUI()
+					Else
+						GUICtrlSetData($Label_mid, "Game Downloading")
+					EndIf
+				Else
+					MsgBox(262192, "Download Error", "Game data could not be found!", 0, $GOGcliGUI)
+				EndIf
+				SetStateOfControls($GUI_ENABLE, "all")
+				GUICtrlSetData($Label_mid, "")
+			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+			_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
 		Case $msg = $Button_dest
 			; Browse to set the destination folder
 			If $dest = "" Then
@@ -760,10 +961,11 @@ Func MainGUI()
 EndFunc ;=> MainGUI
 
 Func SetupGUI()
-	Local $Button_close, $Button_cookie, $Checkbox_dos, $Checkbox_keep, $Label_info
-	Local $above, $high, $side, $wide
+	Local $Button_close, $Button_cookie, $Checkbox_dos, $Checkbox_keep, $Checkbox_latest, $Checkbox_select, $Combo_lang, $Combo_OS
+	Local $Combo_two, $Edit_info, $Group_down, $Group_lang, $Label_OS
+	Local $above, $high, $info, $langs, $opsys, $side, $wide
 	;
-	$wide = 230
+	$wide = 250
 	$high = 405
 	$side = IniRead($inifle, "Setup Window", "left", $left)
 	$above = IniRead($inifle, "Setup Window", "top", $top)
@@ -772,39 +974,61 @@ Func SetupGUI()
 	GUISetBkColor(0xFFFFB0, $SetupGUI)
 	;
 	; CONTROLS
-	$Label_info = GuiCtrlCreateLabel("Before using 'gogcli.exe' to download your" _
-		& @LF & "games, update etc, you need a cookie file." _
-		& @LF & "The 'Cookie.txt' file must be located inside" _
-		& @LF & "the main program folder and contain some" _
-		& @LF & "required content to pass an authentication" _
-		& @LF & "check when connecting to GOG." & @LF _
-		& @LF & "At this current point in time, 'gogcli.exe' is" _
-		& @LF & "unable to obtain the necessary data your" _
-		& @LF & "cookie file needs, so you need to obtain" _
-		& @LF & "it manually, or with the help of a browser" _
-		& @LF & "addon (recommended)." & @LF _
-		& @LF & "To assist you, this program can create an" _
-		& @LF & "empty 'Cookie.txt' file, to which you copy" _
-		& @LF & "the required entry(s).", 11, 10, 210, 215)
+	$Edit_info = GUICtrlCreateEdit("", 11, 10, 228, 110, $ES_WANTRETURN + $WS_VSCROLL + $ES_AUTOVSCROLL + $ES_MULTILINE + $ES_READONLY)
 	;
-	$Button_cookie = GuiCtrlCreateButton("CREATE COOKIE", 10, 235, 140, 50)
+	$Button_cookie = GuiCtrlCreateButton("CREATE COOKIE", 10, 130, 160, 50)
 	GUICtrlSetFont($Button_cookie, 9, 600)
 	GUICtrlSetTip($Button_cookie, "Create the basic cookie file!")
 	;
-	$Button_close = GuiCtrlCreateButton("EXIT", 160, 235, 60, 50, $BS_ICON)
+	$Button_close = GuiCtrlCreateButton("EXIT", 180, 130, 60, 50, $BS_ICON)
 	GUICtrlSetTip($Button_close, "Exit / Close / Quit the window!")
 	;
-	$Checkbox_keep = GUICtrlCreateCheckbox("Save cover images locally when shown", 14, 295, 210, 20)
+	$Checkbox_keep = GUICtrlCreateCheckbox("Save cover images locally when shown", 24, 190, 210, 20)
 	GUICtrlSetTip($Checkbox_keep, "Save cover images locally when obtained!")
 	;
-	$Checkbox_dos = GUICtrlCreateCheckbox("Minimize DOS Console window process", 14, 315, 210, 20)
+	$Checkbox_dos = GUICtrlCreateCheckbox("Minimize DOS Console window process", 24, 210, 210, 20)
 	GUICtrlSetTip($Checkbox_dos, "Minimize a DOS Console window process when it starts!")
 	;
+	$Group_lang = GuiCtrlCreateGroup("Language(s)", 10, 235, 230, 52)
+	$Combo_lang = GUICtrlCreateCombo("", 20, 255, 125, 21)
+	;GUICtrlSetBkColor($Combo_lang, 0xFFFFB0)
+	GUICtrlSetTip($Combo_lang, "Main language to use!")
+	$Combo_two = GUICtrlCreateCombo("", 150, 255, 80, 21)
+	GUICtrlSetTip($Combo_two, "Second language to use!")
+	;
+	$Label_OS = GuiCtrlCreateLabel("OS", 15, 296, 30, 21, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_OS, $COLOR_BLACK)
+	GUICtrlSetColor($Label_OS, $COLOR_WHITE)
+	$Combo_OS = GUICtrlCreateCombo("", 45, 296, 120, 21)
+	GUICtrlSetTip($Combo_OS, "OSes to use!")
+	;
+	$Group_down = GuiCtrlCreateGroup("Download Options", 10, 323, 230, 75)
+	$Checkbox_latest = GUICtrlCreateCheckbox("Download the latest game file information", 21, 343, 210, 20)
+	GUICtrlSetTip($Checkbox_latest, "Get latest file information for the game!")
+	$Checkbox_select = GUICtrlCreateCheckbox("Present the 'Game Files Selector' window", 21, 365, 210, 20)
+	GUICtrlSetTip($Checkbox_select, "Present the game files selector window!")
+	;
 	; SETTINGS
+	$info = "Before using 'gogcli.exe' to download your games, update etc, you need a cookie file." _
+		& @CRLF & "The 'Cookie.txt' file must be located inside the main program folder and contain some required content to pass an authentication check when connecting to GOG." _
+		& @CRLF & "At this current point in time, 'gogcli.exe' is unable to obtain the necessary data your cookie file needs, so you need to obtain it manually, or with the help of a browser addon (recommended)." _
+		& @CRLF & "To assist you, this program can create an empty 'Cookie.txt' file, to which you copy the required entry(s)."
+	GUICtrlSetData($Edit_info, $info)
+	;
 	GUICtrlSetImage($Button_close, $user, $icoX, 1)
 	;
 	GUICtrlSetState($Checkbox_keep, $keep)
 	GUICtrlSetState($Checkbox_dos, $minimize)
+	;
+	$langs = "||arabic|chinese_simplified|czech|danish|dutch|english|finnish|french|german|hungarian|italian|japanese|korean|polish|portuguese|portuguese_brazilian|romanian|russian|spanish|swedish|turkish|unknown"
+	GUICtrlSetData($Combo_lang, $langs, $lang)
+	GUICtrlSetData($Combo_two, $langs, $second)
+	;
+	$opsys = "linux|mac|windows|mac linux|windows linux|windows mac|windows mac linux"
+	GUICtrlSetData($Combo_OS, $opsys, $OS)
+	;
+	GUICtrlSetState($Checkbox_latest, $getlatest)
+	GUICtrlSetState($Checkbox_select, $selector)
 	;
 	$window = $SetupGUI
 
@@ -815,6 +1039,11 @@ Func SetupGUI()
 		Select
 		Case $msg = $GUI_EVENT_CLOSE Or $msg = $Button_close
 			; Exit / Close / Quit the window
+			If $lang & $second = "" Then
+				MsgBox(262192, "Language Error", "You must specify one language at least!", 0, $GOGcliGUI)
+				ContinueLoop
+			EndIf
+			;
 			$winpos = WinGetPos($SetupGUI, "")
 			$side = $winpos[0]
 			If $side < 0 Then
@@ -862,6 +1091,22 @@ Func SetupGUI()
 				EndIf
 				_FileCreate($cookies)
 			EndIf
+		Case $msg = $Checkbox_select
+			; Present the game files selector window
+			If GUICtrlRead($Checkbox_select) = $GUI_CHECKED Then
+				$selector = 1
+			Else
+				$selector = 4
+			EndIf
+			IniWrite($inifle, "Download Options", "selector", $selector)
+		Case $msg = $Checkbox_latest
+			; Get latest file information for the game
+			If GUICtrlRead($Checkbox_latest) = $GUI_CHECKED Then
+				$getlatest = 1
+			Else
+				$getlatest = 4
+			EndIf
+			IniWrite($inifle, "Download Options", "get_latest", $getlatest)
 		Case $msg = $Checkbox_keep
 			; Save cover images locally when obtained & shown
 			If GUICtrlRead($Checkbox_keep) = $GUI_CHECKED Then
@@ -878,11 +1123,266 @@ Func SetupGUI()
 				$minimize = 4
 			EndIf
 			IniWrite($inifle, "DOS Console", "minimize", $minimize)
+		Case $msg = $Combo_two
+			; Second language to use
+			$second = GUICtrlRead($Combo_two)
+			IniWrite($inifle, "Manifest Inclusion", "language_2", $second)
+			If $second = $lang Then
+				$lang = ""
+				IniWrite($inifle, "Manifest Inclusion", "language", $lang)
+				GUICtrlSetData($Combo_lang, $langs, $lang)
+			EndIf
+		Case $msg = $Combo_OS
+			; OSes to use
+			$OS = GUICtrlRead($Combo_OS)
+			IniWrite($inifle, "Manifest Inclusion", "OS", $OS)
+		Case $msg = $Combo_lang
+			; Main language to use
+			$lang = GUICtrlRead($Combo_lang)
+			IniWrite($inifle, "Manifest Inclusion", "language", $lang)
+			If $lang = $second Then
+				$second = ""
+				IniWrite($inifle, "Manifest Inclusion", "language_2", $second)
+				GUICtrlSetData($Combo_two, $langs, $second)
+			EndIf
 		Case Else
 			;;;
 		EndSelect
 	WEnd
 EndFunc ;=> SetupGUI
+
+Func FileSelectorGUI()
+	Local $Button_download, $Button_quit, $Button_uncheck, $Combo_OSfle, $Group_files, $Group_OS, $Label_warn, $ListView_files
+	Local $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
+	Local $amount, $checked, $col1, $col2, $col3, $col4, $downloads, $ents, $fext, $final, $first, $l, $osfle, $p, $portion, $portions, $sum, $tmpman, $wide
+	;
+	$SelectorGUI = GuiCreate("Game Files Selector - " & $title, $width, $height, $left, $top, $style + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
+	GUISetBkColor(0xBBFFBB, $SelectorGUI)
+	; CONTROLS
+	$Group_files = GuiCtrlCreateGroup("Game Files To Download", 10, 10, $width - 20, 302)
+	GUICtrlSetResizing($Group_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
+	$ListView_files = GUICtrlCreateListView("||||", 20, 30, $width - 40, 270, $LVS_SHOWSELALWAYS + $LVS_SINGLESEL + $LVS_REPORT + $LVS_NOCOLUMNHEADER, _
+													$LVS_EX_FULLROWSELECT + $LVS_EX_GRIDLINES + $LVS_EX_CHECKBOXES) ;
+	GUICtrlSetBkColor($ListView_files, 0xB9FFFF)
+	GUICtrlSetResizing($ListView_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
+	;
+	$Label_warn = GuiCtrlCreateLabel("", 10, 318, $width - 20, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_warn, $COLOR_RED)
+	GUICtrlSetColor($Label_warn, $COLOR_YELLOW)
+	GUICtrlSetFont($Label_warn, 9, 600)
+	GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
+	;
+	$Group_select = GuiCtrlCreateGroup("Select Files", 10, $height - 65, 300, 55)
+	GUICtrlSetResizing($Group_select, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	$Radio_selall = GUICtrlCreateRadio("ALL", 20, $height - 44,  50, 20)
+	GUICtrlSetResizing($Radio_selall, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Radio_selall, "Select ALL file entries!")
+	$Radio_selgame = GUICtrlCreateRadio("GAME", 70, $height - 44,  60, 20)
+	GUICtrlSetResizing($Radio_selgame, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Radio_selgame, "Select GAME file entries!")
+	$Radio_selext = GUICtrlCreateRadio("EXTRA", 130, $height - 44,  65, 20)
+	GUICtrlSetResizing($Radio_selext, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Radio_selext, "Select EXTRA file entries!")
+	$Radio_selset = GUICtrlCreateRadio("setup", 195, $height - 44,  55, 20)
+	GUICtrlSetResizing($Radio_selset, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Radio_selset, "Select SETUP file entries!")
+	$Radio_selpat = GUICtrlCreateRadio("patch", 250, $height - 44,  50, 20)
+	GUICtrlSetResizing($Radio_selpat, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Radio_selpat, "Select PATCH file entries!")
+	GUICtrlSetBkColor($Radio_selall, 0xFFD5FF)
+	GUICtrlSetBkColor($Radio_selgame, 0xFFD5FF)
+	GUICtrlSetBkColor($Radio_selext, 0xFFD5FF)
+	GUICtrlSetBkColor($Radio_selset, 0xFFD5FF)
+	GUICtrlSetBkColor($Radio_selpat, 0xFFD5FF)
+	;
+	$Group_OS = GuiCtrlCreateGroup("OS", $width - 270, $height - 65, 90, 55)
+	GUICtrlSetResizing($Group_OS, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	$Combo_OSfle = GUICtrlCreateCombo("", $width - 260, $height - 45, 70, 21)
+	GUICtrlSetResizing($Combo_OSfle, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Combo_OSfle, "OS for files!")
+	;
+	$Button_download = GuiCtrlCreateButton("DOWNLOAD", $width - 170, $height - 60, 105, 28)
+	GUICtrlSetFont($Button_download, 8, 600)
+	GUICtrlSetResizing($Button_download, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Button_download, "Download selected files!")
+	;
+	$Button_uncheck = GuiCtrlCreateButton("De-Select ALL", $width - 170, $height - 28, 105, 18)
+	GUICtrlSetFont($Button_uncheck, 7, 600, 0, "Small Fonts")
+	GUICtrlSetResizing($Button_uncheck, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Button_uncheck, "Deselect ALL files!")
+	;
+	$Button_quit = GuiCtrlCreateButton("EXIT", $width - 55, $height - 60, 45, 50, $BS_ICON)
+	GUICtrlSetResizing($Button_quit, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Button_quit, "Exit / Close / Quit the window!")
+	;
+	; SETTINGS
+	GUICtrlSetImage($Button_quit, $user, $icoX, 1)
+	;
+	$col1 = 0
+	$col2 = ""
+	$col3 = ""
+	$col4 = ""
+	$lines = StringSplit($game, @LF, 1)
+	For $l = 1 To $lines[0]
+		$line = $lines[$l]
+		If StringInStr($line, '"Installers":') > 0 Then
+			$col2 = "GAME"
+		ElseIf StringInStr($line, '"Extras":') > 0 Then
+			$col2 = "EXTRA"
+		ElseIf StringInStr($line, '"Name":') > 0 Then
+			$line = StringSplit($line, '"Name": "', 1)
+			$line = $line[2]
+			$line = StringSplit($line, '",', 1)
+			$col3 = $line[1]
+		ElseIf StringInStr($line, '"VerifiedSize":') > 0 Then
+			$line = StringSplit($line, '"VerifiedSize":', 1)
+			$line = $line[2]
+			$line = StringSplit($line, ',', 1)
+			$line = $line[1]
+			$col4 = StringStripWS($line, 8)
+			If StringIsDigit($col4) Then
+				$size = $col4
+				GetTheSize()
+				$col4 = $size
+			Else
+				$col4 = "0 bytes"
+			EndIf
+		;ElseIf StringInStr($line, '') > 0 Then
+		EndIf
+		If $col3 <> "" And $col4 <> "" Then
+			$col1 = $col1 + 1
+			$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
+			;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
+			GUICtrlCreateListViewItem($entry, $ListView_files)
+			$col3 = ""
+			$col4 = ""
+		EndIf
+	Next
+	;
+	_GUICtrlListView_JustifyColumn($ListView_files, 0, 0)
+	_GUICtrlListView_JustifyColumn($ListView_files, 1, 2)
+	_GUICtrlListView_JustifyColumn($ListView_files, 2, 0)
+	_GUICtrlListView_JustifyColumn($ListView_files, 3, 2)
+	_GUICtrlListView_SetColumnWidth($ListView_files, 0, 45)
+	_GUICtrlListView_SetColumnWidth($ListView_files, 1, 55)
+	_GUICtrlListView_SetColumnWidth($ListView_files, 2, $LVSCW_AUTOSIZE)
+	_GUICtrlListView_SetColumnWidth($ListView_files, 3, 70)
+	;
+	$ents = _GUICtrlListView_GetItemCount($ListView_files)
+	GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")")
+	;
+	GUICtrlSetData($Label_warn, "Ensure other desired download settings have been set on the SETUP window etc.")
+	;
+	$osfle = IniRead($inifle, "Selector", "OS", "")
+	If $osfle = "" Then
+		$osfle = "Both"
+		IniWrite($inifle, "Selector", "OS", $osfle)
+	EndIf
+	GUICtrlSetData($Combo_OSfle, "Both|Windows|Linux", $osfle)
+
+	GuiSetState()
+	While 1
+		$msg = GuiGetMsg()
+		Select
+		Case $msg = $GUI_EVENT_CLOSE Or $msg = $Button_quit
+			; Exit / Close / Quit the window
+			GUIDelete($SelectorGUI)
+			ExitLoop
+		Case $msg = $GUI_EVENT_MINIMIZE
+			GUISetState(@SW_MINIMIZE, $GOGcliGUI)
+		Case $msg = $GUI_EVENT_RESIZED
+			$winpos = WinGetPos($SelectorGUI, "")
+			$wide = $winpos[2]
+			WinMove($SelectorGUI, "", $left, $top, $wide, $height + 38)
+		Case $msg = $Button_uncheck
+			; Deselect ALL files
+			_GUICtrlListView_SetItemChecked($ListView_files, -1, False)
+			If $ents > 0 Then
+				GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")")
+			Else
+				GUICtrlSetData($Group_files, "Game Files To Download")
+			EndIf
+		Case $msg = $Button_download
+			; Download selected files
+			GUICtrlSetState($Button_download, $GUI_DISABLE)
+			GUICtrlSetState($ListView_files, $GUI_DISABLE)
+			GUICtrlSetState($Radio_selall, $GUI_DISABLE)
+			GUICtrlSetState($Radio_selgame, $GUI_DISABLE)
+			GUICtrlSetState($Radio_selext, $GUI_DISABLE)
+			GUICtrlSetState($Radio_selset, $GUI_DISABLE)
+			GUICtrlSetState($Radio_selpat, $GUI_DISABLE)
+			GUICtrlSetState($Combo_OSfle, $GUI_DISABLE)
+			GUICtrlSetState($Button_uncheck, $GUI_DISABLE)
+			GUICtrlSetState($Button_quit, $GUI_DISABLE)
+			$downloads = ""
+			For $a = 0 To $ents - 1
+				If _GUICtrlListView_GetItemChecked($ListView_files, $a) = True Then
+					$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 1)
+					$entry = $entry & ":" & _GUICtrlListView_GetItemText($ListView_files, $a, 2)
+					If $downloads = "" Then
+						$downloads = $entry
+					Else
+						$downloads = $downloads & "|" & $entry
+					EndIf
+				EndIf
+			Next
+			If $downloads <> "" Then
+			EndIf
+		Case $msg = $Combo_OSfle
+			; OS for files
+			$osfle = GUICtrlRead($Combo_OSfle)
+			IniWrite($inifle, "Selector", "OS", $osfle)
+		Case $msg = $ListView_files Or $msg > $Button_quit
+			; Game Files To Download
+			$amount = 0
+			$checked = 0
+			For $a = 0 To $ents - 1
+				If _GUICtrlListView_GetItemChecked($ListView_files, $a) = True Then
+					$checked = $checked + 1
+					$sum = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+					$val = StringSplit($sum, " ", 1)
+					$sum = $val[1]
+					$val = $val[2]
+					If $val = "bytes" Then
+						$amount = $amount + $sum
+					ElseIf $val = "Kb" Then
+						$amount = $amount + ($sum * 1024)
+					ElseIf $val = "Mb" Then
+						$amount = $amount + ($sum * 1048576)
+					ElseIf $val = "Gb" Then
+						$amount = $amount + ($sum * 1073741824)
+					EndIf
+				EndIf
+			Next
+			If $checked = 0 Then
+				If $ents > 0 Then
+					GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")")
+				Else
+					GUICtrlSetData($Group_files, "Game Files To Download")
+				EndIf
+			Else
+				If $amount < 1024 Then
+					$amount = $amount & " bytes"
+				ElseIf $amount < 1048576 Then
+					$amount = $amount / 1024
+					$amount =  Round($amount) & " Kb"
+				ElseIf $amount < 1073741824 Then
+					$amount = $amount / 1048576
+					$amount =  Round($amount, 1) & " Mb"
+				ElseIf $amount < 1099511627776 Then
+					$amount = $amount / 1073741824
+					$amount = Round($amount, 2) & " Gb"
+				Else
+					$amount = $amount / 1099511627776
+					$amount = Round($amount, 3) & " Tb"
+				EndIf
+				GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")  Selected  (" & $checked & ")  (" & $amount & ")")
+			EndIf
+		Case Else
+			;;;
+		EndSelect
+	WEnd
+EndFunc ;=> FileSelectorGUI
 
 
 Func ClearFieldValues()
@@ -955,7 +1455,27 @@ Func FixTitle($text)
 	Return $text
 EndFunc ;=> FixTitle
 
+Func GetTheSize()
+	If $size < 1024 Then
+		$size = $size & " bytes"
+	ElseIf $size < 1048576 Then
+		$size = $size / 1024
+		$size =  Round($size) & " Kb"
+	ElseIf $size < 1073741824 Then
+		$size = $size / 1048576
+		$size =  Round($size, 1) & " Mb"
+	ElseIf $size < 1099511627776 Then
+		$size = $size / 1073741824
+		$size = Round($size, 2) & " Gb"
+	Else
+		$size = $size / 1099511627776
+		$size = Round($size, 3) & " Tb"
+	EndIf
+	;Return $size
+EndFunc ;=> GetTheSize
+
 Func ParseTheGamelist()
+	Local $p
 	If FileExists($gamelist) Then
 		; Parse for titles
 		;SplashTextOn("", "Please Wait!", 140, 120, Default, Default, 33)
