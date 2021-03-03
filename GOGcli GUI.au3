@@ -41,9 +41,9 @@ Global $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_gam
 Global $a, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $category, $cookie, $cookies, $covers, $covimg, $dest, $details
 Global $DLC, $entries, $entry, $flag, $fold, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli
 Global $GOGcliGUI, $head, $height, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json
-Global $keep, $lang, $left, $line, $lines, $link, $logfle, $manifest, $minimize, $n, $name, $num, $OS, $OSes, $params, $part, $parts
-Global $pid, $ping, $pth, $read, $res, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $splash, $split, $splits, $state
-Global $style, $tail, $text, $title, $titlist, $top, $type, $types, $updates, $URL, $user, $version, $which, $width, $winpos
+Global $keep, $lang, $left, $line, $lines, $link, $logfle, $manifest, $minimize, $n, $name, $num, $OP, $OS, $OSes, $params, $part
+Global $parts, $pid, $ping, $pth, $read, $res, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $splash, $split, $splits
+Global $state, $style, $tail, $text, $title, $titlist, $top, $type, $types, $updates, $URL, $user, $version, $which, $width, $winpos
 
 $bigpic = @ScriptDir & "\Big.jpg"
 $blackjpg = @ScriptDir & "\Black.jpg"
@@ -475,7 +475,10 @@ Func MainGUI()
 												$flag = @SW_SHOW
 											EndIf
 											FileChangeDir(@ScriptDir)
-											$params = "-c Cookie.txt manifest generate -l " & $params & ' -o ' & $OS & ' -i "' & $title & '"'
+											$params = StringStripWS($lang & " " & $second, 3)
+											$params = StringReplace($params, " ", " -l=")
+											$OP = StringReplace($OS, " ", " -o=")
+											$params = "-c Cookie.txt manifest generate -l=" & $params & ' -o=' & $OP & ' -i="' & $title & '"'
 											;$params = "-c Cookie.txt manifest generate -l english -o windows linux mac -i " & $title
 											$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params, @ScriptDir, $flag)
 											Sleep(1000)
@@ -778,7 +781,9 @@ Func MainGUI()
 											EndIf
 											FileChangeDir(@ScriptDir)
 											$params = StringStripWS($lang & " " & $second, 3)
-											$params = "-c Cookie.txt manifest generate -l " & $params & " -o " & $OS & ' -i "' & $title & '"'
+											$params = StringReplace($params, " ", " -l=")
+											$OP = StringReplace($OS, " ", " -o=")
+											$params = "-c Cookie.txt manifest generate -l=" & $params & " -o=" & $OP & ' -i="' & $title & '"'
 											;$params = "-c Cookie.txt manifest generate -l english -o windows linux mac -i " & $title
 											$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params, @ScriptDir, $flag)
 											Sleep(1000)
