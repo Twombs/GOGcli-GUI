@@ -1,0 +1,251 @@
+"BASIC HELP COMMANDS" 
+A Client to Interact with the GOG.com API
+
+Usage:
+  gogcli [command]
+
+Available Commands:
+  gog-api     Command to interact with the gog api. Can be used to troubleshoot the sdk or build other tools on top of this client.
+  help        Help about any command
+  manifest    Commands to generate, manipulate and get info from a games manifest
+  storage     Commands to upload to, download from, copy and verify storage
+  update      Commands to manage update files based of what is new or got updated in GOG.com
+
+Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool
+  -h, --help                help for gogcli
+
+Use "gogcli [command] --help" for more information about a command.
+----------------------- 
+. 
+"API HELP COMMANDS" 
+Command to interact with the gog api. Can be used to troubleshoot the sdk or build other tools on top of this client.
+
+Usage:
+  gogcli gog-api [command]
+
+Available Commands:
+  download-url-path Download a single file with the given path from GOG. Valid paths can be obtained from the manifest.
+  game-details      Retrieve details about a given game including link to download files
+  owned-games       Command to retrieve a list of games you own
+  url-path-filename Given a download path, retrieve the filename of the file that would be downloaded. Valid paths can be obtained from the manifest.
+  url-path-info     Given a download path, retrieve the filename, size and checksum of the file that would be downloaded. Valid paths can be obtained from the manifest.
+  user-info         Command to retrieve your GOG user summary
+
+Flags:
+  -h, --help   help for gog-api
+
+Global Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool
+
+Use "gogcli gog-api [command] --help" for more information about a command.
+----------------------- 
+. 
+"DOWNLOAD URL HELP COMMANDS" 
+Download a single file with the given path from GOG. Valid paths can be obtained from the manifest.
+
+Usage:
+  gogcli gog-api download-url-path [flags]
+
+Flags:
+  -h, --help          help for download-url-path
+  -p, --path string   Url path to download
+
+Global Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool
+----------------------- 
+. 
+"GAME DETAILS HELP COMMANDS" 
+Retrieve details about a given game including link to download files
+
+Usage:
+  gogcli gog-api game-details [flags]
+
+Flags:
+  -f, --file string   File to output the game details information in if in json format (default "game-details.json")
+  -h, --help          help for game-details
+  -i, --id int        Id of the game to get details from
+  -j, --json          If set to true, the output will be in json format either on the terminal or in a file. Otherwise, it will be in human readable format on the terminal.
+  -t, --terminal      If set to true and json format is used, the game details information will be output on the terminal instead of in a file (default true)
+
+Global Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool
+----------------------- 
+. 
+"OWNED GAMES HELP COMMANDS" 
+Command to retrieve a list of games you own
+
+Usage:
+  gogcli gog-api owned-games [flags]
+
+Flags:
+  -f, --file string     File to output the owned games information in if in json format (default "owned-games.json")
+  -h, --help            help for owned-games
+  -j, --json            If set to true, the output will be in json format either on the terminal or in a file. Otherwise, it will be in human readable format on the terminal.
+  -p, --page int        Page to fetch if the result spans multiple pages (default 1)
+  -s, --search string   Return only games whose title contain the term
+  -t, --terminal        If set to true and json format is used, the owned games information will be output on the terminal instead of in a file (default true)
+
+Global Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool
+----------------------- 
+. 
+"GAME FILENAME HELP COMMANDS" 
+Given a download path, retrieve the filename of the file that would be downloaded. Valid paths can be obtained from the manifest.
+
+Usage:
+  gogcli gog-api url-path-filename [flags]
+
+Flags:
+  -h, --help          help for url-path-filename
+  -p, --path string   Url path to download
+
+Global Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool
+----------------------- 
+. 
+"URL PATH INFO HELP COMMANDS" 
+Given a download path, retrieve the filename, size and checksum of the file that would be downloaded. Valid paths can be obtained from the manifest.
+
+Usage:
+  gogcli gog-api url-path-info [flags]
+
+Flags:
+  -f, --file string   File to output the url path information in if in json format (default "url-path-info.json")
+  -h, --help          help for url-path-info
+  -j, --json          If set to true, the output will be in json format either on the terminal or in a file. Otherwise, it will be in human readable format on the terminal.
+  -p, --path string   Url path to download
+  -t, --terminal      If set to true and json format is used, the url path information will be output on the terminal instead of in a file (default true)
+
+Global Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool
+----------------------- 
+. 
+"USER INFO HELP COMMANDS" 
+Command to retrieve your GOG user summary
+
+Usage:
+  gogcli gog-api user-info [flags]
+
+Flags:
+  -f, --file string   File to output the user information in if in json format (default "user.json")
+  -h, --help          help for user-info
+  -j, --json          If set to true, the output will be in json format either on the terminal or in a file. Otherwise, it will be in human readable format on the terminal.
+  -t, --terminal      If set to true and json format is used, the user information will be output on the terminal instead of in a file (default true)
+
+Global Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool
+----------------------- 
+. 
+"STORAGE HELP COMMANDS" 
+Commands to upload to, download from, copy and verify storage
+
+Usage:
+  gogcli storage [command]
+
+Available Commands:
+  apply       Change the files in a given storage to match the content of a manifest, uploading and deleting files as necessary
+  copy        Copy the game files from one storage to another
+  download    Commands to download things from the storage
+  plan        Generate a plan of the actions that would be executed if a given manifest was applied to the storage
+  resume      Resume a manifest apply operation that didn't complete on a storage
+  validate    Validate that all the game files in the storage match the size and checksum values in the manifest
+
+Flags:
+  -h, --help   help for storage
+
+Global Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool
+
+Use "gogcli storage [command] --help" for more information about a command.
+----------------------- 
+. 
+"STORAGE COPY HELP COMMANDS" 
+Copy the game files from one storage to another
+
+Usage:
+  gogcli storage copy [flags]
+
+Flags:
+  -r, --concurrency int              Number of downloads that should be attempted at the same time (default 10)
+  -n, --destination-path string      Path to the destination of your games (directory if it is of type fs, json configuration file if it is of type s3) (default "games-copy")
+  -o, --destination-storage string   Kind of storage your destination is. Can be 'fs' (for file system) or 's3' (for s3 store) (default "fs")
+  -h, --help                         help for copy
+  -x, --maximum int                  The maximum number of games to copy into storage. (default -1)
+  -s, --source-path string           Path to the source of your games (directory if it is of type fs, json configuration file if it is of type s3) (default "games")
+  -t, --source-storage string        Kind of storage your source is. Can be 'fs' (for file system) or 's3' (for s3 store) (default "fs")
+
+Global Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool
+----------------------- 
+. 
+"STORAGE VALIDATION HELP COMMANDS" 
+Validate that all the game files in the storage match the size and checksum values in the manifest
+
+Usage:
+  gogcli storage validate [flags]
+
+Flags:
+  -r, --concurrency int   Number of downloads that should be attempted at the same time (default 10)
+  -h, --help              help for validate
+  -p, --path string       Path to your games' storage (directory if it is of type fs, json configuration file if it is of type s3) (default "games")
+  -k, --storage string    The type of storage you are using. Can be 'fs' (for file system) or 's3' (for s3 store) (default "fs")
+
+Global Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool
+----------------------- 
+. 
+"MANIFEST HELP COMMANDS" 
+Commands to generate, manipulate and get info from a games manifest
+
+Usage:
+  gogcli manifest [command]
+
+Available Commands:
+  generate    Generate a games manifest from the GOG Api, which can then be applied to a storage
+  summary     Command to retrieve the summary of a manifest
+
+Flags:
+  -h, --help   help for manifest
+
+Global Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool
+
+Use "gogcli manifest [command] --help" for more information about a command.
+. 
+Generate a games manifest from the GOG Api, which can then be applied to a storage
+
+Usage:
+  gogcli manifest generate [flags]
+
+Flags:
+  -r, --concurrency int         Maximum number of concurrent requests that will be made on the GOG api (default 10)
+  -e, --extras                  Whether to incluse extras (default true)
+  -x, --extratype stringArray   If you want to include only extras whole type contain one of the given strings. Look at full generated manifest without this flag to figure out valid types
+  -f, --file string             File to output the manifest in (default "manifest.json")
+  -h, --help                    help for generate
+  -n, --installers              Whether to incluse installer downloads (default true)
+  -l, --lang stringArray        If you want to include only specific languages. Valid values: english, french, spanish, dutch, portuguese_brazilian, russian, korean, chinese_simplified, japanese, polish, italian, german, czech, hungarian, portuguese, danish, finnish, swedish, turkish, arabic, romanian, unknown
+  -o, --os stringArray          If you want to include only specific oses. Valid values: windows, mac, linux
+  -s, --pause int               Number of milliseconds to wait between batches of api calls (default 200)
+  -a, --tag stringArray         If you want to include only games having specific tags
+  -t, --terminal                If set to true, the manifest will be output on the terminal instead of in a file
+  -i, --title stringArray       If you want to include only games with title that contain at least one of the given strings
+  -g, --tolerate-dangles        If set to true, undownloadable dangling files (ie, 404 code on download url) will be tolerated and will not prevent manifest generation (default true)
+  -w, --warning-file string     Warnings from files whose download url return 404 will be listed in this file. Will only be generated if tolerate-dangles is set to true (default "manifest-404-warnings.json")
+
+Global Flags:
+  -c, --cookiefile string   Path were to read the user provided cookie file (default "cookie")
+  -d, --debug               Provide additional more detailed ouputs to help troubleshoot the tool

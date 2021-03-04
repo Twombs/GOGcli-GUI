@@ -35,6 +35,14 @@ echo "USER INFO HELP COMMANDS"
 gogcli.exe gog-api user-info -h
 echo -----------------------
 echo .
+echo "STORAGE HELP COMMANDS"
+gogcli.exe storage -h
+echo -----------------------
+echo .
+echo "STORAGE COPY HELP COMMANDS"
+gogcli.exe storage copy -h
+echo -----------------------
+echo .
 echo "STORAGE VALIDATION HELP COMMANDS"
 gogcli.exe storage validate -h
 echo -----------------------
@@ -115,6 +123,14 @@ echo ----------------------- >> Help.wri
 echo . >> Help.wri
 echo "USER INFO HELP COMMANDS" >> Help.wri
 gogcli.exe gog-api user-info -h >> Help.wri
+echo ----------------------- >> Help.wri
+echo . >> Help.wri
+echo "STORAGE HELP COMMANDS" >> Help.wri
+gogcli.exe storage -h >> Help.wri
+echo ----------------------- >> Help.wri
+echo . >> Help.wri
+echo "STORAGE COPY HELP COMMANDS" >> Help.wri
+gogcli.exe storage copy -h >> Help.wri
 echo ----------------------- >> Help.wri
 echo . >> Help.wri
 echo "STORAGE VALIDATION HELP COMMANDS" >> Help.wri

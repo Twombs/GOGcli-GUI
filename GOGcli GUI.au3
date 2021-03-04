@@ -12,8 +12,8 @@
 
 ; FUNCTIONS
 ; MainGUI(), SetupGUI(), FileSelectorGUI()
-; ClearFieldValues(), FillTheGamesList(), FixTitle($text), GetTheSize(), ParseTheGamelist(), SetStateOfControls($state, $which)
-; SetTheColumnWidths(), ShowCorrectImage()
+; ClearFieldValues(), FillTheGamesList(), FixTitle($text), GetFileDownloadDetails($listview), GetTheSize(), ParseTheGamelist()
+; SetStateOfControls($state, $which), SetTheColumnWidths(), ShowCorrectImage()
 
 #include <Constants.au3>
 #include <GUIConstantsEx.au3>
@@ -33,23 +33,26 @@
 
 _Singleton("gog-cli-gui-timboli")
 
-Global $Button_dest, $Button_down, $Button_exit, $Button_fold, $Button_game, $Button_get, $Button_info, $Button_log, $Button_man
-Global $Button_pic, $Button_setup, $Button_web, $Checkbox_alpha, $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games
-Global $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Label_bed, $Label_cat, $Label_dlc
-Global $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
+Global $Button_dest, $Button_down, $Button_exit, $Button_find, $Button_fold, $Button_game, $Button_get, $Button_info, $Button_last
+Global $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_web, $Checkbox_alpha, $Checkbox_show, $Combo_dest, $Group_cover
+Global $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Label_bed
+Global $Label_cat, $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $a, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $category, $cookie, $cookies, $covers, $covimg, $dest, $details
-Global $DLC, $entries, $entry, $flag, $fold, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli
-Global $GOGcliGUI, $head, $height, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json
-Global $keep, $lang, $left, $line, $lines, $link, $logfle, $manifest, $minimize, $n, $name, $num, $OP, $OS, $OSes, $params, $part
-Global $parts, $pid, $ping, $pth, $read, $res, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $splash, $split, $splits
-Global $state, $style, $tail, $text, $title, $titlist, $top, $type, $types, $updates, $URL, $user, $version, $which, $width, $winpos
+Global $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $category, $cookie, $cookies, $covers, $covimg, $dest
+Global $details, $DLC, $downfiles, $entries, $entry, $flag, $fold, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini
+Global $getlatest, $gogcli, $GOGcliGUI, $head, $height, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle
+Global $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $listview, $logfle, $manifest, $minimize, $n, $name, $num, $OP, $OS
+Global $OSes, $params, $part, $parts, $pid, $ping, $pth, $read, $res, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug
+Global $splash, $split, $splits, $state, $style, $tail, $text, $title, $titlist, $top, $type, $types, $updates, $URL, $user, $validate
+Global $verify, $version, $web, $which, $width, $winpos
 
+$addlist = @ScriptDir & "\Added.txt"
 $bigpic = @ScriptDir & "\Big.jpg"
 $blackjpg = @ScriptDir & "\Black.jpg"
 $cookies = @ScriptDir & "\Cookie.txt"
 $covers = @ScriptDir & "\Covers"
 $details = @ScriptDir & "\Detail.txt"
+$downfiles = @ScriptDir & "\Downfiles.ini"
 $gamelist = @ScriptDir & "\Games.txt"
 $gamesini = @ScriptDir & "\Games.ini"
 $gogcli = @ScriptDir & "\gogcli.exe"
@@ -62,6 +65,7 @@ $splash = @ScriptDir & "\Splash.jpg"
 $titlist = @ScriptDir & "\Titles.txt"
 $version = "v1.0"
 
+If Not FileExists($addlist) Then _FileCreate($addlist)
 If Not FileExists($covers) Then DirCreate($covers)
 
 MainGUI()
@@ -69,7 +73,8 @@ MainGUI()
 Exit
 
 Func MainGUI()
-	Local $display, $dll, $mpos, $xpos, $ypos
+	Local $Menu_button, $Item_verify
+	Local $cnt, $display, $dll, $find, $ind, $last, $latest, $mpos, $xpos, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -111,15 +116,20 @@ Func MainGUI()
 	_GUICtrlListView_AddColumn($Listview_games, "", 0)
 	_GUICtrlListView_AddColumn($Listview_games, "", 320)
 	;SetTheColumnWidths()
-	$Input_title = GUICtrlCreateInput("", 20, 276, 350, 20)
+	$Input_title = GUICtrlCreateInput("", 20, 276, 325, 20)
 	GUICtrlSetBkColor($Input_title, 0xFFFFB0)
 	GUICtrlSetTip($Input_title, "Game Title!")
+	$Button_find = GuiCtrlCreateButton("?", 348, 275, 22, 22, $BS_ICON)
+	GUICtrlSetTip($Button_find, "Find the specified game title text in the list!")
 	$Label_slug = GuiCtrlCreateLabel("Slug", 20, 301, 38, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN + $SS_NOTIFY)
 	GUICtrlSetBkColor($Label_slug, $COLOR_BLUE)
 	GUICtrlSetColor($Label_slug, $COLOR_WHITE)
-	$Input_slug = GUICtrlCreateInput("", 58, 301, 312, 20) ;, $ES_READONLY
+	$Input_slug = GUICtrlCreateInput("", 58, 301, 270, 20) ;, $ES_READONLY
 	GUICtrlSetBkColor($Input_slug, 0xBBFFBB)
 	GUICtrlSetTip($Input_slug, "Game Slug!")
+	$Button_last = GuiCtrlCreateButton("Last", 330, 300, 40, 22)
+	GUICtrlSetFont($Button_last, 7, 600, 0, "Small Fonts")
+	GUICtrlSetTip($Button_last, "Find the latest added game(s)!")
 	;
 	;$Group_dest = GuiCtrlCreateGroup("Download Destination - Games Folder && Naming Types", 10, 341, 390, 52)
 	$Group_dest = GuiCtrlCreateGroup("Download Destination - Games Folder && Sub-Folder Options", 10, 341, 390, 52)
@@ -225,10 +235,14 @@ Func MainGUI()
 	;
 	$Button_exit = GuiCtrlCreateButton("EXIT", 530, 345, 50, 50, $BS_ICON)
 	GUICtrlSetTip($Button_exit, "Exit / Close / Quit the program!")
-	;
-	$lowid = $Button_exit
-	;$lowid = $Button_exit - 11
+	;$lowid = $Button_exit
 	;MsgBox(262208, "$lowid", $lowid & @LF & $Button_exit & @LF & $Button_info & @LF & $Button_log & @LF & $Input_dest)
+	;
+	; CONTEXT MENU
+	$Menu_button = GUICtrlCreateContextMenu($Button_down)
+	$Item_verify = GUICtrlCreateMenuItem("Validate", $Menu_button, -1, 0)
+	;
+	$lowid = $Item_verify
 	;
 	; OS SETTINGS
 	$user = @SystemDir & "\user32.dll"
@@ -240,7 +254,7 @@ Func MainGUI()
 	$icoT = -71
 	$icoW = -14
 	$icoX = -4
-	;GUICtrlSetImage($Button_find, $shell, $icoS, 0)
+	GUICtrlSetImage($Button_find, $shell, $icoS, 0)
 	GUICtrlSetImage($Button_web, $shell, $icoW, 0)
 	GUICtrlSetImage($Button_dest, $shell, $icoF, 0)
 	GUICtrlSetImage($Button_fold, $shell, $icoD, 0)
@@ -311,6 +325,11 @@ Func MainGUI()
 		IniWrite($inifle, "Manifest Inclusion", "OS", $OS)
 	EndIf
 	;
+	$validate = IniRead($inifle, "Download Options", "validate", "")
+	If $validate = "" Then
+		$validate = 1
+		IniWrite($inifle, "Download Options", "validate", $validate)
+	EndIf
 	$getlatest = IniRead($inifle, "Download Options", "get_latest", "")
 	If $getlatest = "" Then
 		$getlatest = 4
@@ -322,12 +341,16 @@ Func MainGUI()
 		IniWrite($inifle, "Download Options", "selector", $selector)
 	EndIf
 	;
+	$find = ""
+	$last = ""
+	$verify = 4
+	;
 	FillTheGamesList()
 	$ID = ""
 	$title = ""
 	$slug = ""
 	$image = ""
-	$URL = ""
+	$web = ""
 	$category = ""
 	$OSes = ""
 	$DLC = ""
@@ -361,10 +384,10 @@ Func MainGUI()
 			ExitLoop
 		Case $msg = $Button_web
 			; Visit the online page of selected game
-			If $URL = "" Then
+			If $web = "" Then
 				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
 			Else
-				$link = "https://www.gog.com" & $URL
+				$link = "https://www.gog.com" & $web
 				ShellExecute($link)
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
@@ -544,9 +567,50 @@ Func MainGUI()
 			; Log Record
 			If FileExists($logfle) Then ShellExecute($logfle)
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Button_last
+			; Find the latest added game(s)
+			If _IsPressed("11") Then $last = ""
+			If FileExists($addlist) Then
+				$res = _FileReadToArray($addlist, $latest)
+				If $res = 1 Then
+					If $last = "" Then
+						$last = $latest[0]
+						$title = $latest[$last]
+					Else
+						If $last > 1 Then
+							$last = $last - 1
+						Else
+							$last = $latest[0]
+						EndIf
+						$title = $latest[$last]
+					EndIf
+					$ind = -1
+					While 1
+						$ind = _GUICtrlListView_FindInText($Listview_games, $title, $ind, False, False)
+						If $ind = -1 Then ExitLoop
+						If _GUICtrlListView_GetItemText($Listview_games, $ind, 1) = $title Then ExitLoop
+					WEnd
+					If $ind > -1 Then
+						GUICtrlSetState($Listview_games, $GUI_FOCUS)
+						_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+						ContinueLoop
+					EndIf
+				Else
+					MsgBox(262192, "Read Error", "Added.txt file not read!", 0, $GOGcliGUI)
+				EndIf
+			Else
+				MsgBox(262192, "File Error", "Added.txt file not found!", 0, $GOGcliGUI)
+			EndIf
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_info
 			; Program Information
 			$ans = MsgBox(262209 + 256, "Program Information", _
+				"To get started with the program, click the SETUP button." & @LF & @LF & _
+				"The DOWNLOAD button has a right-click VALIDATE option." & @LF & @LF & _
+				"The LAST button cycles through latest game list additions." & @LF & _
+				"The FIND button is also a next button for the text specified." & @LF & _
+				"Both the FIND and LAST buttons remember their value, so" & @LF & _
+				"to start afresh, hold down CTRL when clicking them." & @LF & @LF & _
 				"Click OK to see more information.", 0, $GOGcliGUI)
 			If $ans = 1 Then
 				MsgBox(262208, "Program Information (continued)", _
@@ -711,9 +775,35 @@ Func MainGUI()
 				MsgBox(262192, "Path Error", "Game folder does not exist!", 0, $GOGcliGUI)
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Button_find
+			; Find the specified game title on list
+			If _IsPressed("11") Then $find = ""
+			$text = GUICtrlRead($Input_title)
+			If $text <> "" Then
+				;$cnt = _GUICtrlListView_GetItemCount($Listview_games)
+				If $find = "" Then
+					$find = $text
+					If StringIsDigit($find) Then
+						MsgBox(262192, "Find Advice", "Because the list has a hidden ID column, it is not recommended" _
+							& @LF & "to search with just a number, unless that number has a leading" _
+							& @LF & "or trailing space!", 0, $GOGcliGUI)
+					EndIf
+				EndIf
+				If $ind = "" Then
+					$ind = -1
+				EndIf
+				$ind = _GUICtrlListView_FindInText($Listview_games, $find, $ind, True, False)
+				If $ind > -1 Then
+					GUICtrlSetState($Listview_games, $GUI_FOCUS)
+					_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+					ContinueLoop
+				EndIf
+			Else
+				MsgBox(262192, "Find Error", "No text specified!", 0, $GOGcliGUI)
+			EndIf
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_down
 			; Download the selected game
-			MsgBox(262192, "Download Error", "This feature is not yet supported!", 1.5, $GOGcliGUI)
 			If $title = "" Then
 				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
 			Else
@@ -844,11 +934,20 @@ Func MainGUI()
 					EndIf
 				EndIf
 				If $game <> "" Then
-					If $selector = 1 Then
-						GUICtrlSetData($Label_mid, "Game Files Selector")
-						FileSelectorGUI()
+					If $verify = 4 Then
+						If $selector = 1 Then
+							GUICtrlSetData($Label_mid, "Game Files Selector")
+							FileSelectorGUI()
+						Else
+							GUICtrlSetData($Label_mid, "Game Downloading")
+							GetFileDownloadDetails()
+							If $validate = 1 Then
+								GUICtrlSetData($Label_mid, "Verifying Game Files")
+							EndIf
+						EndIf
 					Else
-						GUICtrlSetData($Label_mid, "Game Downloading")
+						GUICtrlSetData($Label_mid, "Verifying Game Files")
+						GetFileDownloadDetails()
 					EndIf
 				Else
 					MsgBox(262192, "Download Error", "Game data could not be found!", 0, $GOGcliGUI)
@@ -857,7 +956,7 @@ Func MainGUI()
 				GUICtrlSetData($Label_mid, "")
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
-			_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+			If $ind > -1 Then _GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
 		Case $msg = $Button_dest
 			; Browse to set the destination folder
 			If $dest = "" Then
@@ -888,6 +987,16 @@ Func MainGUI()
 			$type = GUICtrlRead($Combo_dest)
 			IniWrite($inifle, "Game Folder Names", "type", $type)
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Item_verify
+			; Validate for DOWNLOAD button
+			If $verify = 4 Then
+				$verify = 1
+				GUICtrlSetData($Button_down, "VALIDATE")
+			Else
+				$verify = 4
+				GUICtrlSetData($Button_down, "DOWNLOAD")
+			EndIf
+			GUICtrlSetState($Item_verify, $verify)
 		Case $msg = $Listview_games Or $msg > $lowid
 			; List of games
 			$ind = _GUICtrlListView_GetSelectedIndices($Listview_games, False)
@@ -903,7 +1012,7 @@ Func MainGUI()
 			If $display = 1 Then
 				ShowCorrectImage()
 			EndIf
-			$URL = IniRead($gamesini, $ID, "URL", "")
+			$web = IniRead($gamesini, $ID, "URL", "")
 			$category = IniRead($gamesini, $ID, "category", "")
 			GUICtrlSetData($Input_cat, $category)
 			$OSes = IniRead($gamesini, $ID, "OSes", "")
@@ -966,8 +1075,8 @@ Func MainGUI()
 EndFunc ;=> MainGUI
 
 Func SetupGUI()
-	Local $Button_close, $Button_cookie, $Checkbox_dos, $Checkbox_keep, $Checkbox_latest, $Checkbox_select, $Combo_lang, $Combo_OS
-	Local $Combo_two, $Edit_info, $Group_down, $Group_lang, $Label_OS
+	Local $Button_close, $Button_cookie, $Checkbox_dos, $Checkbox_keep, $Checkbox_latest, $Checkbox_select, $Checkbox_valid, $Combo_lang
+	Local $Combo_OS, $Combo_two, $Edit_info, $Group_down, $Group_lang, $Label_OS
 	Local $above, $high, $info, $langs, $opsys, $side, $wide
 	;
 	$wide = 250
@@ -1001,11 +1110,15 @@ Func SetupGUI()
 	$Combo_two = GUICtrlCreateCombo("", 150, 255, 80, 21)
 	GUICtrlSetTip($Combo_two, "Second language to use!")
 	;
-	$Label_OS = GuiCtrlCreateLabel("OS", 15, 296, 30, 21, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	$Label_OS = GuiCtrlCreateLabel("OS", 15, 296, 28, 21, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetBkColor($Label_OS, $COLOR_BLACK)
 	GUICtrlSetColor($Label_OS, $COLOR_WHITE)
-	$Combo_OS = GUICtrlCreateCombo("", 45, 296, 120, 21)
+	$Combo_OS = GUICtrlCreateCombo("", 43, 296, 113, 21)
 	GUICtrlSetTip($Combo_OS, "OSes to use!")
+	;
+	GuiCtrlCreateGroup("", 166, 290, 74, 41)
+	$Checkbox_valid = GUICtrlCreateCheckbox("Validate", 175, 303, 60, 20)
+	GUICtrlSetTip($Checkbox_valid, "Validate after downloading!")
 	;
 	$Group_down = GuiCtrlCreateGroup("Download Options", 10, 323, 230, 75)
 	$Checkbox_latest = GUICtrlCreateCheckbox("Download the latest game file information", 21, 343, 210, 20)
@@ -1032,6 +1145,7 @@ Func SetupGUI()
 	$opsys = "linux|mac|windows|mac linux|windows linux|windows mac|windows mac linux"
 	GUICtrlSetData($Combo_OS, $opsys, $OS)
 	;
+	GUICtrlSetState($Checkbox_valid, $validate)
 	GUICtrlSetState($Checkbox_latest, $getlatest)
 	GUICtrlSetState($Checkbox_select, $selector)
 	;
@@ -1096,6 +1210,14 @@ Func SetupGUI()
 				EndIf
 				_FileCreate($cookies)
 			EndIf
+		Case $msg = $Checkbox_valid
+			; Validate after downloading
+			If GUICtrlRead($Checkbox_valid) = $GUI_CHECKED Then
+				$validate = 1
+			Else
+				$validate = 4
+			EndIf
+			IniWrite($inifle, "Download Options", "validate", $validate)
 		Case $msg = $Checkbox_select
 			; Present the game files selector window
 			If GUICtrlRead($Checkbox_select) = $GUI_CHECKED Then
@@ -1159,19 +1281,19 @@ EndFunc ;=> SetupGUI
 Func FileSelectorGUI()
 	Local $Button_download, $Button_quit, $Button_uncheck, $Combo_OSfle, $Group_files, $Group_OS, $Label_warn, $ListView_files
 	Local $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
-	Local $amount, $checked, $col1, $col2, $col3, $col4, $downloads, $ents, $fext, $final, $first, $l, $osfle, $p, $portion, $portions, $sum, $tmpman, $wide
+	Local $amount, $checked, $downloads, $ents, $fext, $final, $first, $osfle, $p, $portion, $portions, $sum, $tmpman, $wide
 	;
-	$SelectorGUI = GuiCreate("Game Files Selector - " & $title, $width, $height, $left, $top, $style + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
+	$SelectorGUI = GuiCreate("Game Files Selector - " & $title, $width - 5, $height, $left, $top, $style + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
 	GUISetBkColor(0xBBFFBB, $SelectorGUI)
 	; CONTROLS
-	$Group_files = GuiCtrlCreateGroup("Game Files To Download", 10, 10, $width - 20, 302)
+	$Group_files = GuiCtrlCreateGroup("Game Files To Download", 10, 10, $width - 25, 302)
 	GUICtrlSetResizing($Group_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
-	$ListView_files = GUICtrlCreateListView("||||", 20, 30, $width - 40, 270, $LVS_SHOWSELALWAYS + $LVS_SINGLESEL + $LVS_REPORT + $LVS_NOCOLUMNHEADER, _
+	$ListView_files = GUICtrlCreateListView("||||", 20, 30, $width - 45, 270, $LVS_SHOWSELALWAYS + $LVS_SINGLESEL + $LVS_REPORT + $LVS_NOCOLUMNHEADER, _
 													$LVS_EX_FULLROWSELECT + $LVS_EX_GRIDLINES + $LVS_EX_CHECKBOXES) ;
 	GUICtrlSetBkColor($ListView_files, 0xB9FFFF)
 	GUICtrlSetResizing($ListView_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
 	;
-	$Label_warn = GuiCtrlCreateLabel("", 10, 318, $width - 20, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	$Label_warn = GuiCtrlCreateLabel("", 10, 318, $width - 25, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetBkColor($Label_warn, $COLOR_RED)
 	GUICtrlSetColor($Label_warn, $COLOR_YELLOW)
 	GUICtrlSetFont($Label_warn, 9, 600)
@@ -1200,69 +1322,30 @@ Func FileSelectorGUI()
 	GUICtrlSetBkColor($Radio_selset, 0xFFD5FF)
 	GUICtrlSetBkColor($Radio_selpat, 0xFFD5FF)
 	;
-	$Group_OS = GuiCtrlCreateGroup("OS", $width - 270, $height - 65, 90, 55)
+	$Group_OS = GuiCtrlCreateGroup("OS Select", $width - 270, $height - 65, 90, 55)
 	GUICtrlSetResizing($Group_OS, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
 	$Combo_OSfle = GUICtrlCreateCombo("", $width - 260, $height - 45, 70, 21)
 	GUICtrlSetResizing($Combo_OSfle, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Combo_OSfle, "OS for files!")
 	;
-	$Button_download = GuiCtrlCreateButton("DOWNLOAD", $width - 170, $height - 60, 105, 28)
+	$Button_download = GuiCtrlCreateButton("DOWNLOAD", $width - 170, $height - 60, 100, 28)
 	GUICtrlSetFont($Button_download, 8, 600)
 	GUICtrlSetResizing($Button_download, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Button_download, "Download selected files!")
 	;
-	$Button_uncheck = GuiCtrlCreateButton("De-Select ALL", $width - 170, $height - 28, 105, 18)
+	$Button_uncheck = GuiCtrlCreateButton("De-Select ALL", $width - 170, $height - 28, 100, 18)
 	GUICtrlSetFont($Button_uncheck, 7, 600, 0, "Small Fonts")
 	GUICtrlSetResizing($Button_uncheck, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Button_uncheck, "Deselect ALL files!")
 	;
-	$Button_quit = GuiCtrlCreateButton("EXIT", $width - 55, $height - 60, 45, 50, $BS_ICON)
+	$Button_quit = GuiCtrlCreateButton("EXIT", $width - 60, $height - 60, 45, 50, $BS_ICON)
 	GUICtrlSetResizing($Button_quit, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Button_quit, "Exit / Close / Quit the window!")
 	;
 	; SETTINGS
 	GUICtrlSetImage($Button_quit, $user, $icoX, 1)
 	;
-	$col1 = 0
-	$col2 = ""
-	$col3 = ""
-	$col4 = ""
-	$lines = StringSplit($game, @LF, 1)
-	For $l = 1 To $lines[0]
-		$line = $lines[$l]
-		If StringInStr($line, '"Installers":') > 0 Then
-			$col2 = "GAME"
-		ElseIf StringInStr($line, '"Extras":') > 0 Then
-			$col2 = "EXTRA"
-		ElseIf StringInStr($line, '"Name":') > 0 Then
-			$line = StringSplit($line, '"Name": "', 1)
-			$line = $line[2]
-			$line = StringSplit($line, '",', 1)
-			$col3 = $line[1]
-		ElseIf StringInStr($line, '"VerifiedSize":') > 0 Then
-			$line = StringSplit($line, '"VerifiedSize":', 1)
-			$line = $line[2]
-			$line = StringSplit($line, ',', 1)
-			$line = $line[1]
-			$col4 = StringStripWS($line, 8)
-			If StringIsDigit($col4) Then
-				$size = $col4
-				GetTheSize()
-				$col4 = $size
-			Else
-				$col4 = "0 bytes"
-			EndIf
-		;ElseIf StringInStr($line, '') > 0 Then
-		EndIf
-		If $col3 <> "" And $col4 <> "" Then
-			$col1 = $col1 + 1
-			$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
-			;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
-			GUICtrlCreateListViewItem($entry, $ListView_files)
-			$col3 = ""
-			$col4 = ""
-		EndIf
-	Next
+	GetFileDownloadDetails($ListView_files)
 	;
 	_GUICtrlListView_JustifyColumn($ListView_files, 0, 0)
 	_GUICtrlListView_JustifyColumn($ListView_files, 1, 2)
@@ -1280,10 +1363,13 @@ Func FileSelectorGUI()
 	;
 	$osfle = IniRead($inifle, "Selector", "OS", "")
 	If $osfle = "" Then
-		$osfle = "Both"
+		$osfle = "Win-Lin"
+		IniWrite($inifle, "Selector", "OS", $osfle)
+	ElseIf $osfle = "Both" Then
+		$osfle = "Win-Lin"
 		IniWrite($inifle, "Selector", "OS", $osfle)
 	EndIf
-	GUICtrlSetData($Combo_OSfle, "Both|Windows|Linux", $osfle)
+	GUICtrlSetData($Combo_OSfle, "ALL|Windows|Linux|Mac|Win-Lin|Win-Mac|Mac-Lin", $osfle)
 
 	GuiSetState()
 	While 1
@@ -1298,6 +1384,9 @@ Func FileSelectorGUI()
 		Case $msg = $GUI_EVENT_RESIZED
 			$winpos = WinGetPos($SelectorGUI, "")
 			$wide = $winpos[2]
+			If $left > @DesktopWidth - $wide Then
+				$left = @DesktopWidth - $wide - 20
+			EndIf
 			WinMove($SelectorGUI, "", $left, $top, $wide, $height + 38)
 		Case $msg = $Button_uncheck
 			; Deselect ALL files
@@ -1307,8 +1396,14 @@ Func FileSelectorGUI()
 			Else
 				GUICtrlSetData($Group_files, "Game Files To Download")
 			EndIf
+			GUICtrlSetState($Radio_selall, $GUI_UNCHECKED)
+			GUICtrlSetState($Radio_selgame, $GUI_UNCHECKED)
+			GUICtrlSetState($Radio_selext, $GUI_UNCHECKED)
+			GUICtrlSetState($Radio_selset, $GUI_UNCHECKED)
+			GUICtrlSetState($Radio_selpat, $GUI_UNCHECKED)
 		Case $msg = $Button_download
 			; Download selected files
+			MsgBox(262192, "Download Error", "This feature is not yet supported!", 1.5, $GOGcliGUI)
 			GUICtrlSetState($Button_download, $GUI_DISABLE)
 			GUICtrlSetState($ListView_files, $GUI_DISABLE)
 			GUICtrlSetState($Radio_selall, $GUI_DISABLE)
@@ -1322,8 +1417,9 @@ Func FileSelectorGUI()
 			$downloads = ""
 			For $a = 0 To $ents - 1
 				If _GUICtrlListView_GetItemChecked($ListView_files, $a) = True Then
-					$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 1)
-					$entry = $entry & ":" & _GUICtrlListView_GetItemText($ListView_files, $a, 2)
+					;$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 1)
+					;$entry = $entry & ":" & _GUICtrlListView_GetItemText($ListView_files, $a, 2)
+					$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 2)
 					If $downloads = "" Then
 						$downloads = $entry
 					Else
@@ -1332,11 +1428,38 @@ Func FileSelectorGUI()
 				EndIf
 			Next
 			If $downloads <> "" Then
+				MsgBox(262192, "Selected Files", $downloads, 0, $SelectorGUI)
+				If $validate = 1 Then
+				EndIf
+			Else
+				MsgBox(262192, "Program Error", "Nothing to download!", 0, $SelectorGUI)
 			EndIf
+			GUICtrlSetState($Button_download, $GUI_ENABLE)
+			GUICtrlSetState($ListView_files, $GUI_ENABLE)
+			GUICtrlSetState($Radio_selall, $GUI_ENABLE)
+			GUICtrlSetState($Radio_selgame, $GUI_ENABLE)
+			GUICtrlSetState($Radio_selext, $GUI_ENABLE)
+			GUICtrlSetState($Radio_selset, $GUI_ENABLE)
+			GUICtrlSetState($Radio_selpat, $GUI_ENABLE)
+			GUICtrlSetState($Combo_OSfle, $GUI_ENABLE)
+			GUICtrlSetState($Button_uncheck, $GUI_ENABLE)
+			GUICtrlSetState($Button_quit, $GUI_ENABLE)
 		Case $msg = $Combo_OSfle
 			; OS for files
 			$osfle = GUICtrlRead($Combo_OSfle)
 			IniWrite($inifle, "Selector", "OS", $osfle)
+			;
+			_GUICtrlListView_SetItemChecked($ListView_files, -1, False)
+			If $ents > 0 Then
+				GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")")
+			Else
+				GUICtrlSetData($Group_files, "Game Files To Download")
+			EndIf
+			GUICtrlSetState($Radio_selall, $GUI_UNCHECKED)
+			GUICtrlSetState($Radio_selgame, $GUI_UNCHECKED)
+			GUICtrlSetState($Radio_selext, $GUI_UNCHECKED)
+			GUICtrlSetState($Radio_selset, $GUI_UNCHECKED)
+			GUICtrlSetState($Radio_selpat, $GUI_UNCHECKED)
 		Case $msg = $ListView_files Or $msg > $Button_quit
 			; Game Files To Download
 			$amount = 0
@@ -1383,6 +1506,498 @@ Func FileSelectorGUI()
 				EndIf
 				GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")  Selected  (" & $checked & ")  (" & $amount & ")")
 			EndIf
+		Case $msg = $Radio_selset
+			; Select SETUP file entries
+			$amount = 0
+			$checked = 0
+			For $a = 0 To $ents - 1
+				$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 2)
+				$fext = StringRight($entry, 4)
+				If $osfle = "ALL" Or $osfle = "Win-Lin" Or $osfle = "Win-Mac" Or $osfle = "Mac-Lin" Then
+					If ($fext = ".dmg" Or $fext = ".pkg") And $osfle <> "ALL" And $osfle <> "Win-Mac" And $osfle <> "Mac-Lin" Then
+						_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+						$sum = ""
+					ElseIf StringRight($fext, 3) = ".sh" And $osfle <> "ALL" And $osfle <> "Win-Lin" And $osfle <> "Mac-Lin" Then
+						_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+						$sum = ""
+					ElseIf ($fext = ".exe" Or $fext = ".bin") And $osfle <> "ALL" And $osfle <> "Win-Lin" And $osfle <> "Win-Mac" Then
+						_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+						$sum = ""
+					Else
+						If StringInStr($entry, "setup_") > 0 Then
+							_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+							$checked = $checked + 1
+							$sum = 1
+						ElseIf StringInStr($entry, "patch_") < 1 Then
+							$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 1)
+							If $entry = "GAME" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+								$checked = $checked + 1
+								$sum = 1
+							Else
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							EndIf
+						Else
+							_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+							$sum = ""
+						EndIf
+					EndIf
+				ElseIf StringInStr($entry, "patch_") < 1 Then
+					;$fext = StringRight($entry, 4)
+					$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 1)
+					If $entry = "GAME" Then
+						If $osfle = "Windows" Then
+							If $fext = ".exe" Or $fext = ".bin" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+								$checked = $checked + 1
+								$sum = 1
+							Else
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							EndIf
+						ElseIf $osfle = "Mac" Then
+							If $fext = ".dmg" Or $fext = ".pkg" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+								$checked = $checked + 1
+								$sum = 1
+							Else
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							EndIf
+						;ElseIf $fext <> ".exe" And $fext <> ".bin" Then
+						ElseIf $osfle = "Linux" Then
+							If StringRight($fext, 3) = ".sh" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+								$checked = $checked + 1
+								$sum = 1
+							Else
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							EndIf
+						Else
+							_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+							$sum = ""
+						EndIf
+					Else
+						_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+						$sum = ""
+					EndIf
+				Else
+					_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+					$sum = ""
+				EndIf
+				If $sum = 1 Then
+					$sum = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+					$val = StringSplit($sum, " ", 1)
+					$sum = $val[1]
+					$val = $val[2]
+					If $val = "bytes" Then
+						$amount = $amount + $sum
+					ElseIf $val = "Kb" Then
+						$amount = $amount + ($sum * 1024)
+					ElseIf $val = "Mb" Then
+						$amount = $amount + ($sum * 1048576)
+					ElseIf $val = "Gb" Then
+						$amount = $amount + ($sum * 1073741824)
+					EndIf
+				EndIf
+			Next
+			If $checked = 0 Then
+				If $ents > 0 Then
+					GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")")
+				Else
+					GUICtrlSetData($Group_files, "Game Files To Download")
+				EndIf
+			Else
+				If $amount < 1024 Then
+					$amount = $amount & " bytes"
+				ElseIf $amount < 1048576 Then
+					$amount = $amount / 1024
+					$amount =  Round($amount) & " Kb"
+				ElseIf $amount < 1073741824 Then
+					$amount = $amount / 1048576
+					$amount =  Round($amount, 1) & " Mb"
+				ElseIf $amount < 1099511627776 Then
+					$amount = $amount / 1073741824
+					$amount = Round($amount, 2) & " Gb"
+				Else
+					$amount = $amount / 1099511627776
+					$amount = Round($amount, 3) & " Tb"
+				EndIf
+				GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")  Selected  (" & $checked & ")  (" & $amount & ")")
+			EndIf
+		Case $msg = $Radio_selpat
+			; Select PATCH file entries
+			$amount = 0
+			$checked = 0
+			For $a = 0 To $ents - 1
+				$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 2)
+				$fext = StringRight($entry, 4)
+				If StringInStr($entry, "patch_") > 0 Then
+					If $osfle = "ALL" Or $osfle = "Win-Lin" Or $osfle = "Win-Mac" Or $osfle = "Mac-Lin" Then
+						If ($fext = ".dmg" Or $fext = ".pkg") And $osfle <> "ALL" And $osfle <> "Win-Mac" And $osfle <> "Mac-Lin" Then
+							_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+							$sum = ""
+						ElseIf StringRight($fext, 3) = ".sh" And $osfle <> "ALL" And $osfle <> "Win-Lin" And $osfle <> "Mac-Lin" Then
+							_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+							$sum = ""
+						ElseIf ($fext = ".exe" Or $fext = ".bin") And $osfle <> "ALL" And $osfle <> "Win-Lin" And $osfle <> "Win-Mac" Then
+							_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+							$sum = ""
+						Else
+							_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+							$checked = $checked + 1
+							$sum = 1
+						EndIf
+					Else
+						If $osfle = "Windows" Then
+							If $fext = ".exe" Or $fext = ".bin" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+								$checked = $checked + 1
+								$sum = 1
+							Else
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							EndIf
+						ElseIf $osfle = "Mac" Then
+							If $fext = ".dmg" Or $fext = ".pkg" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+								$checked = $checked + 1
+								$sum = 1
+							Else
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							EndIf
+						ElseIf $osfle = "Linux" Then
+							If StringRight($fext, 3) = ".sh" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+								$checked = $checked + 1
+								$sum = 1
+							Else
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							EndIf
+						Else
+							_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+							$sum = ""
+						EndIf
+					EndIf
+				Else
+					_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+					$sum = ""
+				EndIf
+				If $sum = 1 Then
+					$sum = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+					$val = StringSplit($sum, " ", 1)
+					$sum = $val[1]
+					$val = $val[2]
+					If $val = "bytes" Then
+						$amount = $amount + $sum
+					ElseIf $val = "Kb" Then
+						$amount = $amount + ($sum * 1024)
+					ElseIf $val = "Mb" Then
+						$amount = $amount + ($sum * 1048576)
+					ElseIf $val = "Gb" Then
+						$amount = $amount + ($sum * 1073741824)
+					EndIf
+				EndIf
+			Next
+			If $checked = 0 Then
+				If $ents > 0 Then
+					GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")")
+				Else
+					GUICtrlSetData($Group_files, "Game Files To Download")
+				EndIf
+			Else
+				If $amount < 1024 Then
+					$amount = $amount & " bytes"
+				ElseIf $amount < 1048576 Then
+					$amount = $amount / 1024
+					$amount =  Round($amount) & " Kb"
+				ElseIf $amount < 1073741824 Then
+					$amount = $amount / 1048576
+					$amount =  Round($amount, 1) & " Mb"
+				ElseIf $amount < 1099511627776 Then
+					$amount = $amount / 1073741824
+					$amount = Round($amount, 2) & " Gb"
+				Else
+					$amount = $amount / 1099511627776
+					$amount = Round($amount, 3) & " Tb"
+				EndIf
+				GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")  Selected  (" & $checked & ")  (" & $amount & ")")
+			EndIf
+		Case $msg = $Radio_selgame
+			; Select GAME file entries
+			$amount = 0
+			$checked = 0
+			For $a = 0 To $ents - 1
+				$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 1)
+				If $entry = "GAME" Then
+					If $osfle = "ALL" Then
+						_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+						$checked = $checked + 1
+						$sum = 1
+					Else
+						$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 2)
+						$fext = StringRight($entry, 4)
+						If $osfle = "ALL" Or $osfle = "Win-Lin" Or $osfle = "Win-Mac" Or $osfle = "Mac-Lin" Then
+							If ($fext = ".dmg" Or $fext = ".pkg") And $osfle <> "ALL" And $osfle <> "Win-Mac" And $osfle <> "Mac-Lin" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							ElseIf StringRight($fext, 3) = ".sh" And $osfle <> "ALL" And $osfle <> "Win-Lin" And $osfle <> "Mac-Lin" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							ElseIf ($fext = ".exe" Or $fext = ".bin") And $osfle <> "ALL" And $osfle <> "Win-Lin" And $osfle <> "Win-Mac" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							Else
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+								$checked = $checked + 1
+								$sum = 1
+							EndIf
+						Else
+							If $osfle = "Windows" Then
+								If $fext = ".exe" Or $fext = ".bin" Then
+									_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+									$checked = $checked + 1
+									$sum = 1
+								Else
+									_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+									$sum = ""
+								EndIf
+							ElseIf $osfle = "Mac" Then
+								If $fext = ".dmg" Or $fext = ".pkg" Then
+									_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+									$checked = $checked + 1
+									$sum = 1
+								Else
+									_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+									$sum = ""
+								EndIf
+							ElseIf $osfle = "Linux" Then
+								If StringRight($fext, 3) = ".sh" Then
+									_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+									$checked = $checked + 1
+									$sum = 1
+								Else
+									_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+									$sum = ""
+								EndIf
+							Else
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							EndIf
+						EndIf
+					EndIf
+				Else
+					_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+					$sum = ""
+				EndIf
+				If $sum = 1 Then
+					$sum = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+					$val = StringSplit($sum, " ", 1)
+					$sum = $val[1]
+					$val = $val[2]
+					If $val = "bytes" Then
+						$amount = $amount + $sum
+					ElseIf $val = "Kb" Then
+						$amount = $amount + ($sum * 1024)
+					ElseIf $val = "Mb" Then
+						$amount = $amount + ($sum * 1048576)
+					ElseIf $val = "Gb" Then
+						$amount = $amount + ($sum * 1073741824)
+					EndIf
+				EndIf
+			Next
+			If $checked = 0 Then
+				If $ents > 0 Then
+					GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")")
+				Else
+					GUICtrlSetData($Group_files, "Game Files To Download")
+				EndIf
+			Else
+				If $amount < 1024 Then
+					$amount = $amount & " bytes"
+				ElseIf $amount < 1048576 Then
+					$amount = $amount / 1024
+					$amount =  Round($amount) & " Kb"
+				ElseIf $amount < 1073741824 Then
+					$amount = $amount / 1048576
+					$amount =  Round($amount, 1) & " Mb"
+				ElseIf $amount < 1099511627776 Then
+					$amount = $amount / 1073741824
+					$amount = Round($amount, 2) & " Gb"
+				Else
+					$amount = $amount / 1099511627776
+					$amount = Round($amount, 3) & " Tb"
+				EndIf
+				GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")  Selected  (" & $checked & ")  (" & $amount & ")")
+			EndIf
+		Case $msg = $Radio_selext
+			; Select EXTRA file entries
+			$amount = 0
+			$checked = 0
+			For $a = 0 To $ents - 1
+				$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 1)
+				If $entry = "EXTRA" Then
+					_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+					$checked = $checked + 1
+					$sum = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+					$val = StringSplit($sum, " ", 1)
+					$sum = $val[1]
+					$val = $val[2]
+					If $val = "bytes" Then
+						$amount = $amount + $sum
+					ElseIf $val = "Kb" Then
+						$amount = $amount + ($sum * 1024)
+					ElseIf $val = "Mb" Then
+						$amount = $amount + ($sum * 1048576)
+					ElseIf $val = "Gb" Then
+						$amount = $amount + ($sum * 1073741824)
+					EndIf
+				Else
+					_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+				EndIf
+			Next
+			If $checked = 0 Then
+				If $ents > 0 Then
+					GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")")
+				Else
+					GUICtrlSetData($Group_files, "Game Files To Download")
+				EndIf
+			Else
+				If $amount < 1024 Then
+					$amount = $amount & " bytes"
+				ElseIf $amount < 1048576 Then
+					$amount = $amount / 1024
+					$amount =  Round($amount) & " Kb"
+				ElseIf $amount < 1073741824 Then
+					$amount = $amount / 1048576
+					$amount =  Round($amount, 1) & " Mb"
+				ElseIf $amount < 1099511627776 Then
+					$amount = $amount / 1073741824
+					$amount = Round($amount, 2) & " Gb"
+				Else
+					$amount = $amount / 1099511627776
+					$amount = Round($amount, 3) & " Tb"
+				EndIf
+				GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")  Selected  (" & $checked & ")  (" & $amount & ")")
+			EndIf
+		Case $msg = $Radio_selall
+			; Select ALL file entries
+			$amount = 0
+			If $osfle = "ALL" Then
+				_GUICtrlListView_SetItemChecked($ListView_files, -1, True)
+				For $a = 0 To $ents - 1
+					$sum = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+					$val = StringSplit($sum, " ", 1)
+					$sum = $val[1]
+					$val = $val[2]
+					If $val = "bytes" Then
+						$amount = $amount + $sum
+					ElseIf $val = "Kb" Then
+						$amount = $amount + ($sum * 1024)
+					ElseIf $val = "Mb" Then
+						$amount = $amount + ($sum * 1048576)
+					ElseIf $val = "Gb" Then
+						$amount = $amount + ($sum * 1073741824)
+					EndIf
+				Next
+			Else
+				$checked = 0
+				_GUICtrlListView_SetItemChecked($ListView_files, -1, True)
+				For $a = 0 To $ents - 1
+					$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 1)
+					If $entry = "EXTRA" Then
+						_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+						$checked = 1
+					Else
+						$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 2)
+						$fext = StringRight($entry, 4)
+						If $osfle = "Win-Lin" Or $osfle = "Win-Mac" Or $osfle = "Mac-Lin" Then
+							If ($fext = ".dmg" Or $fext = ".pkg") And $osfle <> "Win-Mac" And $osfle <> "Mac-Lin" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							ElseIf StringRight($fext, 3) = ".sh" And $osfle <> "Win-Lin" And $osfle <> "Mac-Lin" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							ElseIf ($fext = ".exe" Or $fext = ".bin") And $osfle <> "Win-Lin" And $osfle <> "Win-Mac" Then
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$sum = ""
+							Else
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+								$checked = $checked + 1
+								$sum = 1
+							EndIf
+						Else
+							If $osfle = "Windows" Then
+								If $fext = ".exe" Or $fext = ".bin" Then
+									_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+									$checked = 1
+								Else
+									_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+									$checked = ""
+								EndIf
+							ElseIf $osfle = "Mac" Then
+								If $fext = ".dmg" Or $fext = ".pkg" Then
+									_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+									$checked = 1
+								Else
+									_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+									$checked = ""
+								EndIf
+							ElseIf $osfle = "Linux" Then
+								If StringRight($fext, 3) = ".sh" Then
+									_GUICtrlListView_SetItemChecked($ListView_files, $a, True)
+									$checked = 1
+								Else
+									_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+									$checked = ""
+								EndIf
+							Else
+								_GUICtrlListView_SetItemChecked($ListView_files, $a, False)
+								$checked = ""
+							EndIf
+						EndIf
+					EndIf
+					If $checked = 1 Then
+						$sum = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+						$val = StringSplit($sum, " ", 1)
+						$sum = $val[1]
+						$val = $val[2]
+						If $val = "bytes" Then
+							$amount = $amount + $sum
+						ElseIf $val = "Kb" Then
+							$amount = $amount + ($sum * 1024)
+						ElseIf $val = "Mb" Then
+							$amount = $amount + ($sum * 1048576)
+						ElseIf $val = "Gb" Then
+							$amount = $amount + ($sum * 1073741824)
+						EndIf
+					EndIf
+				Next
+			EndIf
+			If $ents > 0 Then
+				If $amount < 1024 Then
+					$amount = $amount & " bytes"
+				ElseIf $amount < 1048576 Then
+					$amount = $amount / 1024
+					$amount =  Round($amount) & " Kb"
+				ElseIf $amount < 1073741824 Then
+					$amount = $amount / 1048576
+					$amount =  Round($amount, 1) & " Mb"
+				ElseIf $amount < 1099511627776 Then
+					$amount = $amount / 1073741824
+					$amount = Round($amount, 2) & " Gb"
+				Else
+					$amount = $amount / 1099511627776
+					$amount = Round($amount, 3) & " Tb"
+				EndIf
+				GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")  Selected  (" & $ents & ")  (" & $amount & ")")
+			Else
+				GUICtrlSetData($Group_files, "Game Files To Download")
+			EndIf
 		Case Else
 			;;;
 		EndSelect
@@ -1397,7 +2012,7 @@ Func ClearFieldValues()
 	$slug = ""
 	GUICtrlSetData($Input_slug, $slug)
 	$image = ""
-	$URL = ""
+	$web = ""
 	$category = ""
 	GUICtrlSetData($Input_cat, $category)
 	$OSes = ""
@@ -1460,6 +2075,104 @@ Func FixTitle($text)
 	Return $text
 EndFunc ;=> FixTitle
 
+Func GetFileDownloadDetails($listview = "")
+	Local $alias, $checksum, $col1, $col2, $col3, $col4, $filesize, $language, $OPS, $URL
+	;
+	_FileCreate($downfiles)
+	Sleep(500)
+	;
+	$alias = ""
+	$checksum = ""
+	$col1 = 0
+	$col2 = ""
+	$col3 = ""
+	$col4 = ""
+	$filesize = ""
+	$language = ""
+	$OPS = ""
+	$URL = ""
+	$lines = StringSplit($game, @LF, 1)
+	For $l = 1 To $lines[0]
+		$line = $lines[$l]
+		If StringInStr($line, '"Installers":') > 0 Then
+			$col2 = "GAME"
+		ElseIf StringInStr($line, '"Extras":') > 0 Then
+			$col2 = "EXTRA"
+		ElseIf StringInStr($line, '"Language":') > 0 Then
+			$line = StringSplit($line, '"Language": "', 1)
+			$line = $line[2]
+			$line = StringSplit($line, '",', 1)
+			$language = $line[1]
+		ElseIf StringInStr($line, '"Os":') > 0 Then
+			$line = StringSplit($line, '"Os": "', 1)
+			$line = $line[2]
+			$line = StringSplit($line, '",', 1)
+			$OPS = $line[1]
+		ElseIf StringInStr($line, '"Url":') > 0 Then
+			$line = StringSplit($line, '"Url": "', 1)
+			$line = $line[2]
+			$line = StringSplit($line, '",', 1)
+			$URL = $line[1]
+		ElseIf StringInStr($line, '"Title":') > 0 Then
+			$line = StringSplit($line, '"Title": "', 1)
+			$line = $line[2]
+			$line = StringSplit($line, '",', 1)
+			$alias = $line[1]
+		ElseIf StringInStr($line, '"Name":') > 0 Then
+			$line = StringSplit($line, '"Name": "', 1)
+			$line = $line[2]
+			$line = StringSplit($line, '",', 1)
+			$col3 = $line[1]
+		ElseIf StringInStr($line, '"VerifiedSize":') > 0 Then
+			$line = StringSplit($line, '"VerifiedSize":', 1)
+			$line = $line[2]
+			$line = StringSplit($line, ',', 1)
+			$line = $line[1]
+			$col4 = StringStripWS($line, 8)
+			$filesize = $col4
+			If StringIsDigit($col4) Then
+				$size = $col4
+				GetTheSize()
+				$col4 = $size
+			Else
+				$col4 = "0 bytes"
+			EndIf
+		ElseIf StringInStr($line, '"Checksum":') > 0 Then
+			$line = StringSplit($line, '"Checksum": "', 1)
+			$line = $line[2]
+			$line = StringSplit($line, '"', 1)
+			$checksum = $line[1]
+			;
+			IniWrite($downfiles, $col3, "file", $col3)
+			IniWrite($downfiles, $col3, "language", $language)
+			IniWrite($downfiles, $col3, "OS", $OPS)
+			IniWrite($downfiles, $col3, "URL", $URL)
+			IniWrite($downfiles, $col3, "title", $alias)
+			IniWrite($downfiles, $col3, "bytes", $filesize)
+			IniWrite($downfiles, $col3, "size", $col4)
+			IniWrite($downfiles, $col3, "checksum", $checksum)
+			IniWrite($downfiles, $col3, "type", $col2)
+			;
+			If $listview <> "" Then
+				If $col3 <> "" And $col4 <> "" Then
+					$col1 = $col1 + 1
+					$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
+					;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
+					GUICtrlCreateListViewItem($entry, $listview)
+				EndIf
+			EndIf
+			$alias = ""
+			$checksum = ""
+			$col3 = ""
+			$col4 = ""
+			$filesize = ""
+			$language = ""
+			$OPS = ""
+			$URL = ""
+		EndIf
+	Next
+EndFunc ;=> GetFileDownloadDetails
+
 Func GetTheSize()
 	If $size < 1024 Then
 		$size = $size & " bytes"
@@ -1480,7 +2193,7 @@ Func GetTheSize()
 EndFunc ;=> GetTheSize
 
 Func ParseTheGamelist()
-	Local $p
+	Local $p, $titles
 	If FileExists($gamelist) Then
 		; Parse for titles
 		;SplashTextOn("", "Please Wait!", 140, 120, Default, Default, 33)
@@ -1488,8 +2201,14 @@ Func ParseTheGamelist()
 		_GUICtrlListView_BeginUpdate($Listview_games)
 		_GUICtrlListView_DeleteAllItems($Listview_games)
 		_GUICtrlListView_EndUpdate($Listview_games)
+		If FileExists($titlist) Then
+			$titles = FileRead($titlist)
+		Else
+			$titles = ""
+		EndIf
 		$entries = ""
 		$lines = ""
+		$new = ""
 		$read = FileRead($gamelist)
 		$split = StringSplit($read, "- Title:", 1)
 		$splits = $split[0]
@@ -1508,7 +2227,7 @@ Func ParseTheGamelist()
 				$image = ""
 				$OSes = ""
 				$slug = ""
-				$URL = ""
+				$web = ""
 				For $p = 2 To $parts[0]
 					$part = $parts[$p]
 					$part = StringStripWS($part, 3)
@@ -1522,8 +2241,8 @@ Func ParseTheGamelist()
 						$image = StringTrimLeft($part, 6)
 						$image = StringStripWS($image, 3)
 					ElseIf StringLeft($part, 4) = "Url:" Then
-						$URL = StringTrimLeft($part, 4)
-						$URL = StringStripWS($URL, 3)
+						$web = StringTrimLeft($part, 4)
+						$web = StringStripWS($web, 3)
 					ElseIf StringLeft($part, 9) = "Category:" Then
 						$category = StringTrimLeft($part, 9)
 						$category = StringStripWS($category, 3)
@@ -1540,19 +2259,32 @@ Func ParseTheGamelist()
 						$DLC = StringStripWS($DLC, 3)
 					EndIf
 				Next
-				$line = $title & "|" & $ID & "|" & $updates
+				$line = $title & "|" & $ID
+				If $titles <> "" Then
+					If StringInStr($titles, $line) < 1 Then
+						If $new = "" Then
+							$new = $title
+						Else
+							$new = $new & @CRLF & $title
+						EndIf
+					EndIf
+				EndIf
+				$line = $line & "|" & $updates
 				If $lines = "" Then
 					$lines = $line
 				Else
 					$lines = $lines & @LF & $line
 				EndIf
 				$entries = $entries & @CRLF & "[" & $ID & "]" & @CRLF & "title=" & $title & @CRLF & "slug=" & $slug & @CRLF & "image=" & $image
-				$entries = $entries & @CRLF & "URL=" & $URL & @CRLF & "category=" & $category & @CRLF & "OSes=" & $OSes & @CRLF & "DLC=" & $DLC
+				$entries = $entries & @CRLF & "URL=" & $web & @CRLF & "category=" & $category & @CRLF & "OSes=" & $OSes & @CRLF & "DLC=" & $DLC
 				$entries = $entries & @CRLF & "updates=" & $updates
 			Next
 			_FileCreate($titlist)
 			If $lines <> "" Then
 				FileWrite($titlist, $lines)
+			EndIf
+			If $new <> "" Then
+				FileWriteLine($addlist, $new)
 			EndIf
 			_FileCreate($gamesini)
 			If $entries <> "" Then
@@ -1570,6 +2302,7 @@ Func ParseTheGamelist()
 EndFunc ;=> ParseTheGamelist
 
 Func SetStateOfControls($state, $which = "")
+	GUICtrlSetState($Button_last, $state)
 	GUICtrlSetState($Button_pic, $state)
 	GUICtrlSetState($Checkbox_show, $state)
 	GUICtrlSetState($Button_get, $state)
