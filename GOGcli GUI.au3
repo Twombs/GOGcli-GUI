@@ -39,12 +39,12 @@ Global $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS
 Global $Label_cat, $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
 Global $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $category, $checksum, $cookie, $cookies, $covers
-Global $covimg, $dest, $details, $DLC, $downfiles, $download, $entries, $entry, $f, $file, $files, $filesize, $flag, $fold, $game, $gamefold
-Global $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $head, $height, $i, $icoD, $icoF, $icoI, $icoS
-Global $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $listview, $logfle
-Global $manifest, $minimize, $n, $name, $num, $OP, $OS, $OSes, $params, $part, $parts, $pid, $ping, $pth, $read, $res, $row, $s, $second
-Global $selector, $SetupGUI, $shell, $size, $slug, $splash, $split, $splits, $state, $style, $tail, $text, $title, $titlist, $top, $type
-Global $types, $updates, $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos
+Global $covimg, $dest, $details, $DLC, $downfiles, $download, $drv, $entries, $entry, $f, $file, $files, $filesize, $flag, $fold, $free
+Global $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $head, $height, $i, $icoD
+Global $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link
+Global $listview, $logfle, $manifest, $minimize, $n, $name, $num, $OP, $OS, $OSes, $params, $part, $parts, $pid, $ping, $pth, $read, $res
+Global $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $space, $splash, $split, $splits, $state, $style, $tail, $text, $title
+Global $titlist, $top, $type, $types, $updates, $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos
 
 $addlist = @ScriptDir & "\Added.txt"
 $bigpic = @ScriptDir & "\Big.jpg"
@@ -646,8 +646,8 @@ Func MainGUI()
 										$flag = @SW_SHOW
 									EndIf
 									FileChangeDir(@ScriptDir)
-									$params = "-c Cookie.txt gog-api owned-games -p "
-									$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params & '1 >"' & $gamelist & '"', @ScriptDir, $flag)
+									$params = "-c Cookie.txt gog-api owned-games -p="
+									$pid = RunWait(@ComSpec & ' /c echo Page 1 && gogcli.exe ' & $params & '1 >"' & $gamelist & '"', @ScriptDir, $flag)
 									If FileExists($gamelist) Then
 										$res = _FileReadToArray($gamelist, $lines)
 										If $res = 1 Then
@@ -662,7 +662,7 @@ Func MainGUI()
 																For $n = 2 To $num
 																	Sleep(500)
 																	GUICtrlSetData($Label_bed, "Page " & $n)
-																	$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params & $n & ' >>"' & $gamelist & '"', @ScriptDir, $flag)
+																	$pid = RunWait(@ComSpec & ' /c echo Page ' & $n & ' && gogcli.exe ' & $params & $n & ' >>"' & $gamelist & '"', @ScriptDir, $flag)
 																Next
 																GUICtrlSetData($Label_top, "")
 																GUICtrlSetData($Label_bed, "")
@@ -984,6 +984,14 @@ Func MainGUI()
 			EndIf
 			IniWrite($inifle, "Cover Image", "show", $display)
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Checkbox_alpha
+			; Create alphanumeric sub-folder
+			If GUICtrlRead($Checkbox_alpha) = $GUI_CHECKED Then
+				$alpha = 1
+			Else
+				$alpha = 4
+			EndIf
+			IniWrite($inifle, "Game Folder Names", "alpha", $alpha)
 		Case $msg = $Combo_dest
 			; Type of game folder name
 			$type = GUICtrlRead($Combo_dest)
@@ -1452,65 +1460,79 @@ Func FileSelectorGUI()
 						$file = $files[$f]
 						$URL = IniRead($downfiles, $file, "URL", "")
 						If $URL <> "" Then
-							$filesize = IniRead($downfiles, $file, "bytes", "")
-							$checksum = IniRead($downfiles, $file, "checksum", "")
-							$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
-							If $i > -1 Then
-								$row = $Button_quit + $i + 1
-								GUICtrlSetBkColor($row, $COLOR_YELLOW)
-								_GUICtrlListView_SetItemText($ListView_files, $i, "Downloading..." & $file, 3)
-								If $test = 1 Then
-									Sleep(5000)
-								Else
-									$params = "-c Cookie.txt gog-api download-url-path -p=" & $URL
-									$pid = RunWait(@ComSpec & ' /c echo DOWNLOADING ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
-								EndIf
-								If $filesize <> "" Then
+							$drv = StringLeft(@ScriptDir, 3)
+							$space = DriveSpaceFree($drv)
+							$free = $space * 1048576
+							$filesize = IniRead($downfiles, $file, "bytes", 0)
+							If $filesize < $free Then
+								$checksum = IniRead($downfiles, $file, "checksum", "")
+								$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
+								If $i > -1 Then
+									$row = $Button_quit + $i + 1
+									GUICtrlSetBkColor($row, $COLOR_YELLOW)
+									_GUICtrlListView_SetItemText($ListView_files, $i, "Downloading..." & $file, 3)
 									If $test = 1 Then
-										GUICtrlSetBkColor($row, $COLOR_LIME)
-										_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
+										Sleep(5000)
 									Else
-										$download = @ScriptDir & "\" & $file
-										If FileExists($download) Then
-											$bytes = FileGetSize($download)
-											If $bytes = $filesize Then
-												If $checksum <> "" Then
-													GUICtrlSetBkColor($row, $COLOR_LIME)
-													_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
+										$params = "-c Cookie.txt gog-api download-url-path -p=" & $URL
+										$pid = RunWait(@ComSpec & ' /c echo DOWNLOADING ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+									EndIf
+									If $filesize <> 0 Then
+										If $test = 1 Then
+											GUICtrlSetBkColor($row, $COLOR_LIME)
+											_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
+										Else
+											$download = @ScriptDir & "\" & $file
+											If FileExists($download) Then
+												$bytes = FileGetSize($download)
+												If $bytes = $filesize Then
+													If $checksum <> "" Then
+														GUICtrlSetBkColor($row, $COLOR_LIME)
+														_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
+													Else
+														GUICtrlSetBkColor($row, $COLOR_AQUA)
+														_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
+													EndIf
 												Else
-													GUICtrlSetBkColor($row, $COLOR_AQUA)
-													_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
+													GUICtrlSetBkColor($row, $COLOR_RED)
+													_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
+												EndIf
+												$gamefold = $gamesfold
+												If $type = "Slug" Then
+													$name = $slug
+												ElseIf $type = "Title" Then
+													$name = FixTitle($title)
+												EndIf
+												If $alpha = 1 Then
+													$alf = StringUpper(StringLeft($name, 1))
+													$gamefold = $gamefold & "\" & $alf
+												EndIf
+												$gamefold = $gamefold & "\" & $name
+												If Not FileExists($gamefold) Then DirCreate($gamefold)
+												If FileExists($gamefold) Then
+													FileMove($download, $gamefold & "\", 1)
+												ElseIf FileExists($gamesfold) Then
+													FileMove($download, $gamesfold & "\", 1)
 												EndIf
 											Else
 												GUICtrlSetBkColor($row, $COLOR_RED)
 												_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
 											EndIf
-											$gamefold = $gamesfold
-											If $type = "Slug" Then
-												$name = $slug
-											ElseIf $type = "Title" Then
-												$name = FixTitle($title)
-											EndIf
-											If $alpha = 1 Then
-												$alf = StringUpper(StringLeft($name, 1))
-												$gamefold = $gamefold & "\" & $alf
-											EndIf
-											$gamefold = $gamefold & "\" & $name
-											If Not FileExists($gamefold) Then DirCreate($gamefold)
-											If FileExists($gamefold) Then
-												FileMove($download, $gamefold & "\", 1)
-											ElseIf FileExists($gamesfold) Then
-												FileMove($download, $gamesfold & "\", 1)
-											EndIf
-										Else
-											GUICtrlSetBkColor($row, $COLOR_RED)
-											_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
 										EndIf
+									Else
+										GUICtrlSetBkColor($row, $COLOR_MONEYGREEN)
+										_GUICtrlListView_SetItemText($ListView_files, $i, "DONE..." & $file, 3)
 									EndIf
-								Else
-									GUICtrlSetBkColor($row, $COLOR_MONEYGREEN)
-									_GUICtrlListView_SetItemText($ListView_files, $i, "DONE..." & $file, 3)
 								EndIf
+							Else
+								$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
+								If $i > -1 Then
+									$row = $Button_quit + $i + 1
+									GUICtrlSetBkColor($row, $COLOR_FUCHSIA)
+									_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
+								EndIf
+								$space = Round($space, 3)
+								MsgBox(262192, "Drive Space Error", "Not enough free space on destination drive, only " & $space & " Mb's", 6, $SelectorGUI)
 							EndIf
 						EndIf
 					Next
