@@ -26,6 +26,7 @@
 #include <GuiListView.au3>
 #include <Misc.au3>
 #include <File.au3>
+#include <Date.au3>
 #include <Inet.au3>
 #include <ScreenCapture.au3>
 #include <GDIPlus.au3>
@@ -38,13 +39,13 @@ Global $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_web, $Check
 Global $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Label_bed
 Global $Label_cat, $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $category, $checksum, $cookie, $cookies, $covers
-Global $covimg, $dest, $details, $DLC, $downfiles, $download, $drv, $entries, $entry, $f, $file, $files, $filesize, $flag, $fold, $free
-Global $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $head, $height, $i, $icoD
-Global $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link
-Global $listview, $logfle, $manifest, $minimize, $n, $name, $num, $OP, $OS, $OSes, $params, $part, $parts, $pid, $ping, $pth, $read, $res
-Global $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $space, $splash, $split, $splits, $state, $style, $tail, $text, $title
-Global $titlist, $top, $type, $types, $updates, $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos
+Global $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $category, $checksum, $cookie, $cookies, $cover
+Global $covers, $covimg, $dest, $details, $DLC, $downfiles, $download, $drv, $entries, $entry, $f, $file, $files, $filesize, $flag, $fold
+Global $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $head, $height, $i
+Global $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines
+Global $link, $listview, $logfle, $manifest, $minimize, $n, $name, $num, $OP, $OS, $OSes, $params, $part, $parts, $pid, $ping, $pth, $read
+Global $res, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $space, $splash, $split, $splits, $state, $style, $tail, $text
+Global $title, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos
 
 $addlist = @ScriptDir & "\Added.txt"
 $bigpic = @ScriptDir & "\Big.jpg"
@@ -63,10 +64,12 @@ $logfle = @ScriptDir & "\Log.txt"
 $manifest = @ScriptDir & "\Manifest.txt"
 $splash = @ScriptDir & "\Splash.jpg"
 $titlist = @ScriptDir & "\Titles.txt"
+$updated = @ScriptDir & "\Updated.txt"
 $version = "v1.0"
 
 If Not FileExists($addlist) Then _FileCreate($addlist)
 If Not FileExists($covers) Then DirCreate($covers)
+If Not FileExists($updated) Then _FileCreate($updated)
 
 MainGUI()
 
@@ -340,6 +343,11 @@ Func MainGUI()
 		$selector = 1
 		IniWrite($inifle, "Download Options", "selector", $selector)
 	EndIf
+	$cover = IniRead($inifle, "Download Options", "cover", "")
+	If $cover = "" Then
+		$cover = 1
+		IniWrite($inifle, "Download Options", "cover", $cover)
+	EndIf
 	;
 	$find = ""
 	$last = ""
@@ -565,7 +573,11 @@ Func MainGUI()
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_log
 			; Log Record
-			If FileExists($logfle) Then ShellExecute($logfle)
+			If _IsPressed("11") Then
+				If FileExists($updated) Then ShellExecute($updated)
+			Else
+				If FileExists($logfle) Then ShellExecute($logfle)
+			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_last
 			; Find the latest added game(s)
@@ -1085,8 +1097,8 @@ Func MainGUI()
 EndFunc ;=> MainGUI
 
 Func SetupGUI()
-	Local $Button_close, $Button_cookie, $Checkbox_dos, $Checkbox_keep, $Checkbox_latest, $Checkbox_select, $Checkbox_valid, $Combo_lang
-	Local $Combo_OS, $Combo_two, $Edit_info, $Group_down, $Group_lang, $Label_OS
+	Local $Button_close, $Button_cookie, $Checkbox_dos, $Checkbox_image, $Checkbox_keep, $Checkbox_latest, $Checkbox_select, $Checkbox_valid
+	Local $Combo_lang, $Combo_OS, $Combo_two, $Edit_info, $Group_down, $Group_lang, $Label_OS
 	Local $above, $high, $info, $langs, $opsys, $side, $wide
 	;
 	$wide = 250
@@ -1098,43 +1110,45 @@ Func SetupGUI()
 	GUISetBkColor(0xFFFFB0, $SetupGUI)
 	;
 	; CONTROLS
-	$Edit_info = GUICtrlCreateEdit("", 11, 10, 228, 110, $ES_WANTRETURN + $WS_VSCROLL + $ES_AUTOVSCROLL + $ES_MULTILINE + $ES_READONLY)
+	$Edit_info = GUICtrlCreateEdit("", 11, 10, 228, 100, $ES_WANTRETURN + $WS_VSCROLL + $ES_AUTOVSCROLL + $ES_MULTILINE + $ES_READONLY)
 	;
-	$Button_cookie = GuiCtrlCreateButton("CREATE COOKIE", 10, 130, 160, 50)
+	$Button_cookie = GuiCtrlCreateButton("CREATE COOKIE", 10, 120, 160, 50)
 	GUICtrlSetFont($Button_cookie, 9, 600)
 	GUICtrlSetTip($Button_cookie, "Create the basic cookie file!")
 	;
-	$Button_close = GuiCtrlCreateButton("EXIT", 180, 130, 60, 50, $BS_ICON)
+	$Button_close = GuiCtrlCreateButton("EXIT", 180, 120, 60, 50, $BS_ICON)
 	GUICtrlSetTip($Button_close, "Exit / Close / Quit the window!")
 	;
-	$Checkbox_keep = GUICtrlCreateCheckbox("Save cover images locally when shown", 24, 190, 210, 20)
+	$Checkbox_keep = GUICtrlCreateCheckbox("Save cover images locally when shown", 24, 180, 210, 20)
 	GUICtrlSetTip($Checkbox_keep, "Save cover images locally when obtained!")
 	;
-	$Checkbox_dos = GUICtrlCreateCheckbox("Minimize DOS Console window process", 24, 210, 210, 20)
+	$Checkbox_dos = GUICtrlCreateCheckbox("Minimize DOS Console window process", 24, 200, 210, 20)
 	GUICtrlSetTip($Checkbox_dos, "Minimize a DOS Console window process when it starts!")
 	;
-	$Group_lang = GuiCtrlCreateGroup("Language(s)", 10, 235, 230, 52)
-	$Combo_lang = GUICtrlCreateCombo("", 20, 255, 125, 21)
+	$Group_lang = GuiCtrlCreateGroup("Language(s)", 10, 225, 230, 52)
+	$Combo_lang = GUICtrlCreateCombo("", 20, 245, 125, 21)
 	;GUICtrlSetBkColor($Combo_lang, 0xFFFFB0)
 	GUICtrlSetTip($Combo_lang, "Main language to use!")
-	$Combo_two = GUICtrlCreateCombo("", 150, 255, 80, 21)
+	$Combo_two = GUICtrlCreateCombo("", 150, 245, 80, 21)
 	GUICtrlSetTip($Combo_two, "Second language to use!")
 	;
-	$Label_OS = GuiCtrlCreateLabel("OS", 15, 296, 28, 21, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	$Label_OS = GuiCtrlCreateLabel("OS", 15, 286, 28, 21, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetBkColor($Label_OS, $COLOR_BLACK)
 	GUICtrlSetColor($Label_OS, $COLOR_WHITE)
-	$Combo_OS = GUICtrlCreateCombo("", 43, 296, 113, 21)
+	$Combo_OS = GUICtrlCreateCombo("", 43, 286, 113, 21)
 	GUICtrlSetTip($Combo_OS, "OSes to use!")
 	;
-	GuiCtrlCreateGroup("", 166, 290, 74, 41)
-	$Checkbox_valid = GUICtrlCreateCheckbox("Validate", 175, 303, 60, 20)
+	GuiCtrlCreateGroup("", 166, 280, 74, 41)
+	$Checkbox_valid = GUICtrlCreateCheckbox("Validate", 175, 293, 60, 20)
 	GUICtrlSetTip($Checkbox_valid, "Validate after downloading!")
 	;
-	$Group_down = GuiCtrlCreateGroup("Download Options", 10, 323, 230, 75)
-	$Checkbox_latest = GUICtrlCreateCheckbox("Download the latest game file information", 21, 343, 210, 20)
+	$Group_down = GuiCtrlCreateGroup("Download Options", 10, 313, 230, 85)
+	$Checkbox_latest = GUICtrlCreateCheckbox("Download the latest game file information", 21, 331, 210, 20)
 	GUICtrlSetTip($Checkbox_latest, "Get latest file information for the game!")
-	$Checkbox_select = GUICtrlCreateCheckbox("Present the 'Game Files Selector' window", 21, 365, 210, 20)
+	$Checkbox_select = GUICtrlCreateCheckbox("Present the 'Game Files Selector' window", 21, 351, 210, 20)
 	GUICtrlSetTip($Checkbox_select, "Present the game files selector window!")
+	$Checkbox_image = GUICtrlCreateCheckbox("Download the game cover image file", 21, 371, 210, 20)
+	GUICtrlSetTip($Checkbox_image, "Download the game cover image file automatically!")
 	;
 	; SETTINGS
 	$info = "Before using 'gogcli.exe' to download your games, update etc, you need a cookie file." _
@@ -1158,6 +1172,7 @@ Func SetupGUI()
 	GUICtrlSetState($Checkbox_valid, $validate)
 	GUICtrlSetState($Checkbox_latest, $getlatest)
 	GUICtrlSetState($Checkbox_select, $selector)
+	GUICtrlSetState($Checkbox_image, $cover)
 	;
 	$window = $SetupGUI
 
@@ -1252,6 +1267,14 @@ Func SetupGUI()
 				$keep = 4
 			EndIf
 			IniWrite($inifle, "Cover Image", "keep", $keep)
+		Case $msg = $Checkbox_image
+			; Download the game cover image file automatically
+			If GUICtrlRead($Checkbox_image) = $GUI_CHECKED Then
+				$cover = 1
+			Else
+				$cover = 4
+			EndIf
+			IniWrite($inifle, "Download Options", "cover", $cover)
 		Case $msg = $Checkbox_dos
 			; Minimize DOS Console window process
 			If GUICtrlRead($Checkbox_dos) = $GUI_CHECKED Then
@@ -1438,6 +1461,9 @@ Func FileSelectorGUI()
 							If StringLeft($entry, 9) = "FAILED..." Then
 								$entry = StringTrimLeft($entry, 9)
 								_GUICtrlListView_SetItemText($ListView_files, $a, $entry, 3)
+							ElseIf StringLeft($entry, 10) = "SKIPPED..." Then
+								$entry = StringTrimLeft($entry, 10)
+								_GUICtrlListView_SetItemText($ListView_files, $a, $entry, 3)
 							EndIf
 							If $downloads = "" Then
 								$downloads = $entry
@@ -1474,8 +1500,10 @@ Func FileSelectorGUI()
 									If $test = 1 Then
 										Sleep(5000)
 									Else
+										_FileWriteLog($logfle, "DOWNLOADING - " & $file, -1)
 										$params = "-c Cookie.txt gog-api download-url-path -p=" & $URL
 										$pid = RunWait(@ComSpec & ' /c echo DOWNLOADING ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+										_FileWriteLog($logfle, "COMPLETED.", -1)
 									EndIf
 									If $filesize <> 0 Then
 										If $test = 1 Then
@@ -1493,9 +1521,11 @@ Func FileSelectorGUI()
 														GUICtrlSetBkColor($row, $COLOR_AQUA)
 														_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
 													EndIf
+													_FileWriteLog($logfle, "Passed the File Size check.", -1)
 												Else
 													GUICtrlSetBkColor($row, $COLOR_RED)
 													_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
+													_FileWriteLog($logfle, "File Size check failed.", -1)
 												EndIf
 												$gamefold = $gamesfold
 												If $type = "Slug" Then
@@ -1514,14 +1544,18 @@ Func FileSelectorGUI()
 												ElseIf FileExists($gamesfold) Then
 													FileMove($download, $gamesfold & "\", 1)
 												EndIf
+												If $cover = 1 Then
+												EndIf
 											Else
 												GUICtrlSetBkColor($row, $COLOR_RED)
 												_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
+												_FileWriteLog($logfle, "File is missing.", -1)
 											EndIf
 										EndIf
 									Else
 										GUICtrlSetBkColor($row, $COLOR_MONEYGREEN)
 										_GUICtrlListView_SetItemText($ListView_files, $i, "DONE..." & $file, 3)
+										_FileWriteLog($logfle, "No file size listed.", -1)
 									EndIf
 								EndIf
 							Else
@@ -1529,11 +1563,13 @@ Func FileSelectorGUI()
 								If $i > -1 Then
 									$row = $Button_quit + $i + 1
 									GUICtrlSetBkColor($row, $COLOR_FUCHSIA)
-									_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
+									_GUICtrlListView_SetItemText($ListView_files, $i, "SKIPPED..." & $file, 3)
 								EndIf
+								_FileWriteLog($logfle, "Not enough drive space.", -1)
 								$space = Round($space, 3)
 								MsgBox(262192, "Drive Space Error", "Not enough free space on destination drive, only " & $space & " Mb's", 6, $SelectorGUI)
 							EndIf
+							FileWriteLine($logfle, "")
 						EndIf
 					Next
 					If $validate = 1 Then
@@ -1552,6 +1588,7 @@ Func FileSelectorGUI()
 				GUICtrlSetState($Combo_OSfle, $GUI_ENABLE)
 				GUICtrlSetState($Button_uncheck, $GUI_ENABLE)
 				GUICtrlSetState($Button_quit, $GUI_ENABLE)
+				_GUICtrlListView_SetItemSelected($ListView_files, -1, True, False)
 			Else
 				MsgBox(262192, "Web Error", "No connection detected!", 0, $SelectorGUI)
 			EndIf
@@ -2283,6 +2320,8 @@ Func GetFileDownloadDetails($listview = "")
 			$URL = ""
 		EndIf
 	Next
+	If $cover = 1 Then
+	EndIf
 EndFunc ;=> GetFileDownloadDetails
 
 Func GetTheSize()
@@ -2305,7 +2344,7 @@ Func GetTheSize()
 EndFunc ;=> GetTheSize
 
 Func ParseTheGamelist()
-	Local $p, $titles
+	Local $p, $titles, $uplist
 	If FileExists($gamelist) Then
 		; Parse for titles
 		;SplashTextOn("", "Please Wait!", 140, 120, Default, Default, 33)
@@ -2321,6 +2360,7 @@ Func ParseTheGamelist()
 		$entries = ""
 		$lines = ""
 		$new = ""
+		$uplist = ""
 		$read = FileRead($gamelist)
 		$split = StringSplit($read, "- Title:", 1)
 		$splits = $split[0]
@@ -2390,7 +2430,18 @@ Func ParseTheGamelist()
 				$entries = $entries & @CRLF & "[" & $ID & "]" & @CRLF & "title=" & $title & @CRLF & "slug=" & $slug & @CRLF & "image=" & $image
 				$entries = $entries & @CRLF & "URL=" & $web & @CRLF & "category=" & $category & @CRLF & "OSes=" & $OSes & @CRLF & "DLC=" & $DLC
 				$entries = $entries & @CRLF & "updates=" & $updates
+				If $updates > 0 Then
+					$entry = $title & " | " & _Now()
+					If $uplist = "" Then
+						$uplist = $entry
+					Else
+						$uplist = $uplist & @CRLF & $entry
+					EndIf
+				EndIf
 			Next
+			If $uplist <> "" Then
+				FileWriteLine($updated, $uplist & @CRLF & @CRLF)
+			EndIf
 			_FileCreate($titlist)
 			If $lines <> "" Then
 				FileWrite($titlist, $lines)
