@@ -39,7 +39,7 @@ Global $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_web, $Check
 Global $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Label_bed
 Global $Label_cat, $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $category, $checksum, $cookie, $cookies, $cover
+Global $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum, $cookie, $cookies, $cover
 Global $covers, $covimg, $dest, $details, $DLC, $downfiles, $download, $drv, $entries, $entry, $f, $file, $files, $filesize, $flag, $fold
 Global $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $head, $height, $i
 Global $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines
@@ -460,6 +460,8 @@ Func MainGUI()
 								InetGet($link, $gamepic, 0, 1)
 							EndIf
 						EndIf
+						_FileWriteLog($logfle, "SAVE COVER - " & $title, -1)
+						FileWriteLine($logfle, "")
 					EndIf
 					GUICtrlSetData($Label_mid, "")
 					;SplashOff()
@@ -544,8 +546,12 @@ Func MainGUI()
 															; Start the manifest
 															FileCopy($json, $manifest)
 														EndIf
+														_FileWriteLog($logfle, "GET MANIFEST - " & $title, -1)
+														FileWriteLine($logfle, "")
 													Else
 														; Game ID not found in return.
+														_FileWriteLog($logfle, "MANIFEST FAILED - " & $title, -1)
+														FileWriteLine($logfle, "")
 														MsgBox(262192, "Add Error", "Retrieval failed!", 0, $GOGcliGUI)
 													EndIf
 												EndIf
@@ -623,6 +629,9 @@ Func MainGUI()
 				"The FIND button is also a next button for the text specified." & @LF & _
 				"Both the FIND and LAST buttons remember their value, so" & @LF & _
 				"to start afresh, hold down CTRL when clicking them." & @LF & @LF & _
+				"The LOG button similarly has a hold down CTRL option, to" & @LF & _
+				"see the 'Updated.txt' file instead." & @LF & @LF & _
+				"Width of the 'Game Files Selector' window is adjustable." & @LF & @LF & _
 				"Click OK to see more information.", 0, $GOGcliGUI)
 			If $ans = 1 Then
 				MsgBox(262208, "Program Information (continued)", _
@@ -681,6 +690,8 @@ Func MainGUI()
 															EndIf
 															Sleep(1000)
 															ParseTheGamelist()
+															_FileWriteLog($logfle, "RETRIEVE GAMES LIST.", -1)
+															FileWriteLine($logfle, "")
 															SetStateOfControls($GUI_ENABLE, "all")
 															ContinueLoop 3
 														EndIf
@@ -736,6 +747,8 @@ Func MainGUI()
 										Sleep(1000)
 										If FileExists($details) Then
 											_ReplaceStringInFile($details, @LF, @CRLF)
+											_FileWriteLog($logfle, "GET DETAILS - " & $title, -1)
+											FileWriteLine($logfle, "")
 											Sleep(500)
 											ShellExecute($details)
 										EndIf
@@ -947,8 +960,10 @@ Func MainGUI()
 				EndIf
 				If $game <> "" Then
 					If $verify = 4 Then
+						; Download
 						If $selector = 1 Then
 							GUICtrlSetData($Label_mid, "Game Files Selector")
+							$caption = $title
 							FileSelectorGUI()
 						Else
 							GUICtrlSetData($Label_mid, "Game Downloading")
@@ -959,6 +974,7 @@ Func MainGUI()
 							EndIf
 						EndIf
 					Else
+						; Validate
 						GUICtrlSetData($Label_mid, "Verifying Game Files")
 						GetFileDownloadDetails()
 						MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $SelectorGUI)
@@ -1312,11 +1328,11 @@ Func SetupGUI()
 EndFunc ;=> SetupGUI
 
 Func FileSelectorGUI()
-	Local $Button_download, $Button_quit, $Button_uncheck, $Combo_OSfle, $Group_files, $Group_OS, $Label_warn, $ListView_files
+	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Combo_OSfle, $Group_files, $Group_OS, $Label_warn, $ListView_files
 	Local $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
 	Local $amount, $checked, $downloads, $ents, $fext, $final, $first, $osfle, $p, $portion, $portions, $sum, $tmpman, $wide
 	;
-	$SelectorGUI = GuiCreate("Game Files Selector - " & $title, $width - 5, $height, $left, $top, $style + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
+	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $style + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
 	GUISetBkColor(0xBBFFBB, $SelectorGUI)
 	; CONTROLS
 	$Group_files = GuiCtrlCreateGroup("Game Files To Download", 10, 10, $width - 25, 302)
@@ -1326,11 +1342,15 @@ Func FileSelectorGUI()
 	GUICtrlSetBkColor($ListView_files, 0xB9FFFF)
 	GUICtrlSetResizing($ListView_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
 	;
-	$Label_warn = GuiCtrlCreateLabel("", 10, 318, $width - 25, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	$Label_warn = GuiCtrlCreateLabel("", 10, 318, $width - 86, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetBkColor($Label_warn, $COLOR_RED)
 	GUICtrlSetColor($Label_warn, $COLOR_YELLOW)
 	GUICtrlSetFont($Label_warn, 9, 600)
 	GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
+	;
+	$Checkbox_cancel = GUICtrlCreateCheckbox("Cancel", $width - 66, 318, 50, 20)
+	GUICtrlSetResizing($Checkbox_cancel, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Checkbox_cancel, "Cancel downloading after the current download has finished!")
 	;
 	$Group_select = GuiCtrlCreateGroup("Select Files", 10, $height - 65, 300, 55)
 	GUICtrlSetResizing($Group_select, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
@@ -1394,7 +1414,7 @@ Func FileSelectorGUI()
 	$ents = _GUICtrlListView_GetItemCount($ListView_files)
 	GUICtrlSetData($Group_files, "Game Files To Download (" & $ents & ")")
 	;
-	GUICtrlSetData($Label_warn, "Ensure other desired download settings have been set on the SETUP window etc.")
+	GUICtrlSetData($Label_warn, "Ensure desired download settings have been set on the SETUP window.")
 	;
 	$osfle = IniRead($inifle, "Selector", "OS", "")
 	If $osfle = "" Then
@@ -1439,158 +1459,194 @@ Func FileSelectorGUI()
 		Case $msg = $Button_download
 			; Download selected files
 			;MsgBox(262192, "Download Error", "This feature is not yet supported!", 1.5, $SelectorGUI)
-			Local $test = ""
-			$ping = Ping("gog.com", 4000)
-			If $ping > 0 Or $test = 1 Then
-				GUICtrlSetState($Button_download, $GUI_DISABLE)
-				GUICtrlSetState($ListView_files, $GUI_DISABLE)
-				GUICtrlSetState($Radio_selall, $GUI_DISABLE)
-				GUICtrlSetState($Radio_selgame, $GUI_DISABLE)
-				GUICtrlSetState($Radio_selext, $GUI_DISABLE)
-				GUICtrlSetState($Radio_selset, $GUI_DISABLE)
-				GUICtrlSetState($Radio_selpat, $GUI_DISABLE)
-				GUICtrlSetState($Combo_OSfle, $GUI_DISABLE)
-				GUICtrlSetState($Button_uncheck, $GUI_DISABLE)
-				GUICtrlSetState($Button_quit, $GUI_DISABLE)
-				$downloads = ""
-				_GUICtrlListView_SetItemSelected($ListView_files, -1, True, False)
-				For $a = 0 To $ents - 1
-					If _GUICtrlListView_GetItemChecked($ListView_files, $a) = True Then
-						$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
-						If StringLeft($entry, 14) <> "Downloading..." And StringLeft($entry, 9) <> "PASSED..." And StringLeft($entry, 7) <> "DONE..." Then
-							If StringLeft($entry, 9) = "FAILED..." Then
-								$entry = StringTrimLeft($entry, 9)
-								_GUICtrlListView_SetItemText($ListView_files, $a, $entry, 3)
-							ElseIf StringLeft($entry, 10) = "SKIPPED..." Then
-								$entry = StringTrimLeft($entry, 10)
-								_GUICtrlListView_SetItemText($ListView_files, $a, $entry, 3)
-							EndIf
-							If $downloads = "" Then
-								$downloads = $entry
-							Else
-								$downloads = $downloads & "|" & $entry
+			Local $cancel, $IDD, $imageD, $slugD, $titleD, $test = ""
+			If GUICtrlRead($Checkbox_cancel) = $GUI_CHECKED Then
+				MsgBox(262192, "Download Error", "Cancel is selected!", 0, $SelectorGUI)
+			Else
+				$cancel = ""
+				$ping = Ping("gog.com", 4000)
+				If $ping > 0 Or $test = 1 Then
+					GUICtrlSetState($Button_download, $GUI_DISABLE)
+					GUICtrlSetState($ListView_files, $GUI_DISABLE)
+					GUICtrlSetState($Radio_selall, $GUI_DISABLE)
+					GUICtrlSetState($Radio_selgame, $GUI_DISABLE)
+					GUICtrlSetState($Radio_selext, $GUI_DISABLE)
+					GUICtrlSetState($Radio_selset, $GUI_DISABLE)
+					GUICtrlSetState($Radio_selpat, $GUI_DISABLE)
+					GUICtrlSetState($Combo_OSfle, $GUI_DISABLE)
+					GUICtrlSetState($Button_uncheck, $GUI_DISABLE)
+					GUICtrlSetState($Button_quit, $GUI_DISABLE)
+					$downloads = ""
+					_GUICtrlListView_SetItemSelected($ListView_files, -1, True, False)
+					For $a = 0 To $ents - 1
+						If _GUICtrlListView_GetItemChecked($ListView_files, $a) = True Then
+							$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+							If StringLeft($entry, 14) <> "Downloading..." And StringLeft($entry, 9) <> "PASSED..." And StringLeft($entry, 7) <> "DONE..." Then
+								If StringLeft($entry, 9) = "FAILED..." Then
+									$entry = StringTrimLeft($entry, 9)
+									_GUICtrlListView_SetItemText($ListView_files, $a, $entry, 3)
+								ElseIf StringLeft($entry, 10) = "SKIPPED..." Then
+									$entry = StringTrimLeft($entry, 10)
+									_GUICtrlListView_SetItemText($ListView_files, $a, $entry, 3)
+								EndIf
+								If $downloads = "" Then
+									$downloads = $entry
+								Else
+									$downloads = $downloads & "|" & $entry
+								EndIf
 							EndIf
 						EndIf
-					EndIf
-				Next
-				If $downloads <> "" Then
-					;MsgBox(262192, "Selected Files", $downloads, 2, $SelectorGUI)
-					If $minimize = 1 Then
-						$flag = @SW_MINIMIZE
-					Else
-						$flag = @SW_SHOW
-					EndIf
-					FileChangeDir(@ScriptDir)
-					$files = StringSplit($downloads, "|", 1)
-					For $f = 1 To $files[0]
-						$file = $files[$f]
-						$URL = IniRead($downfiles, $file, "URL", "")
-						If $URL <> "" Then
-							$drv = StringLeft(@ScriptDir, 3)
-							$space = DriveSpaceFree($drv)
-							$free = $space * 1048576
-							$filesize = IniRead($downfiles, $file, "bytes", 0)
-							If $filesize < $free Then
-								$checksum = IniRead($downfiles, $file, "checksum", "")
-								$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
-								If $i > -1 Then
-									$row = $Button_quit + $i + 1
-									GUICtrlSetBkColor($row, $COLOR_YELLOW)
-									_GUICtrlListView_SetItemText($ListView_files, $i, "Downloading..." & $file, 3)
-									If $test = 1 Then
-										Sleep(5000)
-									Else
-										_FileWriteLog($logfle, "DOWNLOADING - " & $file, -1)
-										$params = "-c Cookie.txt gog-api download-url-path -p=" & $URL
-										$pid = RunWait(@ComSpec & ' /c echo DOWNLOADING ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
-										_FileWriteLog($logfle, "COMPLETED.", -1)
-									EndIf
-									If $filesize <> 0 Then
+					Next
+					If $downloads <> "" Then
+						;MsgBox(262192, "Selected Files", $downloads, 2, $SelectorGUI)
+						If $minimize = 1 Then
+							$flag = @SW_MINIMIZE
+						Else
+							$flag = @SW_SHOW
+						EndIf
+						FileChangeDir(@ScriptDir)
+						$files = StringSplit($downloads, "|", 1)
+						For $f = 1 To $files[0]
+							$file = $files[$f]
+							$URL = IniRead($downfiles, $file, "URL", "")
+							If $URL <> "" Then
+								$drv = StringLeft(@ScriptDir, 3)
+								$space = DriveSpaceFree($drv)
+								$free = $space * 1048576
+								$filesize = IniRead($downfiles, $file, "bytes", 0)
+								If $filesize < $free Then
+									$titleD = IniRead($downfiles, $file, "game", "")
+									$slugD = IniRead($downfiles, $file, "slug", "")
+									$IDD = IniRead($downfiles, $file, "ID", "")
+									$checksum = IniRead($downfiles, $file, "checksum", "")
+									$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
+									If $i > -1 Then
+										$row = $Button_quit + $i + 1
+										GUICtrlSetBkColor($row, $COLOR_YELLOW)
+										_GUICtrlListView_SetItemText($ListView_files, $i, "Downloading..." & $file, 3)
 										If $test = 1 Then
-											GUICtrlSetBkColor($row, $COLOR_LIME)
-											_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
+											Sleep(5000)
 										Else
-											$download = @ScriptDir & "\" & $file
-											If FileExists($download) Then
-												$bytes = FileGetSize($download)
-												If $bytes = $filesize Then
-													If $checksum <> "" Then
-														GUICtrlSetBkColor($row, $COLOR_LIME)
-														_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
+											_FileWriteLog($logfle, "DOWNLOADING - " & $file, -1)
+											$params = "-c Cookie.txt gog-api download-url-path -p=" & $URL
+											$pid = RunWait(@ComSpec & ' /c echo DOWNLOADING ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+											_FileWriteLog($logfle, "COMPLETED.", -1)
+										EndIf
+										If $filesize <> 0 Then
+											If $test = 1 Then
+												GUICtrlSetBkColor($row, $COLOR_LIME)
+												_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
+											Else
+												$download = @ScriptDir & "\" & $file
+												If FileExists($download) Then
+													$bytes = FileGetSize($download)
+													If $bytes = $filesize Then
+														If $checksum <> "" Then
+															GUICtrlSetBkColor($row, $COLOR_LIME)
+															_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
+														Else
+															GUICtrlSetBkColor($row, $COLOR_AQUA)
+															_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
+														EndIf
+														_FileWriteLog($logfle, "Passed the File Size check.", -1)
 													Else
-														GUICtrlSetBkColor($row, $COLOR_AQUA)
-														_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
+														GUICtrlSetBkColor($row, $COLOR_RED)
+														_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
+														_FileWriteLog($logfle, "File Size check failed.", -1)
 													EndIf
-													_FileWriteLog($logfle, "Passed the File Size check.", -1)
+													$gamepic = ""
+													$gamefold = $gamesfold
+													If $type = "Slug" Then
+														$name = $slugD
+													ElseIf $type = "Title" Then
+														$name = FixTitle($titleD)
+													EndIf
+													If $alpha = 1 Then
+														$alf = StringUpper(StringLeft($name, 1))
+														$gamefold = $gamefold & "\" & $alf
+													EndIf
+													$gamefold = $gamefold & "\" & $name
+													If Not FileExists($gamefold) Then DirCreate($gamefold)
+													If FileExists($gamefold) Then
+														FileMove($download, $gamefold & "\", 1)
+														If $cover = 1 Then
+															$gamepic = $gamefold & "\Folder.jpg"
+														EndIf
+													ElseIf FileExists($gamesfold) Then
+														FileMove($download, $gamesfold & "\", 1)
+														If $cover = 1 Then
+															$gamepic = $gamesfold & "\" & $name & ".jpg"
+														EndIf
+													EndIf
+													If $gamepic <> "" Then
+														If Not FileExists($gamepic) Then
+															$imageD = IniRead($gamesini, $IDD, "image", "")
+															$link = "https:" & $imageD & ".jpg"
+															InetGet($link, $gamepic, 1, 0)
+															If Not FileExists($gamepic) Then
+																InetGet($link, $gamepic, 0, 0)
+																If Not FileExists($gamepic) Then
+																	InetGet($link, $gamepic, 0, 1)
+																EndIf
+															EndIf
+															_FileWriteLog($logfle, "Download cover.", -1)
+														EndIf
+													EndIf
 												Else
 													GUICtrlSetBkColor($row, $COLOR_RED)
 													_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
-													_FileWriteLog($logfle, "File Size check failed.", -1)
+													_FileWriteLog($logfle, "File is missing.", -1)
 												EndIf
-												$gamefold = $gamesfold
-												If $type = "Slug" Then
-													$name = $slug
-												ElseIf $type = "Title" Then
-													$name = FixTitle($title)
-												EndIf
-												If $alpha = 1 Then
-													$alf = StringUpper(StringLeft($name, 1))
-													$gamefold = $gamefold & "\" & $alf
-												EndIf
-												$gamefold = $gamefold & "\" & $name
-												If Not FileExists($gamefold) Then DirCreate($gamefold)
-												If FileExists($gamefold) Then
-													FileMove($download, $gamefold & "\", 1)
-												ElseIf FileExists($gamesfold) Then
-													FileMove($download, $gamesfold & "\", 1)
-												EndIf
-												If $cover = 1 Then
-												EndIf
-											Else
-												GUICtrlSetBkColor($row, $COLOR_RED)
-												_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
-												_FileWriteLog($logfle, "File is missing.", -1)
 											EndIf
+										Else
+											GUICtrlSetBkColor($row, $COLOR_MONEYGREEN)
+											_GUICtrlListView_SetItemText($ListView_files, $i, "DONE..." & $file, 3)
+											_FileWriteLog($logfle, "No file size listed.", -1)
 										EndIf
-									Else
-										GUICtrlSetBkColor($row, $COLOR_MONEYGREEN)
-										_GUICtrlListView_SetItemText($ListView_files, $i, "DONE..." & $file, 3)
-										_FileWriteLog($logfle, "No file size listed.", -1)
+									EndIf
+								Else
+									$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
+									If $i > -1 Then
+										$row = $Button_quit + $i + 1
+										GUICtrlSetBkColor($row, $COLOR_FUCHSIA)
+										_GUICtrlListView_SetItemText($ListView_files, $i, "SKIPPED..." & $file, 3)
+									EndIf
+									_FileWriteLog($logfle, "Not enough drive space.", -1)
+									$space = Round($space, 3)
+									MsgBox(262192, "Drive Space Error", "Not enough free space on destination drive, only " & $space & " Mb's", 6, $SelectorGUI)
+								EndIf
+								FileWriteLine($logfle, "")
+							EndIf
+							If $f <> $files[0] Then
+								If GUICtrlRead($Checkbox_cancel) = $GUI_CHECKED Then
+									$ans = MsgBox(262209 + 256, "Cancel Query", "Do you want to cancel remaining downloads?", 0, $SelectorGUI)
+									If $ans = 1 Then
+										$cancel = 1
+										ExitLoop
 									EndIf
 								EndIf
-							Else
-								$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
-								If $i > -1 Then
-									$row = $Button_quit + $i + 1
-									GUICtrlSetBkColor($row, $COLOR_FUCHSIA)
-									_GUICtrlListView_SetItemText($ListView_files, $i, "SKIPPED..." & $file, 3)
-								EndIf
-								_FileWriteLog($logfle, "Not enough drive space.", -1)
-								$space = Round($space, 3)
-								MsgBox(262192, "Drive Space Error", "Not enough free space on destination drive, only " & $space & " Mb's", 6, $SelectorGUI)
 							EndIf
-							FileWriteLine($logfle, "")
+						Next
+						If $validate = 1 Then
 						EndIf
-					Next
-					If $validate = 1 Then
+						_GUICtrlListView_SetColumnWidth($ListView_files, 3, $LVSCW_AUTOSIZE)
+					Else
+						MsgBox(262192, "Program Error", "Nothing to download!", 2, $SelectorGUI)
 					EndIf
-					_GUICtrlListView_SetColumnWidth($ListView_files, 3, $LVSCW_AUTOSIZE)
+					GUICtrlSetState($Button_download, $GUI_ENABLE)
+					GUICtrlSetState($ListView_files, $GUI_ENABLE)
+					GUICtrlSetState($Radio_selall, $GUI_ENABLE)
+					GUICtrlSetState($Radio_selgame, $GUI_ENABLE)
+					GUICtrlSetState($Radio_selext, $GUI_ENABLE)
+					GUICtrlSetState($Radio_selset, $GUI_ENABLE)
+					GUICtrlSetState($Radio_selpat, $GUI_ENABLE)
+					GUICtrlSetState($Combo_OSfle, $GUI_ENABLE)
+					GUICtrlSetState($Button_uncheck, $GUI_ENABLE)
+					GUICtrlSetState($Button_quit, $GUI_ENABLE)
+					_GUICtrlListView_SetItemSelected($ListView_files, -1, True, False)
 				Else
-					MsgBox(262192, "Program Error", "Nothing to download!", 2, $SelectorGUI)
+					MsgBox(262192, "Web Error", "No connection detected!", 0, $SelectorGUI)
 				EndIf
-				GUICtrlSetState($Button_download, $GUI_ENABLE)
-				GUICtrlSetState($ListView_files, $GUI_ENABLE)
-				GUICtrlSetState($Radio_selall, $GUI_ENABLE)
-				GUICtrlSetState($Radio_selgame, $GUI_ENABLE)
-				GUICtrlSetState($Radio_selext, $GUI_ENABLE)
-				GUICtrlSetState($Radio_selset, $GUI_ENABLE)
-				GUICtrlSetState($Radio_selpat, $GUI_ENABLE)
-				GUICtrlSetState($Combo_OSfle, $GUI_ENABLE)
-				GUICtrlSetState($Button_uncheck, $GUI_ENABLE)
-				GUICtrlSetState($Button_quit, $GUI_ENABLE)
-				_GUICtrlListView_SetItemSelected($ListView_files, -1, True, False)
-			Else
-				MsgBox(262192, "Web Error", "No connection detected!", 0, $SelectorGUI)
 			EndIf
 		Case $msg = $Combo_OSfle
 			; OS for files
@@ -2224,10 +2280,11 @@ Func FixTitle($text)
 EndFunc ;=> FixTitle
 
 Func GetFileDownloadDetails($listview = "")
-	Local $alias, $col1, $col2, $col3, $col4, $language, $OPS, $URL
-	;
+	Local $alias, $col1, $col2, $col3, $col4, $language, $OPS
+	;$caption
 	_FileCreate($downfiles)
 	Sleep(500)
+	If $listview <> "" Then IniWrite($downfiles, "Title", "caption", $caption)
 	;
 	$alias = ""
 	$checksum = ""
@@ -2291,6 +2348,9 @@ Func GetFileDownloadDetails($listview = "")
 			$line = StringSplit($line, '"', 1)
 			$checksum = $line[1]
 			;
+			IniWrite($downfiles, $col4, "game", $title)
+			IniWrite($downfiles, $col4, "slug", $slug)
+			IniWrite($downfiles, $col4, "ID", $ID)
 			IniWrite($downfiles, $col4, "file", $col3)
 			IniWrite($downfiles, $col4, "language", $language)
 			IniWrite($downfiles, $col4, "OS", $OPS)
@@ -2320,8 +2380,8 @@ Func GetFileDownloadDetails($listview = "")
 			$URL = ""
 		EndIf
 	Next
-	If $cover = 1 Then
-	EndIf
+	;If $cover = 1 Then
+	;EndIf
 EndFunc ;=> GetFileDownloadDetails
 
 Func GetTheSize()
