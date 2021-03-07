@@ -5,6 +5,8 @@ In development at this stage, but nearing completion for version 1.
 
 Downloading from the 'Game Files Selector' window now supported.
 
+See the Wiki link above, for more information.
+
 Stay Tuned!
 
 https://github.com/Magnitus-/gogcli
