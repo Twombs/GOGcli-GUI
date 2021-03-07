@@ -22,6 +22,7 @@
 #include <ColorConstants.au3>
 #include <EditConstants.au3>
 #include <ListViewConstants.au3>
+#include <ProgressConstants.au3>
 #include <StaticConstants.au3>
 #include <GuiListView.au3>
 #include <Misc.au3>
@@ -39,13 +40,14 @@ Global $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_web, $Check
 Global $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Label_bed
 Global $Label_cat, $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum, $cookie, $cookies
-Global $cover, $covers, $covimg, $dest, $details, $DLC, $downfiles, $downlist, $download, $drv, $entries, $entry, $f, $file, $files, $filesize
-Global $flag, $fold, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $head, $height, $i
-Global $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines
-Global $link, $listed, $listview, $logfle, $manifest, $minimize, $n, $name, $num, $OP, $OS, $OSes, $params, $part, $parts, $pid, $ping, $pth, $read
-Global $res, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $space, $splash, $split, $splits, $state, $style, $tail, $text
-Global $title, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos
+Global $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum, $checkval, $cookie
+Global $cookies, $cover, $covers, $covimg, $dest, $details, $DLC, $done, $downfiles, $downlist, $download, $drv, $entries, $entry, $exists
+Global $f, $file, $filepth, $files, $filesize, $flag, $fold, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini
+Global $getlatest, $gogcli, $GOGcliGUI, $handle, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image
+Global $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $listed, $listview, $logfle, $m, $manifest, $md5check, $minimize
+Global $n, $name, $num, $OP, $OS, $OSes, $params, $part, $parts, $percent, $pid, $ping, $progress, $pth, $read, $res, $row, $s, $second
+Global $selector, $SetupGUI, $shell, $size, $slug, $space, $splash, $split, $splits, $state, $style, $tail, $text, $title, $titlist, $top
+Global $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos
 
 $addlist = @ScriptDir & "\Added.txt"
 $bigpic = @ScriptDir & "\Big.jpg"
@@ -79,7 +81,7 @@ Exit
 
 Func MainGUI()
 	Local $Menu_button, $Menu_list, $Item_clear, $Item_verify, $Item_view
-	Local $cnt, $display, $dll, $find, $ind, $last, $latest, $mpos, $xpos, $ypos
+	Local $buttxt, $cnt, $display, $dll, $find, $ind, $last, $latest, $mpos, $xpos, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -656,6 +658,7 @@ Func MainGUI()
 					"guarantee the results (or my read) of any 3rd party programs." & @LF & _
 					"This is Freeware that I have voluntarily given many hours to." & @LF & @LF & _
 					"BIG THANKS to Magnitus for 'gogcli.exe'." & @LF & @LF & _
+					"BIG thanks to j0kky (AutoIt Forum) for download size help." & @LF & _
 					"Praise & BIG thanks as always, to Jon & team for free AutoIt." & @LF & @LF & _
 					"© February 2021 - Created by Timboli (aka TheSaint). (" & $version & ")", 0, $GOGcliGUI)
 			EndIf
@@ -1383,9 +1386,9 @@ Func SetupGUI()
 EndFunc ;=> SetupGUI
 
 Func FileSelectorGUI()
-	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Combo_OSfle, $Group_files, $Group_OS, $Label_warn, $ListView_files
-	Local $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
-	Local $amount, $checked, $downloads, $ents, $fext, $final, $first, $osfle, $p, $portion, $portions, $sum, $tmpman, $wide
+	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Combo_OSfle, $Group_files, $Group_OS, $Label_percent, $Label_warn, $ListView_files
+	Local $Progress_bar, $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
+	Local $amount, $checked, $downloads, $edge, $ents, $fext, $final, $first, $osfle, $p, $portion, $portions, $sum, $tmpman, $wide
 	;
 	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $style + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
 	GUISetBkColor(0xBBFFBB, $SelectorGUI)
@@ -1397,14 +1400,23 @@ Func FileSelectorGUI()
 	GUICtrlSetBkColor($ListView_files, 0xB9FFFF)
 	GUICtrlSetResizing($ListView_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
 	;
-	$Label_warn = GuiCtrlCreateLabel("", 10, 318, $width - 86, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	$Label_warn = GuiCtrlCreateLabel("", 10, 318, $width - 184, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetBkColor($Label_warn, $COLOR_RED)
 	GUICtrlSetColor($Label_warn, $COLOR_YELLOW)
-	GUICtrlSetFont($Label_warn, 9, 600)
-	GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
+	GUICtrlSetFont($Label_warn, 8, 600)
+	GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
+	;GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
+	;
+	$Progress_bar = GUICtrlCreateProgress($width - 166, 317, 90, 20, $PBS_SMOOTH)
+	GUICtrlSetResizing($Progress_bar, $GUI_DOCKRIGHT + $GUI_DOCKHEIGHT + $GUI_DOCKAUTO + $GUI_DOCKAUTO)
+	$Label_percent = GUICtrlCreateLabel("0%", $width - 160, 318, 80, 20, $SS_CENTER + $SS_CENTERIMAGE)
+	GUICtrlSetBkColor($Label_percent, $GUI_BKCOLOR_TRANSPARENT)
+	GUICtrlSetColor($Label_percent, $COLOR_BLACK)
+	GUICtrlSetFont($Label_percent, 9, 600)
+	GUICtrlSetResizing($Label_percent, $GUI_DOCKRIGHT + $GUI_DOCKHEIGHT + $GUI_DOCKAUTO + $GUI_DOCKAUTO)
 	;
 	$Checkbox_cancel = GUICtrlCreateCheckbox("Cancel", $width - 66, 318, 50, 20)
-	GUICtrlSetResizing($Checkbox_cancel, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetResizing($Checkbox_cancel, $GUI_DOCKRIGHT + $GUI_DOCKAUTO + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Checkbox_cancel, "Cancel downloading after the current download has finished!")
 	;
 	$Group_select = GuiCtrlCreateGroup("Select Files", 10, $height - 65, 300, 55)
@@ -1495,9 +1507,13 @@ Func FileSelectorGUI()
 			$winpos = WinGetPos($SelectorGUI, "")
 			$wide = $winpos[2]
 			If $left > @DesktopWidth - $wide Then
-				$left = @DesktopWidth - $wide - 20
+				$edge = @DesktopWidth - $wide - 20
+			ElseIf $wide < $width Then
+				$wide = $width + 10
+			Else
+				$edge = $left
 			EndIf
-			WinMove($SelectorGUI, "", $left, $top, $wide, $height + 38)
+			WinMove($SelectorGUI, "", $edge, $top, $wide, $height + 38)
 		Case $msg = $Button_uncheck
 			; Deselect ALL files
 			_GUICtrlListView_SetItemChecked($ListView_files, -1, False)
@@ -1536,8 +1552,9 @@ Func FileSelectorGUI()
 					For $a = 0 To $ents - 1
 						If _GUICtrlListView_GetItemChecked($ListView_files, $a) = True Then
 							$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
-							If StringLeft($entry, 14) <> "Downloading..." And StringLeft($entry, 9) <> "PASSED..." And StringLeft($entry, 7) <> "DONE..." Then
-								If StringLeft($entry, 9) = "FAILED..." Then
+							If StringLeft($entry, 14) <> "Downloading..." And StringLeft($entry, 9) <> "PASSED..." And StringLeft($entry, 7) <> "DONE..." _
+								And StringLeft($entry, 11) <> "MD5check..." And StringLeft($entry, 10) <> "MD5okay..." Then
+								If StringLeft($entry, 9) = "FAILED..." Or StringLeft($entry, 9) = "MD5bad..." Then
 									$entry = StringTrimLeft($entry, 9)
 									_GUICtrlListView_SetItemText($ListView_files, $a, $entry, 3)
 								ElseIf StringLeft($entry, 10) = "SKIPPED..." Then
@@ -1559,6 +1576,7 @@ Func FileSelectorGUI()
 						Else
 							$flag = @SW_SHOW
 						EndIf
+						$md5check = ""
 						FileChangeDir(@ScriptDir)
 						$files = StringSplit($downloads, "|", 1)
 						For $f = 1 To $files[0]
@@ -1579,12 +1597,43 @@ Func FileSelectorGUI()
 										$row = $Button_quit + $i + 1
 										GUICtrlSetBkColor($row, $COLOR_YELLOW)
 										_GUICtrlListView_SetItemText($ListView_files, $i, "Downloading..." & $file, 3)
+										$download = @ScriptDir & "\" & $file
 										If $test = 1 Then
 											Sleep(5000)
 										Else
 											_FileWriteLog($logfle, "DOWNLOADING - " & $file, -1)
+											GUICtrlSetData($Progress_bar, 0)
+											GUICtrlSetData($Label_percent, "0%")
+											$exists = ""
 											$params = "-c Cookie.txt gog-api download-url-path -p=" & $URL
-											$pid = RunWait(@ComSpec & ' /c echo DOWNLOADING ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+											;$pid = RunWait(@ComSpec & ' /c echo DOWNLOADING ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+											$pid = Run(@ComSpec & ' /c echo DOWNLOADING ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+											While ProcessExists($pid) <> 0
+												Sleep(500)
+												If $filesize <> 0 Then
+													If $exists = "" Then $exists = FileExists($download)
+													If $exists = 1 Then
+														$handle = FileOpen($download, 0)
+														DllCall("Kernel32.dll", "BOOLEAN", "FlushFileBuffers", "HANDLE", $handle)
+														$done = FileGetSize($download)
+														FileClose($handle)
+														If $done <> 0 Then
+															$progress = $done
+															$percent = ($progress / $filesize) * 100
+															GUICtrlSetData($Progress_bar, $percent)
+															$percent = Floor($percent) & "%"
+															GUICtrlSetData($Label_percent, $percent)
+															;GUICtrlSetTip($Progress_bar, $percent)
+															;$done = $done / 1048576
+															;If $done > 999 Then
+															;	$done = Round($done / 1024, 2) & " Gb"
+															;Else
+															;	$done = Round($done) & " Mb"
+															;EndIf
+														EndIf
+													EndIf
+												EndIf
+											WEnd
 											_FileWriteLog($logfle, "COMPLETED.", -1)
 										EndIf
 										If $filesize <> 0 Then
@@ -1592,10 +1641,11 @@ Func FileSelectorGUI()
 												GUICtrlSetBkColor($row, $COLOR_LIME)
 												_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
 											Else
-												$download = @ScriptDir & "\" & $file
 												If FileExists($download) Then
 													$bytes = FileGetSize($download)
 													If $bytes = $filesize Then
+														GUICtrlSetData($Progress_bar, 100)
+														GUICtrlSetData($Label_percent, "100%")
 														If $checksum <> "" Then
 															GUICtrlSetBkColor($row, $COLOR_LIME)
 															_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
@@ -1609,6 +1659,7 @@ Func FileSelectorGUI()
 														_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
 														_FileWriteLog($logfle, "File Size check failed.", -1)
 													EndIf
+													$filepth = ""
 													$gamepic = ""
 													$gamefold = $gamesfold
 													If $type = "Slug" Then
@@ -1627,10 +1678,24 @@ Func FileSelectorGUI()
 														If $cover = 1 Then
 															$gamepic = $gamefold & "\Folder.jpg"
 														EndIf
+														If $checksum <> "" And $validate = 1 Then
+															$filepth = $gamefold & "\" & $file
+														EndIf
 													ElseIf FileExists($gamesfold) Then
 														FileMove($download, $gamesfold & "\", 1)
 														If $cover = 1 Then
 															$gamepic = $gamesfold & "\" & $name & ".jpg"
+														EndIf
+														If $checksum <> "" And $validate = 1 Then
+															$filepth = $gamesfold & "\" & $file
+														EndIf
+													EndIf
+													If $filepth <> "" And $validate = 1 Then
+														$checkval = $filepth & "|" & $checksum & "|" & $i
+														If $md5check = "" Then
+															$md5check = $checkval
+														Else
+															$md5check = $md5check & "||" & $checkval
 														EndIf
 													EndIf
 													If $gamepic <> "" Then
@@ -1654,9 +1719,17 @@ Func FileSelectorGUI()
 												EndIf
 											EndIf
 										Else
-											GUICtrlSetBkColor($row, $COLOR_MONEYGREEN)
-											_GUICtrlListView_SetItemText($ListView_files, $i, "DONE..." & $file, 3)
 											_FileWriteLog($logfle, "No file size listed.", -1)
+											If FileExists($download) Then
+												GUICtrlSetData($Progress_bar, 100)
+												GUICtrlSetData($Label_percent, "100%")
+												GUICtrlSetBkColor($row, $COLOR_MONEYGREEN)
+												_GUICtrlListView_SetItemText($ListView_files, $i, "DONE..." & $file, 3)
+											Else
+												GUICtrlSetBkColor($row, $COLOR_RED)
+												_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
+												_FileWriteLog($logfle, "File is missing.", -1)
+											EndIf
 										EndIf
 									EndIf
 								Else
@@ -1680,10 +1753,32 @@ Func FileSelectorGUI()
 										ExitLoop
 									EndIf
 								EndIf
+								Sleep(500)
 							EndIf
 						Next
-						If $validate = 1 Then
-						EndIf
+;~ 						If $validate = 1 Then
+;~ 							If $md5check <> "" Then
+;~ 								; Compare MD5 values.
+;~ 								$md5check = StringSplit($md5check, "||", 1)
+;~ 								For $m = 1 To $md5check[0]
+;~ 									$checkval = $md5check[$m]
+;~ 									$checkval = StringSplit($checkval, "|", 1)
+;~ 									$filepth = $checkval[1]
+;~ 									$checksum = $checkval[2]
+;~ 									$i = $checkval[3]
+;~ 									$file = StringSplit($filepth, "\", 1)
+;~ 									$file = $file[$file[0]]
+;~ 									_GUICtrlListView_SetItemText($ListView_files, $i, "MD5check..." & $file, 3)
+;~ 									;GUICtrlSetBkColor($row, $COLOR_LIME)
+;~ 									;_GUICtrlListView_SetItemText($ListView_files, $i, "MD5okay..." & $file, 3)
+;~ 									;_FileWriteLog($logfle, "MD5 Check passed.", -1)
+;~ 									;Else
+;~ 									;GUICtrlSetBkColor($row, $COLOR_RED)
+;~ 									;_GUICtrlListView_SetItemText($ListView_files, $i, "MD5bad..." & $file, 3)
+;~ 									;_FileWriteLog($logfle, "MD5 Check failed.", -1)
+;~ 								Next
+;~ 							EndIf
+;~ 						EndIf
 						_GUICtrlListView_SetColumnWidth($ListView_files, 3, $LVSCW_AUTOSIZE)
 					Else
 						MsgBox(262192, "Program Error", "Nothing to download!", 2, $SelectorGUI)
