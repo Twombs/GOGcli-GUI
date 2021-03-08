@@ -24,11 +24,13 @@
 #include <ListViewConstants.au3>
 #include <ProgressConstants.au3>
 #include <StaticConstants.au3>
+#include <StringConstants.au3>
 #include <GuiListView.au3>
 #include <Misc.au3>
 #include <File.au3>
 #include <Date.au3>
 #include <Inet.au3>
+#include <Crypt.au3>
 #include <ScreenCapture.au3>
 #include <GDIPlus.au3>
 #include <WinAPI.au3>
@@ -37,17 +39,18 @@ _Singleton("gog-cli-gui-timboli")
 
 Global $Button_dest, $Button_down, $Button_exit, $Button_find, $Button_fold, $Button_game, $Button_get, $Button_info, $Button_last
 Global $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_web, $Checkbox_alpha, $Checkbox_show, $Combo_dest, $Group_cover
-Global $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Label_bed
-Global $Label_cat, $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
+Global $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Item_verify
+Global $Label_bed, $Label_cat, $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum, $checkval, $cookie
-Global $cookies, $cover, $covers, $covimg, $dest, $details, $DLC, $done, $downfiles, $downlist, $download, $drv, $entries, $entry, $exists
-Global $f, $file, $filepth, $files, $filesize, $flag, $fold, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini
-Global $getlatest, $gogcli, $GOGcliGUI, $handle, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image
-Global $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $listed, $listview, $logfle, $m, $manifest, $md5check, $minimize
-Global $n, $name, $num, $OP, $OS, $OSes, $params, $part, $parts, $percent, $pid, $ping, $progress, $pth, $read, $res, $row, $s, $second
-Global $selector, $SetupGUI, $shell, $size, $slug, $space, $splash, $split, $splits, $state, $style, $tail, $text, $title, $titlist, $top
-Global $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos
+Global $7zip, $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum, $checkval
+Global $cookie, $cookies, $cover, $covers, $covimg, $dest, $details, $DLC, $done, $downfiles, $downlist, $download, $drv, $entries, $entry
+Global $exists, $f, $file, $filepth, $files, $filesize, $flag, $fold, $foldzip, $free, $game, $gamefold, $gamelist, $gamepic, $games
+Global $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $handle, $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT
+Global $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $listed, $listview, $logfle
+Global $m, $manifest, $md5check, $minimize, $n, $name, $num, $OP, $OS, $OSes, $params, $part, $parts, $percent, $pid, $ping, $progress, $pth
+Global $read, $res, $resultfle, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $space, $splash, $split, $splits, $state
+Global $style, $tail, $text, $title, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $version, $web
+Global $which, $width, $winpos
 
 $addlist = @ScriptDir & "\Added.txt"
 $bigpic = @ScriptDir & "\Big.jpg"
@@ -57,6 +60,7 @@ $covers = @ScriptDir & "\Covers"
 $details = @ScriptDir & "\Detail.txt"
 $downfiles = @ScriptDir & "\Downfiles.ini"
 $downlist = @ScriptDir & "\Downloads.txt"
+$foldzip = @ScriptDir & "\7-Zip"
 $gamelist = @ScriptDir & "\Games.txt"
 $gamesini = @ScriptDir & "\Games.ini"
 $gogcli = @ScriptDir & "\gogcli.exe"
@@ -65,6 +69,7 @@ $inifle = @ScriptDir & "\Settings.ini"
 $json = @ScriptDir & "\manifest.json"
 $logfle = @ScriptDir & "\Log.txt"
 $manifest = @ScriptDir & "\Manifest.txt"
+$resultfle = @ScriptDir & "\Results.txt"
 $splash = @ScriptDir & "\Splash.jpg"
 $titlist = @ScriptDir & "\Titles.txt"
 $updated = @ScriptDir & "\Updated.txt"
@@ -73,6 +78,7 @@ $version = "v1.0"
 If Not FileExists($addlist) Then _FileCreate($addlist)
 If Not FileExists($covers) Then DirCreate($covers)
 If Not FileExists($downlist) Then _FileCreate($downlist)
+;~ If Not FileExists($foldzip) Then DirCreate($foldzip)
 If Not FileExists($updated) Then _FileCreate($updated)
 
 MainGUI()
@@ -80,7 +86,7 @@ MainGUI()
 Exit
 
 Func MainGUI()
-	Local $Menu_button, $Menu_list, $Item_clear, $Item_verify, $Item_view
+	Local $Menu_button, $Menu_list, $Item_clear, $Item_view
 	Local $buttxt, $cnt, $display, $dll, $find, $ind, $last, $latest, $mpos, $xpos, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
@@ -366,6 +372,30 @@ Func MainGUI()
 		$cover = 1
 		IniWrite($inifle, "Download Options", "cover", $cover)
 	EndIf
+	;
+;~ 	$7zip = IniRead($inifle, "7-Zip", "path", "")
+;~ 	If $7zip = "" Then
+;~ 		$7zip = $foldzip & "\7z.exe"
+;~ 		If FileExists($7zip) Then
+;~ 			IniWrite($inifle, "7-Zip", "path", $7zip)
+;~ 		Else
+;~ 			$7zip = $foldzip & "\7za.exe"
+;~ 			If FileExists($7zip) Then
+;~ 				MsgBox(262192, "7-Zip Error", "This program does not support using '7za.exe'." _
+;~ 					& @LF & "Instead it requires the alternate '7z.exe'." & @LF _
+;~ 					& @LF & "Please update your version of 7-Zip.", 0, $GOGcliGUI)
+;~ 			EndIf
+;~ 			$7zip = ""
+;~ 			IniWrite($inifle, "7-Zip", "path", $7zip)
+;~ 		EndIf
+;~ 	ElseIf Not FileExists($7zip) Then
+;~ 		MsgBox(262192, "7-Zip Error", "The path set for '7z.exe' no longer exists." & @LF _
+;~ 			& @LF & "Please reinstate 7-Zip or manually correct" _
+;~ 			& @LF & "the setting in the 'Settings.ini' file.", 0, $GOGcliGUI)
+;~ 		$7zip = ""
+;~ 		IniWrite($inifle, "7-Zip", "path", $7zip)
+;~ 	EndIf
+	;If $7zip = "" Then GUICtrlSetState($Item_verify, $GUI_DISABLE)
 	;
 	$find = ""
 	$last = ""
@@ -1243,6 +1273,41 @@ Func SetupGUI()
 	$opsys = "linux|mac|windows|mac linux|windows linux|windows mac|windows mac linux"
 	GUICtrlSetData($Combo_OS, $opsys, $OS)
 	;
+;~ 	If $7zip = "" Then
+;~ 		$7zip = $foldzip & "\7z.exe"
+;~ 		If FileExists($7zip) Then
+;~ 			IniWrite($inifle, "7-Zip", "path", $7zip)
+;~ 			;GUISwitch($GOGcliGUI)
+;~ 			;GUICtrlSetState($Item_verify, $GUI_ENABLE)
+;~ 			;GUISwitch($SetupGUI)
+;~ 		Else
+;~ 			$7zip = $foldzip & "\7za.exe"
+;~ 			If FileExists($7zip) Then
+;~ 				MsgBox(262192, "7-Zip Error", "This program does not support using '7za.exe'." _
+;~ 					& @LF & "Instead it requires the alternate '7z.exe'." & @LF _
+;~ 					& @LF & "Please update your version of 7-Zip.", 0, $SetupGUI)
+;~ 			EndIf
+;~ 			$7zip = ""
+;~ 			IniWrite($inifle, "7-Zip", "path", $7zip)
+;~ 		EndIf
+;~ 	ElseIf Not FileExists($7zip) Then
+;~ 		MsgBox(262192, "7-Zip Error", "The path set for '7z.exe' no longer exists." & @LF _
+;~ 			& @LF & "Please reinstate 7-Zip or manually correct" _
+;~ 			& @LF & "the setting in the 'Settings.ini' file.", 0, $SetupGUI)
+;~ 		$7zip = ""
+;~ 		IniWrite($inifle, "7-Zip", "path", $7zip)
+;~ 		;GUISwitch($GOGcliGUI)
+;~ 		;GUICtrlSetState($Item_verify, $GUI_DISABLE)
+;~ 		;GUISwitch($SetupGUI)
+;~ 	EndIf
+;~ 	If $7zip = "" Then
+;~ 		;GUICtrlSetState($Checkbox_valid, $GUI_DISABLE)
+;~ 		;If $validate = 1 Then
+;~ 		;	$validate = 4
+;~ 		;	IniWrite($inifle, "Download Options", "validate", $validate)
+;~ 		;EndIf
+;~ 	EndIf
+	;
 	GUICtrlSetState($Checkbox_valid, $validate)
 	GUICtrlSetState($Checkbox_latest, $getlatest)
 	GUICtrlSetState($Checkbox_select, $selector)
@@ -1258,7 +1323,7 @@ Func SetupGUI()
 		Case $msg = $GUI_EVENT_CLOSE Or $msg = $Button_close
 			; Exit / Close / Quit the window
 			If $lang & $second = "" Then
-				MsgBox(262192, "Language Error", "You must specify one language at least!", 0, $GOGcliGUI)
+				MsgBox(262192, "Language Error", "You must specify one language at least!", 0, $SetupGUI)
 				ContinueLoop
 			EndIf
 			;
@@ -1756,29 +1821,40 @@ Func FileSelectorGUI()
 								Sleep(500)
 							EndIf
 						Next
-;~ 						If $validate = 1 Then
-;~ 							If $md5check <> "" Then
-;~ 								; Compare MD5 values.
-;~ 								$md5check = StringSplit($md5check, "||", 1)
-;~ 								For $m = 1 To $md5check[0]
-;~ 									$checkval = $md5check[$m]
-;~ 									$checkval = StringSplit($checkval, "|", 1)
-;~ 									$filepth = $checkval[1]
-;~ 									$checksum = $checkval[2]
-;~ 									$i = $checkval[3]
-;~ 									$file = StringSplit($filepth, "\", 1)
-;~ 									$file = $file[$file[0]]
-;~ 									_GUICtrlListView_SetItemText($ListView_files, $i, "MD5check..." & $file, 3)
-;~ 									;GUICtrlSetBkColor($row, $COLOR_LIME)
-;~ 									;_GUICtrlListView_SetItemText($ListView_files, $i, "MD5okay..." & $file, 3)
-;~ 									;_FileWriteLog($logfle, "MD5 Check passed.", -1)
-;~ 									;Else
-;~ 									;GUICtrlSetBkColor($row, $COLOR_RED)
-;~ 									;_GUICtrlListView_SetItemText($ListView_files, $i, "MD5bad..." & $file, 3)
-;~ 									;_FileWriteLog($logfle, "MD5 Check failed.", -1)
-;~ 								Next
-;~ 							EndIf
-;~ 						EndIf
+						If $validate = 1 Then
+							If $md5check <> "" Then
+								; Compare MD5 values.
+								$md5check = StringSplit($md5check, "||", 1)
+								For $m = 1 To $md5check[0]
+									$checkval = $md5check[$m]
+									$checkval = StringSplit($checkval, "|", 1)
+									$filepth = $checkval[1]
+									$checksum = $checkval[2]
+									$i = $checkval[3]
+									$row = $Button_quit + $i + 1
+									If FileExists($filepth) Then
+										$file = StringSplit($filepth, "\", 1)
+										$file = $file[$file[0]]
+										_GUICtrlListView_SetItemText($ListView_files, $i, "MD5check..." & $file, 3)
+										_Crypt_Startup()
+										$hash = _Crypt_HashFile($filepth, $CALG_MD5)
+										$hash = StringTrimLeft($hash, 2)
+										If $hash = $checksum Then
+											GUICtrlSetBkColor($row, $COLOR_LIME)
+											_GUICtrlListView_SetItemText($ListView_files, $i, "MD5okay..." & $file, 3)
+											_FileWriteLog($logfle, "MD5 Check passed.", -1)
+										Else
+											GUICtrlSetBkColor($row, $COLOR_RED)
+											_GUICtrlListView_SetItemText($ListView_files, $i, "MD5bad..." & $file, 3)
+											_FileWriteLog($logfle, "MD5 Check failed.", -1)
+											MsgBox(262192, "Checksum Failure", "MD5 = " & $checksum & @LF & "Hash = " & $hash, 0, $SelectorGUI)
+										EndIf
+										_Crypt_Shutdown()
+										;$foldpth = StringTrimRight($filepth, StringLen($file) + 1)
+									EndIf
+								Next
+							EndIf
+						EndIf
 						_GUICtrlListView_SetColumnWidth($ListView_files, 3, $LVSCW_AUTOSIZE)
 					Else
 						MsgBox(262192, "Program Error", "Nothing to download!", 2, $SelectorGUI)
