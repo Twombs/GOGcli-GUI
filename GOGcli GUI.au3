@@ -1847,7 +1847,7 @@ Func FileSelectorGUI()
 											GUICtrlSetBkColor($row, $COLOR_RED)
 											_GUICtrlListView_SetItemText($ListView_files, $i, "MD5bad..." & $file, 3)
 											_FileWriteLog($logfle, "MD5 Check failed.", -1)
-											MsgBox(262192, "Checksum Failure", "MD5 = " & $checksum & @LF & "Hash = " & $hash, 0, $SelectorGUI)
+											;MsgBox(262192, "Checksum Failure", "MD5 = " & $checksum & @LF & "Hash = " & $hash, 0, $SelectorGUI)
 										EndIf
 										_Crypt_Shutdown()
 										;$foldpth = StringTrimRight($filepth, StringLen($file) + 1)
