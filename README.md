@@ -9,7 +9,7 @@ Checksum (MD5) checking is now supported.
 
 See the Wiki link above, for more information.
 
-Stay Tuned!
+See the First Beta Release!
 
 https://github.com/Magnitus-/gogcli
 
