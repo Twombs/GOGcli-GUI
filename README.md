@@ -7,6 +7,10 @@ Downloading from the 'Game Files Selector' window now supported.
 
 Checksum (MD5) checking is now supported.
 
+ZIP file checking is now supported.
+
+Multiple manifest retrieval (batch of 10 or less) is now supported.
+
 See the Wiki link above, for more information.
 
 See the First Beta Release!
