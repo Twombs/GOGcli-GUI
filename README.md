@@ -11,6 +11,8 @@ ZIP file checking is now supported.
 
 Multiple manifest retrieval (batch of 10 or less) is now supported.
 
+Download destination folder parameter is now supported (v0.8.0 gogcli.exe).
+
 See the Wiki link above, for more information.
 
 See the First Beta Release!
