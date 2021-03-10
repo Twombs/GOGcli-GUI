@@ -49,7 +49,7 @@ Global $cnt, $cookie, $cookies, $cover, $covers, $covimg, $dest, $details, $DLC,
 Global $entries, $entry, $exists, $f, $file, $filepth, $files, $filesize, $flag, $fold, $foldzip, $free, $game, $gamefold, $gamelist
 Global $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $handle, $hash, $head, $height, $i, $icoD, $icoF, $icoI
 Global $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed
-Global $listview, $logfle, $m, $manifest, $manifests, $manlist, $md5check, $minimize, $n, $name, $num, $OP, $OS, $OSes, $params, $part
+Global $listview, $logfle, $m, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num, $OP, $OS, $OSes, $params, $part
 Global $parts, $percent, $pid, $ping, $progress, $pth, $read, $res, $resultfle, $ret, $row, $s, $second, $selector, $SetupGUI, $shell, $size
 Global $slug, $space, $splash, $split, $splits, $state, $style, $tail, $text, $title, $titlist, $top, $type, $types, $updated, $updates
 Global $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
@@ -90,7 +90,7 @@ Exit
 
 Func MainGUI()
 	Local $Menu_button, $Menu_list, $Item_clear_down, $Item_clear_man, $Item_view_down, $Item_view_man
-	Local $buttxt, $ctrl, $display, $dll, $existing, $find, $ind, $last, $latest, $mpos, $xpos, $ypos
+	Local $buttxt, $ctrl, $display, $dll, $exist, $existing, $find, $ind, $last, $latest, $mpos, $xpos, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -330,9 +330,39 @@ Func MainGUI()
 	EndIf
 	GUICtrlSetState($Checkbox_alpha, $alpha)
 	;
-	If Not FileExists($gogcli) Or Not FileExists($cookies) Then
-		If Not FileExists($gogcli) Then GUICtrlSetState($Button_setup, $GUI_DISABLE)
+	$exist = FileExists($gogcli)
+	If $exist <> 1 Or Not FileExists($cookies) Then
 		SetStateOfControls($GUI_DISABLE)
+		If $exist <> 1 Then GUICtrlSetState($Button_setup, $GUI_DISABLE)
+	ElseIf $exist = 1 Then
+		_Crypt_Startup()
+		$hash = _Crypt_HashFile($gogcli, $CALG_MD5)
+		$hash = StringTrimLeft($hash, 2)
+		; Win32 or Win64
+		If $hash = "3628874296eb56801d035ed94e08b3a5" Or $hash = "fed1bcfbee23cd70039836d49b97901d" Then
+			; Note - v0.1.1 (Win64 only) and v0.1.2 have the same Win 64 version.
+			$model = 1
+		ElseIf $hash = "0e14a4ecd72b1df04e7b5161edd09157" Or $hash = "6293d448cafabea81fd9ebef325be1c9" Then
+			$model = 2
+		ElseIf $hash = "7ea8487d664d77b17fba01654534b2a8" Or $hash = "663e7644144bb8dd69bdaf8d947d699b" Then
+			$model = 3
+		ElseIf $hash = "eb31b8e2e92f23b21fbec12a46bd018b" Or $hash = "1b415189123f4af596739a5b8e365a23" Then
+			$model = 4
+		ElseIf $hash = "2aaa0e08a43851e0d45dcd06467d4307" Or $hash = "d9ac73f14ff470683f3855125fcc4912" Then
+			$model = 5
+		ElseIf $hash = "426c2f4b9cc1598cd599b41443e8cb86" Or $hash = "0f8800e625c60a2f34b727596258cee3" Then
+			$model = 5.1
+		ElseIf $hash = "c2a8c97eb9072297922c5e8084039e33" Or $hash = "3b0eca66a859494307973a80e47524cd" Then
+			$model = 6
+		ElseIf $hash = "8277fd2044f922e7aff000596a56f39a" Or $hash = "5e0fe5090fc4d9f252c6e16e771bf8ae" Then
+			$model = 7
+		ElseIf $hash = "9d3cb9df6fae01ab13f608de5cbc8bbf" Or $hash = "2b0cea101bb12a00bd73dfd1b58f5253" Then
+			$model = 8
+		Else
+			$model = 9
+		EndIf
+		IniWrite($inifle, "gogcli.exe", "version", $model)
+		_Crypt_Shutdown()
 	EndIf
 	;
 	$minimize = IniRead($inifle, "DOS Console", "minimize", "")
@@ -784,7 +814,7 @@ Func MainGUI()
 					"risk. That said, I strive to ensure they work safe. I also cannot" & @LF & _
 					"guarantee the results (or my read) of any 3rd party programs." & @LF & _
 					"This is Freeware that I have voluntarily given many hours to." & @LF & @LF & _
-					"BIG THANKS to Magnitus for 'gogcli.exe'." & @LF & @LF & _
+					"BIG THANKS to Magnitus for 'gogcli.exe'.   (Model = " & $model & ")" & @LF & @LF & _
 					"BIG thanks to j0kky (AutoIt Forum) for download size help," & @LF & _
 					"and to torels_ & smashley (AutoIt Forum) for zip functions." & @LF & _
 					"Praise & BIG thanks as always, to Jon & team for free AutoIt." & @LF & @LF & _
@@ -1009,36 +1039,36 @@ Func MainGUI()
 					; Downloads from a list of games.
 					MsgBox(262192, "Download Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 					;Local $e, $IDD, $paramsD, $titleD
-					SetStateOfControls($GUI_DISABLE, "all")
-					GUICtrlSetImage($Pic_cover, $blackjpg)
-					$game = ""
-					$retrieve = ""
-					GUICtrlSetData($Label_mid, "Retrieving Game File Data")
-					; Check for multiple game entries.
-					If $getlatest = 1 Or Not FileExists($manifest) Then
-						RetrieveDataFromGOG($downloads, "download")
-					Else
-						; Retrieve game file data where needed from GOG
-						$read = FileRead($manifest)
-						If $read = "" Then
-							RetrieveDataFromGOG($downloads, "download")
-						Else
-							$entries = StringSplit($downloads, @CRLF, 1)
-							For $e = 1 To $entries[0]
-								$entry = $entries[$e]
-								$entry = StringSplit($entry, "|", 1)
-								$titleD = $entry[1]
-								$IDD = $entry[2]
-								$identry = '"Id": ' & $IDD & ','
-								If StringInStr($read, $identry) < 1 Then
-									; Retrieve game file data for one from GOG
-								Else
-								EndIf
-							Next
-						EndIf
-					EndIf
-					SetStateOfControls($GUI_ENABLE, "all")
-					GUICtrlSetData($Label_mid, "")
+;~ 					SetStateOfControls($GUI_DISABLE, "all")
+;~ 					GUICtrlSetImage($Pic_cover, $blackjpg)
+;~ 					$game = ""
+;~ 					$retrieve = ""
+;~ 					GUICtrlSetData($Label_mid, "Retrieving Game File Data")
+;~ 					; Check for multiple game entries.
+;~ 					If $getlatest = 1 Or Not FileExists($manifest) Then
+;~ 						RetrieveDataFromGOG($downloads, "download")
+;~ 					Else
+;~ 						; Retrieve game file data where needed from GOG
+;~ 						$read = FileRead($manifest)
+;~ 						If $read = "" Then
+;~ 							RetrieveDataFromGOG($downloads, "download")
+;~ 						Else
+;~ 							$entries = StringSplit($downloads, @CRLF, 1)
+;~ 							For $e = 1 To $entries[0]
+;~ 								$entry = $entries[$e]
+;~ 								$entry = StringSplit($entry, "|", 1)
+;~ 								$titleD = $entry[1]
+;~ 								$IDD = $entry[2]
+;~ 								$identry = '"Id": ' & $IDD & ','
+;~ 								If StringInStr($read, $identry) < 1 Then
+;~ 									; Retrieve game file data for one from GOG
+;~ 								Else
+;~ 								EndIf
+;~ 							Next
+;~ 						EndIf
+;~ 					EndIf
+;~ 					SetStateOfControls($GUI_ENABLE, "all")
+;~ 					GUICtrlSetData($Label_mid, "")
 					If $ind > -1 Then _GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
 				Else
 					; Downloads from just one game.
@@ -1819,7 +1849,6 @@ Func FileSelectorGUI()
 										$row = $Button_quit + $i + 1
 										GUICtrlSetBkColor($row, $COLOR_YELLOW)
 										_GUICtrlListView_SetItemText($ListView_files, $i, "Downloading..." & $file, 3)
-										$download = @ScriptDir & "\" & $file
 										If $test = 1 Then
 											Sleep(5000)
 										Else
@@ -1827,7 +1856,13 @@ Func FileSelectorGUI()
 											GUICtrlSetData($Progress_bar, 0)
 											GUICtrlSetData($Label_percent, "0%")
 											$exists = ""
-											$params = "-c Cookie.txt gog-api download-url-path -p=" & $URL
+											If $model > 7 And FileExists($gamesfold) Then
+												$params = "-c Cookie.txt gog-api download-url-path -p=" & $URL & " -r=" & $gamesfold
+												$download = $gamesfold & "\" & $file
+											Else
+												$params = "-c Cookie.txt gog-api download-url-path -p=" & $URL
+												$download = @ScriptDir & "\" & $file
+											EndIf
 											;$pid = RunWait(@ComSpec & ' /c echo DOWNLOADING ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
 											$pid = Run(@ComSpec & ' /c echo DOWNLOADING ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
 											While ProcessExists($pid) <> 0
@@ -2062,6 +2097,7 @@ Func FileSelectorGUI()
 									EndIf
 								Next
 							EndIf
+							FileWriteLine($logfle, "")
 						EndIf
 						_GUICtrlListView_SetColumnWidth($ListView_files, 3, $LVSCW_AUTOSIZE)
 					Else
@@ -3082,6 +3118,8 @@ Func RetrieveDataFromGOG($listed, $list)
 EndFunc ;=> RetrieveDataFromGOG
 
 Func SetStateOfControls($state, $which = "")
+	GUICtrlSetState($Listview_games, $state)
+	GUICtrlSetState($Button_find, $state)
 	GUICtrlSetState($Button_last, $state)
 	GUICtrlSetState($Button_pic, $state)
 	GUICtrlSetState($Checkbox_show, $state)
@@ -3095,7 +3133,6 @@ Func SetStateOfControls($state, $which = "")
 	GUICtrlSetState($Button_dest, $state)
 	GUICtrlSetState($Button_fold, $state)
 	If $which = "all" Then
-		GUICtrlSetState($Listview_games, $state)
 		GUICtrlSetState($Button_setup, $state)
 		GUICtrlSetState($Button_log, $state)
 		GUICtrlSetState($Button_info, $state)
