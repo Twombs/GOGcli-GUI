@@ -12,8 +12,10 @@
 
 ; FUNCTIONS
 ; MainGUI(), SetupGUI(), FileSelectorGUI()
-; ClearFieldValues(), FillTheGamesList(), FixTitle($text), GetFileDownloadDetails($listview), GetTheSize(), ParseTheGamelist()
-; RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which), SetTheColumnWidths(), ShowCorrectImage()
+; ClearFieldValues(), FillTheGamesList(), FixTitle($text), GetFileDownloadDetails($listview), GetGameFolderNameAndPath()
+; GetTheSize(), ParseTheGamelist(), RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which), ShowCorrectImage()
+;
+; , SetTheColumnWidths() UNUSED
 ;
 ; _Zip_DllChk(), _Zip_List($zipfile)
 
@@ -40,9 +42,10 @@
 _Singleton("gog-cli-gui-timboli")
 
 Global $Button_dest, $Button_down, $Button_exit, $Button_find, $Button_fold, $Button_game, $Button_get, $Button_info, $Button_last
-Global $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_web, $Checkbox_alpha, $Checkbox_show, $Combo_dest, $Group_cover
-Global $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Item_verify
-Global $Label_bed, $Label_cat, $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
+Global $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_sub, $Button_web, $Checkbox_alpha, $Checkbox_show, $Combo_dest
+Global $Group_cover, $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups
+Global $Item_verify_file, $Item_verify_game, $Label_bed, $Label_cat, $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top
+Global $Label_ups, $Listview_games, $Pic_cover
 
 Global $7zip, $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum, $checkval
 Global $cnt, $cookie, $cookies, $cover, $covers, $covimg, $dest, $details, $DLC, $done, $downfiles, $downlist, $download, $downloads, $drv
@@ -50,9 +53,9 @@ Global $entries, $entry, $exists, $f, $file, $filepth, $files, $filesize, $flag,
 Global $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $handle, $hash, $head, $height, $i, $icoD, $icoF, $icoI
 Global $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed
 Global $listview, $logfle, $m, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num, $OP, $OS, $OSes, $params, $part
-Global $parts, $percent, $pid, $ping, $progress, $pth, $read, $res, $resultfle, $ret, $row, $s, $second, $selector, $SetupGUI, $shell, $size
-Global $slug, $space, $splash, $split, $splits, $state, $style, $tail, $text, $title, $titlist, $top, $type, $types, $updated, $updates
-Global $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
+Global $parts, $percent, $pid, $ping, $progress, $pth, $ratify, $read, $res, $resultfle, $ret, $row, $s, $second, $selector, $SetupGUI, $shell
+Global $size, $slug, $slugfld, $space, $splash, $split, $splits, $state, $style, $tail, $text, $title, $titlist, $top, $type, $types, $updated
+Global $updates, $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
 
 $addlist = @ScriptDir & "\Added.txt"
 $bigpic = @ScriptDir & "\Big.jpg"
@@ -90,7 +93,8 @@ Exit
 
 Func MainGUI()
 	Local $Menu_button, $Menu_list, $Item_clear_down, $Item_clear_man, $Item_view_down, $Item_view_man
-	Local $buttxt, $ctrl, $display, $dll, $exist, $existing, $find, $ind, $last, $latest, $mpos, $xpos, $ypos
+	Local $buttxt, $ctrl, $dir, $display, $dll, $exist, $existing, $fext, $find, $flename, $ind, $last
+	Local $latest, $mpos, $result, $valfold, $xpos, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -137,12 +141,16 @@ Func MainGUI()
 	GUICtrlSetTip($Input_title, "Game Title!")
 	$Button_find = GuiCtrlCreateButton("?", 348, 275, 22, 22, $BS_ICON)
 	GUICtrlSetTip($Button_find, "Find the specified game title text in the list!")
-	$Label_slug = GuiCtrlCreateLabel("Slug", 20, 301, 38, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN + $SS_NOTIFY)
+	$Label_slug = GuiCtrlCreateLabel("Slug", 20, 301, 35, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN + $SS_NOTIFY)
 	GUICtrlSetBkColor($Label_slug, $COLOR_BLUE)
 	GUICtrlSetColor($Label_slug, $COLOR_WHITE)
-	$Input_slug = GUICtrlCreateInput("", 58, 301, 270, 20) ;, $ES_READONLY
+	;GUICtrlSetTip($Label_slug, "Click to create Slug named sub-folder in selected game folder!")
+	$Input_slug = GUICtrlCreateInput("", 55, 301, 230, 20) ;, $ES_READONLY
 	GUICtrlSetBkColor($Input_slug, 0xBBFFBB)
 	GUICtrlSetTip($Input_slug, "Game Slug!")
+	$Button_sub = GuiCtrlCreateButton("SUB", 288, 300, 40, 22)
+	GUICtrlSetFont($Button_sub, 7, 600, 0, "Small Fonts")
+	GUICtrlSetTip($Button_sub, "Create a Slug named sub-folder in selected game folder!")
 	$Button_last = GuiCtrlCreateButton("Last", 330, 300, 40, 22)
 	GUICtrlSetFont($Button_last, 7, 600, 0, "Small Fonts")
 	GUICtrlSetTip($Button_last, "Find the latest added game(s)!")
@@ -187,7 +195,7 @@ Func MainGUI()
 	GUICtrlSetFont($Button_get, 7, 600, 0, "Small Fonts")
 	GUICtrlSetTip($Button_get, "Get game titles from GOG library!")
 	;
-	$Button_down = GuiCtrlCreateButton("DOWNLOAD", 500, 180, 80, 35)
+	$Button_down = GuiCtrlCreateButton("DOWNLOAD", 500, 180, 80, 35, $BS_MULTILINE)
 	GUICtrlSetFont($Button_down, 7, 600, 0, "Small Fonts")
 	GUICtrlSetTip($Button_down, "Download the selected game!")
 	;
@@ -266,9 +274,11 @@ Func MainGUI()
 	$Item_view_man = GUICtrlCreateMenuItem("View Manifests List", $Menu_list)
 	;
 	$Menu_button = GUICtrlCreateContextMenu($Button_down)
-	$Item_verify = GUICtrlCreateMenuItem("Validate", $Menu_button, -1, 0)
+	$Item_verify_file = GUICtrlCreateMenuItem("Validate File", $Menu_button, -1, 0)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Item_verify_game = GUICtrlCreateMenuItem("Validate Game", $Menu_button, -1, 0)
 	;
-	$lowid = $Item_verify
+	$lowid = $Item_verify_game
 	;
 	; OS SETTINGS
 	$user = @SystemDir & "\user32.dll"
@@ -291,9 +301,10 @@ Func MainGUI()
 	; SETTINGS
 	$cnt = _FileCountLines($downlist)
 	If $cnt > 0 Then
-		GUICtrlSetStyle($Button_down, $BS_MULTILINE)
 		GUICtrlSetData($Button_down, "DOWNLOAD" & @LF & "LIST")
 		GUICtrlSetTip($Button_down, "Download with the download list!")
+		GUICtrlSetState($Item_verify_file, $GUI_DISABLE)
+		GUICtrlSetState($Item_verify_game, $GUI_DISABLE)
 		$downloads = FileRead($downlist)
 	Else
 		$downloads = ""
@@ -448,6 +459,7 @@ Func MainGUI()
 	$existing = ""
 	$find = ""
 	$last = ""
+	$ratify = 4
 	$verify = 4
 	;
 	FillTheGamesList()
@@ -498,6 +510,39 @@ Func MainGUI()
 				ShellExecute($link)
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Button_sub
+			; Create a Slug named sub-folder in the selected game folder
+			If FileExists($gamesfold) Then
+				$ans = MsgBox(262177 + 256, "Create & Locate Query", _
+					"This option creates a sub-folder in the destination folder" & @LF & _
+					"of the selected game title, using the 'Slug' title as name." & @LF & @LF & _
+					"The process also copies any 'Folder.jpg' file to that new" & @LF & _
+					"sub-folder, along with moving (relocating) any Linux or" & @LF & _
+					"Mac files to it as well." & @LF & @LF & _
+					"Click OK to continue ... or CANCEL to abort.", 0, $GOGcliGUI)
+				If $ans = 1 Then
+					If $title <> "" Then
+						GetGameFolderNameAndPath()
+						If FileExists($gamefold) Then
+							$slugfld = $gamefold & "\" & $slug
+							If Not FileExists($slugfld) Then DirCreate($slugfld)
+							If FileExists($slugfld) Then
+								FileCopy($gamefold & "\Folder.jpg", $slugfld & "\")
+								FileMove($gamefold & "\*.sh", $slugfld & "\")
+								FileMove($gamefold & "\*.dmg", $slugfld & "\")
+								FileMove($gamefold & "\*.pkg", $slugfld & "\")
+							EndIf
+						Else
+							MsgBox(262192, "Path Error", "Game folder does not exist!", 0, $GOGcliGUI)
+						EndIf
+					Else
+						MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+					EndIf
+				EndIf
+			Else
+				MsgBox(262192, "Path Error", "Games folder does not exist!" & @LF & @LF & "( i.e. Drive is disconnected )", 0, $GOGcliGUI)
+			EndIf
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_setup
 			; Setup window
 			GuiSetState(@SW_DISABLE, $GOGcliGUI)
@@ -521,17 +566,7 @@ Func MainGUI()
 					GUICtrlSetData($Label_mid, "Saving!")
 					If $ans = 6 Then
 						$gamepic = ""
-						$gamefold = $gamesfold
-						If $type = "Slug" Then
-							$name = $slug
-						ElseIf $type = "Title" Then
-							$name = FixTitle($title)
-						EndIf
-						If $alpha = 1 Then
-							$alf = StringUpper(StringLeft($name, 1))
-							$gamefold = $gamefold & "\" & $alf
-						EndIf
-						$gamefold = $gamefold & "\" & $name
+						GetGameFolderNameAndPath()
 						If FileExists($gamefold) Then
 							$gamepic = $gamefold & "\Folder.jpg"
 						Else
@@ -791,7 +826,7 @@ Func MainGUI()
 			; Program Information
 			$ans = MsgBox(262209 + 256, "Program Information", _
 				"To get started with the program, click the SETUP button." & @LF & @LF & _
-				"The DOWNLOAD button has a right-click VALIDATE option." & @LF & @LF & _
+				"The DOWNLOAD button has right-click VALIDATE options." & @LF & @LF & _
 				"The LAST button cycles through latest game list additions." & @LF & _
 				"The FIND button is also a next button for the text specified." & @LF & _
 				"Both the FIND and LAST buttons remember their value, so" & @LF & _
@@ -806,6 +841,8 @@ Func MainGUI()
 				"The 'Games' list has some right-click menu options." & @LF & @LF & _
 				"The MANIFEST button has another hold down option." & @LF & _
 				"SHIFT = Get a query prompt to view a manifest file etc." & @LF & @LF & _
+				"Click on Open the selected destination folder button with" & @LF & _
+				"CTRL held down, to minimize the main program window." & @LF & @LF & _
 				"Width of the 'Game Files Selector' window is adjustable." & @LF & @LF & _
 				"Click OK to see more information.", 0, $GOGcliGUI)
 			If $ans = 1 Then
@@ -952,19 +989,9 @@ Func MainGUI()
 		Case $msg = $Button_fold
 			; Open the selected destination folder
 			If FileExists($gamesfold) Then
-				GUISetState(@SW_MINIMIZE, $GOGcliGUI)
+				If _IsPressed("11") Then GUISetState(@SW_MINIMIZE, $GOGcliGUI)
 				If $title <> "" Then
-					$gamefold = $gamesfold
-					If $type = "Slug" Then
-						$name = $slug
-					ElseIf $type = "Title" Then
-						$name = FixTitle($title)
-					EndIf
-					If $alpha = 1 Then
-						$alf = StringUpper(StringLeft($name, 1))
-						$gamefold = $gamefold & "\" & $alf
-					EndIf
-					$gamefold = $gamefold & "\" & $name
+					GetGameFolderNameAndPath()
 					If FileExists($gamefold) Then
 						Run(@WindowsDir & "\Explorer.exe " & $gamefold)
 					Else
@@ -974,7 +1001,7 @@ Func MainGUI()
 					Run(@WindowsDir & "\Explorer.exe " & $gamesfold)
 				EndIf
 			Else
-				MsgBox(262192, "Path Error", "Game folder does not exist!", 0, $GOGcliGUI)
+				MsgBox(262192, "Path Error", "Games folder does not exist!" & @LF & @LF & "( i.e. Drive is disconnected )", 0, $GOGcliGUI)
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_find
@@ -1007,16 +1034,19 @@ Func MainGUI()
 		Case $msg = $Button_down
 			; Download the selected game
 			$buttxt = GUICtrlRead($Button_down)
-			If $title = "" And ($buttxt = "DOWNLOAD" Or $buttxt = "VALIDATE") Then
+			If $title = "" And ($buttxt = "DOWNLOAD" Or $buttxt = "VALIDATE" & @LF & "GAME" Or $buttxt = "VALIDATE" & @LF & "FILE") Then
 				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
 			Else
-				If _IsPressed("11") And $buttxt <> "VALIDATE" Then
+				$ctrl = _IsPressed("11")
+				If $ctrl = True And ($buttxt <> "VALIDATE" & @LF & "GAME" And $buttxt <> "VALIDATE" & @LF & "FILE") Then
 					; Build a download list of games.
 					$cnt = _FileCountLines($downlist)
 					If $cnt < 10 Then
 						If $buttxt <> "DOWNLOAD" & @LF & "LIST" Then
 							GUICtrlSetStyle($Button_down, $BS_MULTILINE)
 							GUICtrlSetData($Button_down, "DOWNLOAD" & @LF & "LIST")
+							GUICtrlSetState($Item_verify_file, $GUI_DISABLE)
+							GUICtrlSetState($Item_verify_game, $GUI_DISABLE)
 							GUICtrlSetState($Listview_games, $GUI_FOCUS)
 						EndIf
 						$entry = $title & "|" & $ID & @CRLF
@@ -1035,6 +1065,9 @@ Func MainGUI()
 					Else
 						MsgBox(262192, "Add Error", "Limit of 10 games has been reached!", 2, $GOGcliGUI)
 					EndIf
+				ElseIf $ctrl = True Then
+					; Abort adding to or building a download list of games.
+					MsgBox(262192, "Download ADD Error", "A validate option is enabled!", 0, $GOGcliGUI)
 				ElseIf $buttxt = "DOWNLOAD" & @LF & "LIST" Then
 					; Downloads from a list of games.
 					MsgBox(262192, "Download Error", "This feature is not yet supported!", 2, $GOGcliGUI)
@@ -1207,7 +1240,7 @@ Func MainGUI()
 						EndIf
 					EndIf
 					If $game <> "" Then
-						If $verify = 4 Then
+						If $verify = 4 And $ratify = 4 Then
 							; Download
 							If $selector = 1 Then
 								GUICtrlSetData($Label_mid, "Game Files Selector")
@@ -1221,11 +1254,94 @@ Func MainGUI()
 									GUICtrlSetData($Label_mid, "Verifying Game Files")
 								EndIf
 							EndIf
-						Else
-							; Validate
-							GUICtrlSetData($Label_mid, "Verifying Game Files")
+						ElseIf $verify = 1 Then
+							; Validate Game
+							GUICtrlSetData($Label_mid, "Validating Game Files")
 							GetFileDownloadDetails()
 							MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $GOGcliGUI)
+						ElseIf $ratify = 1 Then
+							; Validate File
+							GUICtrlSetData($Label_mid, "Validating Game File")
+							_FileWriteLog($logfle, "Validating Game File.", -1)
+							GetFileDownloadDetails()
+							;MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $GOGcliGUI)
+							If FileExists($gamesfold) Then
+								If $title <> "" Then
+									GetGameFolderNameAndPath()
+									If FileExists($gamefold) Then
+										$valfold = $gamefold
+									Else
+										$valfold = $gamesfold
+									EndIf
+								Else
+									$valfold = $gamesfold
+								EndIf
+								_FileWriteLog($logfle, $valfold, -1)
+								$pth = FileOpenDialog("Select a file to validate.", $valfold, "Game files (*.exe;*.bin;*.dmg;*.pkg;*.sh;*.zip)", 3, "", $GOGcliGUI)
+								If @error = 0 Then
+									$filepth = $pth
+									_PathSplit($filepth, $drv, $dir, $flename, $fext)
+									$file = $flename & $fext
+									_FileWriteLog($logfle, $file, -1)
+									$flename = StringLeft($file, 20)
+									If $flename <> $file Then $flename = $flename & "...."
+									GUICtrlSetData($Label_top, $flename)
+									GUICtrlSetData($Label_bed, StringUpper(StringTrimLeft($fext, 1)))
+									$result = "Validating = " & $file
+									$filesize = IniRead($downfiles, $file, "bytes", 0)
+									If $filesize = 0 Then
+										$result = $result & @LF & "File Size is missing."
+										_FileWriteLog($logfle, "File Size is missing.", -1)
+									Else
+										$bytes = FileGetSize($filepth)
+										If $bytes = $filesize Then
+											$result = $result & @LF & "File Size passed."
+											_FileWriteLog($logfle, "File Size passed.", -1)
+										Else
+											$result = $result & @LF & "File Size failed."
+											_FileWriteLog($logfle, "File Size failed.", -1)
+										EndIf
+									EndIf
+									If $fext = ".exe" Or $fext = ".bin" Or $fext = ".dmg" Or $fext = ".pkg" Or $fext = ".sh" Then
+										$checksum = IniRead($downfiles, $file, "checksum", "")
+										If $checksum = "" Then
+											$result = $result & @LF & "MD5 (checksum) is missing."
+											_FileWriteLog($logfle, "MD5 (checksum) is missing.", -1)
+										Else
+											_Crypt_Startup()
+											$hash = _Crypt_HashFile($filepth, $CALG_MD5)
+											_Crypt_Shutdown()
+											$hash = StringTrimLeft($hash, 2)
+											If $hash = $checksum Then
+												$result = $result & @LF & "MD5 (checksum) passed."
+												_FileWriteLog($logfle, "MD5 (checksum) passed.", -1)
+											Else
+												$result = $result & @LF & "MD5 (checksum) failed."
+												_FileWriteLog($logfle, "MD5 (checksum) failed.", -1)
+											EndIf
+										EndIf
+									ElseIf $fext = ".zip" Then
+										$ret = _Zip_List($filepth)
+										$ret = $ret[0]
+										If $ret > 0 Then
+											$result = $result & @LF & "ZIP check passed."
+											_FileWriteLog($logfle, "ZIP check passed.", -1)
+										Else
+											$result = $result & @LF & "ZIP check failed."
+											_FileWriteLog($logfle, "ZIP check failed.", -1)
+										EndIf
+									EndIf
+									FileWriteLine($logfle, "")
+									MsgBox(262208, "Validate Results", $result, 0, $GOGcliGUI)
+									GUICtrlSetData($Label_top, "")
+									GUICtrlSetData($Label_bed, "")
+								Else
+									_FileWriteLog($logfle, "Validate cancelled.", -1)
+								EndIf
+							Else
+								_FileWriteLog($logfle, "Games folder does not exist.", -1)
+								MsgBox(262192, "Path Error", "Games folder does not exist!" & @LF & @LF & "( i.e. Drive is disconnected )", 0, $GOGcliGUI)
+							EndIf
 						EndIf
 					Else
 						MsgBox(262192, "Details Error", "Game data could not be found!", 0, $GOGcliGUI)
@@ -1283,16 +1399,34 @@ Func MainGUI()
 		Case $msg = $Item_view_down
 			; View Downloads List
 			If FileExists($downlist) Then ShellExecute($downlist)
-		Case $msg = $Item_verify
-			; Validate for DOWNLOAD button
+		Case $msg = $Item_verify_game
+			; Validate Game for DOWNLOAD button
 			If $verify = 4 Then
 				$verify = 1
-				GUICtrlSetData($Button_down, "VALIDATE")
+				GUICtrlSetData($Button_down, "VALIDATE" & @LF & "GAME")
+				If $ratify = 1 Then
+					$ratify = 4
+					GUICtrlSetState($Item_verify_file, $ratify)
+				EndIf
 			Else
 				$verify = 4
 				GUICtrlSetData($Button_down, "DOWNLOAD")
 			EndIf
-			GUICtrlSetState($Item_verify, $verify)
+			GUICtrlSetState($Item_verify_game, $verify)
+		Case $msg = $Item_verify_file
+			; Validate File for DOWNLOAD button
+			If $ratify = 4 Then
+				$ratify = 1
+				GUICtrlSetData($Button_down, "VALIDATE" & @LF & "FILE")
+				If $verify = 1 Then
+					$verify = 4
+					GUICtrlSetState($Item_verify_game, $verify)
+				EndIf
+			Else
+				$ratify = 4
+				GUICtrlSetData($Button_down, "DOWNLOAD")
+			EndIf
+			GUICtrlSetState($Item_verify_file, $ratify)
 		Case $msg = $Item_clear_man
 			; Clear Manifests List
 			GUICtrlSetData($Button_man, "ADD TO" & @LF & "MANIFEST")
@@ -1301,12 +1435,18 @@ Func MainGUI()
 			$manifests = ""
 		Case $msg = $Item_clear_down
 			; Clear Downloads List
-			If GUICtrlRead($Button_down) <> "VALIDATE" Then
+			$buttxt = GUICtrlRead($Button_down)
+			If $buttxt <> "VALIDATE" & @LF & "GAME" And $buttxt <> "VALIDATE" & @LF & "FILE" Then
 				GUICtrlSetData($Button_down, "DOWNLOAD")
 				GUICtrlSetTip($Button_down, "Download the selected game!")
+				GUICtrlSetState($Item_verify_file, $GUI_ENABLE)
+				GUICtrlSetState($Item_verify_game, $GUI_ENABLE)
 				_FileCreate($downlist)
 				$downloads = ""
 			EndIf
+		Case $msg = $Label_slug
+			; Click to
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Listview_games Or $msg > $lowid
 			; List of games
 			$ind = _GUICtrlListView_GetSelectedIndices($Listview_games, False)
@@ -1909,17 +2049,7 @@ Func FileSelectorGUI()
 													$filepth = ""
 													$zippath = ""
 													$gamepic = ""
-													$gamefold = $gamesfold
-													If $type = "Slug" Then
-														$name = $slugD
-													ElseIf $type = "Title" Then
-														$name = FixTitle($titleD)
-													EndIf
-													If $alpha = 1 Then
-														$alf = StringUpper(StringLeft($name, 1))
-														$gamefold = $gamefold & "\" & $alf
-													EndIf
-													$gamefold = $gamefold & "\" & $name
+													GetGameFolderNameAndPath()
 													If Not FileExists($gamefold) Then DirCreate($gamefold)
 													If FileExists($gamefold) Then
 														FileMove($download, $gamefold & "\", 1)
@@ -2843,6 +2973,20 @@ Func GetFileDownloadDetails($listview = "")
 	;EndIf
 EndFunc ;=> GetFileDownloadDetails
 
+Func GetGameFolderNameAndPath()
+	$gamefold = $gamesfold
+	If $type = "Slug" Then
+		$name = $slug
+	ElseIf $type = "Title" Then
+		$name = FixTitle($title)
+	EndIf
+	If $alpha = 1 Then
+		$alf = StringUpper(StringLeft($name, 1))
+		$gamefold = $gamefold & "\" & $alf
+	EndIf
+	$gamefold = $gamefold & "\" & $name
+EndFunc ;=> GetGameFolderNameAndPath
+
 Func GetTheSize()
 	If $size < 1024 Then
 		$size = $size & " bytes"
@@ -3109,6 +3253,7 @@ EndFunc ;=> RetrieveDataFromGOG
 Func SetStateOfControls($state, $which = "")
 	GUICtrlSetState($Listview_games, $state)
 	GUICtrlSetState($Button_find, $state)
+	GUICtrlSetState($Button_sub, $state)
 	GUICtrlSetState($Button_last, $state)
 	GUICtrlSetState($Button_pic, $state)
 	GUICtrlSetState($Checkbox_show, $state)
