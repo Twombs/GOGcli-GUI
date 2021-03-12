@@ -13,10 +13,12 @@ Multiple manifest retrieval (batch of 10 or less) is now supported.
 
 Download destination folder parameter is now supported (v0.8.0 gogcli.exe).
 
+Individual file validation now supported.
+
 See the Wiki link above, for more information.
 
 See the First Beta Release!
 
 https://github.com/Magnitus-/gogcli
 
-![gogcli_main_5](https://user-images.githubusercontent.com/19166041/109964344-77b8aa00-7d3d-11eb-9e3b-2c459a2ceffb.png)
+![gogcli_main_5](https://github.com/Twombs/GOGcli-GUI/blob/main/Screenshots/gogcli_main_8.png?raw=true)
