@@ -93,8 +93,8 @@ Exit
 
 Func MainGUI()
 	Local $Menu_button, $Menu_list, $Item_clear_down, $Item_clear_man, $Item_view_down, $Item_view_man
-	Local $buttxt, $ctrl, $dir, $display, $dll, $exist, $existing, $fext, $find, $flename, $ind, $last
-	Local $latest, $mpos, $result, $valfold, $xpos, $ypos
+	Local $buttxt, $ctrl, $dir, $display, $dll, $exist, $existing, $fext, $filelist, $find, $flename
+	Local $foldpth, $ind, $last, $latest, $mpos, $result, $valfold, $xpos, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -176,14 +176,14 @@ Func MainGUI()
 	$Label_top = GuiCtrlCreateLabel("", 405, 40, 160, 20, $SS_CENTER + $SS_CENTERIMAGE)
 	GUICtrlSetFont($Label_top, 8, 600)
 	GUICtrlSetBkColor($Label_top, $GUI_BKCOLOR_TRANSPARENT)
-	GUICtrlSetColor($Label_top, $COLOR_WHITE)
+	GUICtrlSetColor($Label_top, $COLOR_YELLOW) ;$COLOR_WHITE
 	$Label_mid = GuiCtrlCreateLabel("", 405, 70, 160, 20, $SS_CENTER + $SS_CENTERIMAGE)
 	GUICtrlSetBkColor($Label_mid, $GUI_BKCOLOR_TRANSPARENT)
 	GUICtrlSetColor($Label_mid, $COLOR_WHITE)
 	$Label_bed = GuiCtrlCreateLabel("", 405, 100, 160, 20, $SS_CENTER + $SS_CENTERIMAGE)
 	GUICtrlSetFont($Label_bed, 8, 600)
 	GUICtrlSetBkColor($Label_bed, $GUI_BKCOLOR_TRANSPARENT)
-	GUICtrlSetColor($Label_bed, $COLOR_WHITE)
+	GUICtrlSetColor($Label_bed, $COLOR_RED) ;$COLOR_WHITE
 	$Button_pic = GuiCtrlCreateButton("Download Cover", 400, 135, 120, 25)
 	GUICtrlSetFont($Button_pic, 7, 600, 0, "Small Fonts")
 	GUICtrlSetTip($Button_pic, "Download the selected image!")
@@ -1257,8 +1257,168 @@ Func MainGUI()
 						ElseIf $verify = 1 Then
 							; Validate Game
 							GUICtrlSetData($Label_mid, "Validating Game Files")
+							_FileWriteLog($logfle, "Validating Game Files.", -1)
 							GetFileDownloadDetails()
-							MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $GOGcliGUI)
+							;MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $GOGcliGUI)
+							If FileExists($gamesfold) Then
+								If $title <> "" Then
+									GetGameFolderNameAndPath()
+									If FileExists($gamefold) Then
+										$valfold = $gamefold
+									Else
+										$valfold = $gamesfold
+									EndIf
+								Else
+									$valfold = $gamesfold
+								EndIf
+								_FileWriteLog($logfle, $valfold, -1)
+								$pth = FileSelectFolder("Browse to select a game folder.", "", 7, $valfold, $GOGcliGUI)
+								If Not @error And StringMid($pth, 2, 2) = ":\" Then
+									$foldpth = $pth
+									$ans = MsgBox(262209 + 256, "Validate Query", "Do you want to include sub-folder content?", 0, $GOGcliGUI)
+									If $ans = 1 Then
+										$filelist = _FileListToArrayRec($foldpth, "*.*", 1, 1, 0, 1)
+										If @error Then $filelist = ""
+									Else
+										$filelist = _FileListToArray($foldpth, "*.*", 1, False)
+										If @error Then $filelist = ""
+									EndIf
+									If IsArray($filelist) Then
+										Local $bin = 0, $dmg = 0, $exe = 0, $pkg = 0, $sh = 0, $tested = 0, $zip = 0
+										$entries = IniReadSectionNames($downfiles)
+										$cnt = $entries[0]
+										For $c = 1 To $cnt
+											$entry = $entries[$c]
+											$fext = StringRight($entry, 3)
+											If $fext = "bin" Then
+												$bin = $bin + 1
+											ElseIf $fext = "dmg" Then
+												$dmg = $dmg + 1
+											ElseIf $fext = "exe" Then
+												$exe = $exe + 1
+											ElseIf $fext = "pkg" Then
+												$pkg = $pkg + 1
+											ElseIf $fext = ".sh" Then
+												$sh = $sh + 1
+											ElseIf $fext = "zip" Then
+												$zip = $zip + 1
+											EndIf
+										Next
+										$result = ""
+										If $bin > 0 Then $result = "(" & $bin & " BIN files"
+										If $dmg > 0 Then
+											If $result = "" Then
+												$result = "(" & $dmg & " DMG files"
+											Else
+												$result = $result & ", " & $dmg & " DMG files"
+											EndIf
+										EndIf
+										If $exe > 0 Then
+											If $result = "" Then
+												$result = "(" & $exe & " EXE files"
+											Else
+												$result = $result & ", " & $exe & " EXE files"
+											EndIf
+										EndIf
+										If $pkg > 0 Then
+											If $result = "" Then
+												$result = "(" & $pkg & " PKG files"
+											Else
+												$result = $result & ", " & $pkg & " PKG files"
+											EndIf
+										EndIf
+										If $sh > 0 Then
+											If $result = "" Then
+												$result = "(" & $sh & " SH files"
+											Else
+												$result = $result & ", " & $sh & " SH files"
+											EndIf
+										EndIf
+										If $zip > 0 Then
+											If $result = "" Then
+												$result = "(" & $zip & " ZIP files"
+											Else
+												$result = $result & ", " & $zip & " ZIP files"
+											EndIf
+										EndIf
+										_FileWriteLog($logfle, $cnt & " files listed in the manifest.", -1)
+										$result = $result & ")"
+										_FileWriteLog($logfle, $result, -1)
+										$result = $cnt & " files listed in the manifest." & @LF & $result & @LF
+										_Crypt_Startup()
+										For $f = 1 To $filelist[0]
+											$file = $filelist[$f]
+											$filepth = $foldpth & "\" & $file
+											_PathSplit($filepth, $drv, $dir, $flename, $fext)
+											If $fext = ".exe" Or $fext = ".bin" Or $fext = ".dmg" Or $fext = ".pkg" Or $fext = ".sh" Or $fext = ".zip" Then
+												_FileWriteLog($logfle, $file, -1)
+												$tested = $tested + 1
+												If StringInStr($file, "\") > 0 Then $file = $flename & $fext
+												$flename = StringLeft($file, 20)
+												If $flename <> $file Then $flename = $flename & "...."
+												GUICtrlSetData($Label_top, $flename)
+												GUICtrlSetData($Label_bed, StringUpper(StringTrimLeft($fext, 1)))
+												$result = $result & @LF & "Validating = " & $file
+												$filesize = IniRead($downfiles, $file, "bytes", 0)
+												If $filesize = 0 Then
+													$result = $result & @LF & "File Size is missing."
+													_FileWriteLog($logfle, "File Size is missing.", -1)
+												Else
+													$bytes = FileGetSize($filepth)
+													If $bytes = $filesize Then
+														$result = $result & @LF & "File Size passed."
+														_FileWriteLog($logfle, "File Size passed.", -1)
+													Else
+														$result = $result & @LF & "File Size failed."
+														_FileWriteLog($logfle, "File Size failed.", -1)
+													EndIf
+												EndIf
+												If $fext = ".exe" Or $fext = ".bin" Or $fext = ".dmg" Or $fext = ".pkg" Or $fext = ".sh" Then
+													$checksum = IniRead($downfiles, $file, "checksum", "")
+													If $checksum = "" Then
+														$result = $result & @LF & "MD5 (checksum) is missing."
+														_FileWriteLog($logfle, "MD5 (checksum) is missing.", -1)
+													Else
+														$hash = _Crypt_HashFile($filepth, $CALG_MD5)
+														$hash = StringTrimLeft($hash, 2)
+														If $hash = $checksum Then
+															$result = $result & @LF & "MD5 (checksum) passed."
+															_FileWriteLog($logfle, "MD5 (checksum) passed.", -1)
+														Else
+															$result = $result & @LF & "MD5 (checksum) failed."
+															_FileWriteLog($logfle, "MD5 (checksum) failed.", -1)
+														EndIf
+													EndIf
+												ElseIf $fext = ".zip" Then
+													$ret = _Zip_List($filepth)
+													$ret = $ret[0]
+													If $ret > 0 Then
+														$result = $result & @LF & "ZIP check passed."
+														_FileWriteLog($logfle, "ZIP check passed.", -1)
+													Else
+														$result = $result & @LF & "ZIP check failed."
+														_FileWriteLog($logfle, "ZIP check failed.", -1)
+													EndIf
+												EndIf
+											EndIf
+										Next
+										$result = $result & @LF & @LF & $tested & " files were tested (checked)."
+										_FileWriteLog($logfle, $tested & " files were tested (checked).", -1)
+										_Crypt_Shutdown()
+										FileWriteLine($logfle, "")
+										MsgBox(262208, "Validate Results", $result, 0, $GOGcliGUI)
+										GUICtrlSetData($Label_top, "")
+										GUICtrlSetData($Label_bed, "")
+									Else
+										MsgBox(262192, "Source Error", "Folder or content issue (i.e. no files found).", 0, $GOGcliGUI)
+									EndIf
+								Else
+									_FileWriteLog($logfle, "Validate cancelled.", -1)
+								EndIf
+							Else
+								_FileWriteLog($logfle, "Games folder does not exist.", -1)
+								MsgBox(262192, "Path Error", "Games folder does not exist!" & @LF & @LF & "( i.e. Drive is disconnected )", 0, $GOGcliGUI)
+							EndIf
 						ElseIf $ratify = 1 Then
 							; Validate File
 							GUICtrlSetData($Label_mid, "Validating Game File")
