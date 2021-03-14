@@ -1925,9 +1925,9 @@ Func SetupGUI()
 EndFunc ;=> SetupGUI
 
 Func FileSelectorGUI()
-	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Combo_OSfle, $Group_files, $Group_OS, $Label_percent, $Label_warn, $ListView_files
-	Local $Progress_bar, $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
-	Local $amount, $checked, $downloading, $edge, $ents, $fext, $final, $first, $osfle, $p, $portion, $portions, $sum, $tmpman, $wide
+	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Combo_OSfle, $Group_files, $Group_OS, $Label_done, $Label_percent, $Label_speed
+	Local $Label_warn, $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
+	Local $amount, $begin, $checked, $downloading, $edge, $ents, $fext, $final, $first, $gotten, $osfle, $p, $portion, $portions, $secs, $sum, $taken, $tmpman, $wide
 	;
 	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $style + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
 	GUISetBkColor(0xBBFFBB, $SelectorGUI)
@@ -1939,6 +1939,16 @@ Func FileSelectorGUI()
 	GUICtrlSetBkColor($ListView_files, 0xB9FFFF)
 	GUICtrlSetResizing($ListView_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
 	;
+	$Checkbox_cancel = GUICtrlCreateCheckbox("Cancel ", $width - 156, 6, 50, 20)
+	GUICtrlSetResizing($Checkbox_cancel, $GUI_DOCKRIGHT + $GUI_DOCKAUTO + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Checkbox_cancel, "Cancel downloading after the current download has finished!")
+	;
+	$Label_done = GuiCtrlCreateLabel("0 Kbs", $width - 96, 6, 71, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetResizing($Label_done, $GUI_DOCKRIGHT + $GUI_DOCKAUTO + $GUI_DOCKSIZE)
+	GUICtrlSetBkColor($Label_done, $COLOR_GREEN)
+	GUICtrlSetColor($Label_done, $COLOR_WHITE)
+	GUICtrlSetTip($Label_done, "Downloaded!")
+	;
 	$Label_warn = GuiCtrlCreateLabel("", 10, 318, $width - 184, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetBkColor($Label_warn, $COLOR_RED)
 	GUICtrlSetColor($Label_warn, $COLOR_YELLOW)
@@ -1946,17 +1956,19 @@ Func FileSelectorGUI()
 	GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
 	;GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
 	;
-	$Progress_bar = GUICtrlCreateProgress($width - 166, 317, 90, 20, $PBS_SMOOTH)
+	$Progress_bar = GUICtrlCreateProgress($width - 166, 317, 80, 20, $PBS_SMOOTH)
 	GUICtrlSetResizing($Progress_bar, $GUI_DOCKRIGHT + $GUI_DOCKHEIGHT + $GUI_DOCKAUTO + $GUI_DOCKAUTO)
-	$Label_percent = GUICtrlCreateLabel("0%", $width - 160, 318, 80, 20, $SS_CENTER + $SS_CENTERIMAGE)
+	$Label_percent = GUICtrlCreateLabel("0%", $width - 160, 318, 75, 20, $SS_CENTER + $SS_CENTERIMAGE)
 	GUICtrlSetBkColor($Label_percent, $GUI_BKCOLOR_TRANSPARENT)
 	GUICtrlSetColor($Label_percent, $COLOR_BLACK)
 	GUICtrlSetFont($Label_percent, 9, 600)
 	GUICtrlSetResizing($Label_percent, $GUI_DOCKRIGHT + $GUI_DOCKHEIGHT + $GUI_DOCKAUTO + $GUI_DOCKAUTO)
 	;
-	$Checkbox_cancel = GUICtrlCreateCheckbox("Cancel", $width - 66, 318, 50, 20)
-	GUICtrlSetResizing($Checkbox_cancel, $GUI_DOCKRIGHT + $GUI_DOCKAUTO + $GUI_DOCKSIZE)
-	GUICtrlSetTip($Checkbox_cancel, "Cancel downloading after the current download has finished!")
+	$Label_speed = GuiCtrlCreateLabel("0 Kb/s", $width - 76, 318, 61, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetResizing($Label_speed, $GUI_DOCKRIGHT + $GUI_DOCKAUTO + $GUI_DOCKSIZE)
+	GUICtrlSetBkColor($Label_speed, $COLOR_BLUE)
+	GUICtrlSetColor($Label_speed, $COLOR_WHITE)
+	GUICtrlSetTip($Label_speed, "Downloading speed!")
 	;
 	$Group_select = GuiCtrlCreateGroup("Select Files", 10, $height - 65, 300, 55)
 	GUICtrlSetResizing($Group_select, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
@@ -2164,22 +2176,41 @@ Func FileSelectorGUI()
 														$done = FileGetSize($download)
 														FileClose($handle)
 														If $done <> 0 Then
+															If $begin = "" Then $begin = TimerInit()
 															$progress = $done
 															$percent = ($progress / $filesize) * 100
 															GUICtrlSetData($Progress_bar, $percent)
 															$percent = Floor($percent) & "%"
 															GUICtrlSetData($Label_percent, $percent)
 															;GUICtrlSetTip($Progress_bar, $percent)
-															;$done = $done / 1048576
-															;If $done > 999 Then
-															;	$done = Round($done / 1024, 2) & " Gb"
-															;Else
-															;	$done = Round($done) & " Mb"
-															;EndIf
+															$taken = TimerDiff($begin)
+															$secs = $taken / 1000
+															; KBs
+															$gotten = $done / 1024
+															If $gotten < 1024 Then
+																; Kb/s
+																$done = Floor($gotten) & " Kbs"
+															Else
+																; Mb/s
+																$done = $gotten / 1024
+																If $done < 1024 Then
+																	$done = Round($done, 1) & " Mbs"
+																Else
+																	$done = Round($done / 1024, 2) & " Gbs"
+																EndIf
+															EndIf
+															GUICtrlSetData($Label_done, $done)
+															; MBs
+															$gotten = $gotten / 1024
+															$speed = Round($gotten / $secs, 1) & " Mb/s"
+															If $speed < 1 Then $speed = Floor($speed * 1024) & " Kb/s"
+															GUICtrlSetData($Label_speed, $speed)
 														EndIf
 													EndIf
 												EndIf
 											WEnd
+											GUICtrlSetData($Label_done, "0 Kbs")
+											GUICtrlSetData($Label_speed, "0 Kb/s")
 											_FileWriteLog($logfle, "COMPLETED.", -1)
 										EndIf
 										If $filesize <> 0 Then
