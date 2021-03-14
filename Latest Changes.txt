@@ -1,0 +1,3 @@
+Top and bottom Status fields are now yellow and red text respectively.
+A game folder can now have its content and sub-folder content validated.
+The 'Game Files Selector' window now has 'download speed' and 'downloaded amount' fields.
