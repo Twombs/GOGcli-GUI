@@ -1925,9 +1925,10 @@ Func SetupGUI()
 EndFunc ;=> SetupGUI
 
 Func FileSelectorGUI()
-	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Combo_OSfle, $Combo_shutdown, $Group_files, $Group_OS, $Label_done, $Label_percent
-	Local $Label_shut, $Label_speed, $Label_warn, $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
-	Local $amount, $begin, $checked, $code, $downloading, $edge, $ents, $fext, $gotten, $osfle, $secs, $shutdown, $sum, $taken, $tmpman, $wide
+	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Checkbox_skip, $Combo_OSfle, $Combo_shutdown, $Group_exist, $Group_files
+	Local $Group_OS, $Label_done, $Label_percent, $Label_shut, $Label_speed, $Label_warn, $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext
+	Local $Radio_selgame, $Radio_selpat, $Radio_selset
+	Local $amount, $begin, $checked, $code, $downloading, $edge, $ents, $fext, $gotten, $osfle, $secs, $shutdown, $skip, $sum, $taken, $tmpman, $wide
 	;, $final, $first, $p, $portion, $portions
 	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $style + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
 	GUISetBkColor(0xBBFFBB, $SelectorGUI)
@@ -1979,21 +1980,26 @@ Func FileSelectorGUI()
 	GUICtrlSetColor($Label_speed, $COLOR_WHITE)
 	GUICtrlSetTip($Label_speed, "Downloading speed!")
 	;
-	$Group_select = GuiCtrlCreateGroup("Select Files", 10, $height - 65, 300, 55)
+	$Group_select = GuiCtrlCreateGroup("Select Files", 10, $height - 65, 255, 55)
 	GUICtrlSetResizing($Group_select, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
-	$Radio_selall = GUICtrlCreateRadio("ALL", 20, $height - 44,  50, 20)
+	$Radio_selall = GUICtrlCreateRadio("ALL", 20, $height - 44,  40, 20)
+	GUICtrlSetFont($Radio_selall, 7, 400, 0, "Small Fonts")
 	GUICtrlSetResizing($Radio_selall, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Radio_selall, "Select ALL file entries!")
-	$Radio_selgame = GUICtrlCreateRadio("GAME", 70, $height - 44,  60, 20)
+	$Radio_selgame = GUICtrlCreateRadio("GAME", 60, $height - 44,  51, 20)
+	GUICtrlSetFont($Radio_selgame, 7, 400, 0, "Small Fonts")
 	GUICtrlSetResizing($Radio_selgame, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Radio_selgame, "Select GAME file entries!")
-	$Radio_selext = GUICtrlCreateRadio("EXTRA", 130, $height - 44,  65, 20)
+	$Radio_selext = GUICtrlCreateRadio("EXTRA", 111, $height - 44,  55, 20)
+	GUICtrlSetFont($Radio_selext, 7, 400, 0, "Small Fonts")
 	GUICtrlSetResizing($Radio_selext, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Radio_selext, "Select EXTRA file entries!")
-	$Radio_selset = GUICtrlCreateRadio("setup", 195, $height - 44,  55, 20)
+	$Radio_selset = GUICtrlCreateRadio("setup", 166, $height - 44,  45, 20)
+	GUICtrlSetFont($Radio_selset, 7, 400, 0, "Small Fonts")
 	GUICtrlSetResizing($Radio_selset, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Radio_selset, "Select SETUP file entries!")
-	$Radio_selpat = GUICtrlCreateRadio("patch", 250, $height - 44,  50, 20)
+	$Radio_selpat = GUICtrlCreateRadio("patch", 211, $height - 44,  42, 20)
+	GUICtrlSetFont($Radio_selpat, 7, 400, 0, "Small Fonts")
 	GUICtrlSetResizing($Radio_selpat, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Radio_selpat, "Select PATCH file entries!")
 	GUICtrlSetBkColor($Radio_selall, 0xFFD5FF)
@@ -2002,20 +2008,26 @@ Func FileSelectorGUI()
 	GUICtrlSetBkColor($Radio_selset, 0xFFD5FF)
 	GUICtrlSetBkColor($Radio_selpat, 0xFFD5FF)
 	;
-	$Group_OS = GuiCtrlCreateGroup("OS Select", $width - 270, $height - 65, 90, 55)
+	$Group_OS = GuiCtrlCreateGroup("OS Select", $width - 325, $height - 65, 90, 55)
 	GUICtrlSetResizing($Group_OS, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
-	$Combo_OSfle = GUICtrlCreateCombo("", $width - 260, $height - 45, 70, 21)
+	$Combo_OSfle = GUICtrlCreateCombo("", $width - 315, $height - 45, 70, 21)
 	GUICtrlSetResizing($Combo_OSfle, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Combo_OSfle, "OS for files!")
 	;
-	$Button_download = GuiCtrlCreateButton("DOWNLOAD", $width - 170, $height - 60, 100, 28)
+	$Group_exist = GuiCtrlCreateGroup("Existing", $width - 225, $height - 65, 58, 55)
+	GUICtrlSetResizing($Group_exist, $GUI_DOCKAUTO + $GUI_DOCKSIZE)
+	$Checkbox_skip = GUICtrlCreateCheckbox("Skip ", $width - 215, $height - 44, 40, 20)
+	GUICtrlSetResizing($Checkbox_skip, $GUI_DOCKAUTO + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Checkbox_skip, "Skip downloading existing files!")
+	;
+	$Button_download = GuiCtrlCreateButton("DOWNLOAD", $width - 160, $height - 60, 90, 28)
 	GUICtrlSetFont($Button_download, 8, 600)
-	GUICtrlSetResizing($Button_download, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetResizing($Button_download, $GUI_DOCKRIGHT + $GUI_DOCKAUTO)
 	GUICtrlSetTip($Button_download, "Download selected files!")
 	;
-	$Button_uncheck = GuiCtrlCreateButton("De-Select ALL", $width - 170, $height - 28, 100, 18)
+	$Button_uncheck = GuiCtrlCreateButton("Deselect ALL", $width - 160, $height - 28, 90, 18)
 	GUICtrlSetFont($Button_uncheck, 7, 600, 0, "Small Fonts")
-	GUICtrlSetResizing($Button_uncheck, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
+	GUICtrlSetResizing($Button_uncheck, $GUI_DOCKRIGHT + $GUI_DOCKAUTO)
 	GUICtrlSetTip($Button_uncheck, "Deselect ALL files!")
 	;
 	$Button_quit = GuiCtrlCreateButton("EXIT", $width - 60, $height - 60, 45, 50, $BS_ICON)
@@ -2054,6 +2066,13 @@ Func FileSelectorGUI()
 		IniWrite($inifle, "Selector", "OS", $osfle)
 	EndIf
 	GUICtrlSetData($Combo_OSfle, "ALL|Windows|Linux|Mac|Win-Lin|Win-Mac|Mac-Lin", $osfle)
+	;
+	$skip = IniRead($inifle, "Existing Files", "skip", "")
+	If $skip = "" Then
+		$skip = 1
+		IniWrite($inifle, "Existing Files", "skip", $skip)
+	EndIf
+	GUICtrlSetState($Checkbox_skip, $skip)
 
 	GuiSetState()
 	While 1
@@ -2147,6 +2166,27 @@ Func FileSelectorGUI()
 							$file = $files[$f]
 							$URL = IniRead($downfiles, $file, "URL", "")
 							If $URL <> "" Then
+								If GUICtrlRead($Checkbox_skip) = $GUI_CHECKED Then
+									If $skip = 4 Then
+										$skip = 1
+										IniWrite($inifle, "Existing Files", "skip", $skip)
+									EndIf
+									GetGameFolderNameAndPath()
+									If FileExists($gamefold) Then
+										$download = $gamefold & "\" & $file
+										If FileExists($download) Then
+											_FileWriteLog($logfle, "SKIPPED - " & $file, -1)
+											$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
+											If $i > -1 Then
+												$row = $Button_quit + $i + 1
+												GUICtrlSetBkColor($row, $COLOR_SILVER)  ;$COLOR_MEDGRAY
+												_GUICtrlListView_SetItemText($ListView_files, $i, "SKIPPED..." & $file, 3)
+												_FileWriteLog($logfle, "File exists.", -1)
+											EndIf
+											ContinueLoop
+										EndIf
+									EndIf
+								EndIf
 								$drv = StringLeft(@ScriptDir, 3)
 								$space = DriveSpaceFree($drv)
 								$free = $space * 1048576
@@ -2246,6 +2286,15 @@ Func FileSelectorGUI()
 														GUICtrlSetBkColor($row, $COLOR_RED)
 														_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
 														_FileWriteLog($logfle, "File Size check failed.", -1)
+														; NOTE - Could add an optional ContinueLoop to skip further checking.
+														; An option could be added to the SETUP window's 'Download Options' for this.
+														; 'Skip validation if file size check fails'
+														; But probably not recommended, as validation is the ultimate check.
+														; Everything relies on GOG providing correct values anyway.
+														; It is conceivable that either value could be wrong on a rare occasion,
+														; but maybe not both.
+														; Anyway, in the case of ZIP testing, the process is quick if a failure.
+														; It may also be the case for MD5 checking.
 													EndIf
 													$fext = StringRight($file, 4)
 													$filepth = ""
@@ -2470,6 +2519,14 @@ Func FileSelectorGUI()
 					MsgBox(262192, "Web Error", "No connection detected!", 0, $SelectorGUI)
 				EndIf
 			EndIf
+		Case $msg = $Checkbox_skip
+			; Skip downloading existing files
+			If GUICtrlRead($Checkbox_skip) = $GUI_CHECKED Then
+				$skip = 1
+			Else
+				$skip = 4
+			EndIf
+			IniWrite($inifle, "Existing Files", "skip", $skip)
 		Case $msg = $Combo_OSfle
 			; OS for files
 			$osfle = GUICtrlRead($Combo_OSfle)
