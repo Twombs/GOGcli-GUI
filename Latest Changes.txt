@@ -1,1 +1,5 @@
 Added a 'Skip' option on the 'Game Files Selector' window, to skip downloading of existing files in the game download folder. Some window controls were modified to accomodate this addition. This is enabled by default on first program use, but can also be changed on-the-fly during downloading (current download excepted).
+
+Multiple games (up to 10), can now be downloaded via the 'Game Files Selector' window.
+
+Bugfix that ensures scrolling, for the row being processed in the 'Game Files Selector' window.

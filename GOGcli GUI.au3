@@ -12,7 +12,7 @@
 
 ; FUNCTIONS
 ; MainGUI(), SetupGUI(), FileSelectorGUI()
-; ClearFieldValues(), FillTheGamesList(), FixTitle($text), GetFileDownloadDetails($listview), GetGameFolderNameAndPath()
+; ClearFieldValues(), FillTheGamesList(), FixTitle($text), GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF)
 ; GetTheSize(), ParseTheGamelist(), RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which), ShowCorrectImage()
 ;
 ; , SetTheColumnWidths() UNUSED
@@ -54,8 +54,8 @@ Global $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI,
 Global $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed
 Global $listview, $logfle, $m, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num, $OP, $OS, $OSes, $params, $part
 Global $parts, $percent, $pid, $ping, $progress, $pth, $ratify, $read, $res, $resultfle, $ret, $row, $s, $second, $selector, $SetupGUI, $shell
-Global $size, $slug, $slugfld, $space, $splash, $split, $splits, $state, $style, $tail, $text, $title, $titlist, $top, $type, $types, $updated
-Global $updates, $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
+Global $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state, $style, $tail, $text, $title, $titleF, $titlist, $top, $type
+Global $types, $updated, $updates, $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
 
 $addlist = @ScriptDir & "\Added.txt"
 $bigpic = @ScriptDir & "\Big.jpg"
@@ -91,10 +91,11 @@ MainGUI()
 
 Exit
 
+
 Func MainGUI()
 	Local $Menu_button, $Menu_list, $Item_clear_down, $Item_clear_man, $Item_view_down, $Item_view_man
-	Local $buttxt, $ctrl, $dir, $display, $dll, $exist, $existing, $fext, $filelist, $find, $flename
-	Local $foldpth, $ind, $last, $latest, $mpos, $result, $valfold, $xpos, $ypos
+	Local $alias, $buttxt, $col1, $col2, $col3, $col4, $ctrl, $dir, $display, $dll, $exist, $existing, $fext, $filelist
+	Local $find, $flename, $foldpth, $ind, $language, $last, $latest, $mpos, $OPS, $result, $valfold, $xpos, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -522,7 +523,7 @@ Func MainGUI()
 					"Click OK to continue ... or CANCEL to abort.", 0, $GOGcliGUI)
 				If $ans = 1 Then
 					If $title <> "" Then
-						GetGameFolderNameAndPath()
+						GetGameFolderNameAndPath($title, $slug)
 						If FileExists($gamefold) Then
 							$slugfld = $gamefold & "\" & $slug
 							If Not FileExists($slugfld) Then DirCreate($slugfld)
@@ -566,7 +567,7 @@ Func MainGUI()
 					GUICtrlSetData($Label_mid, "Saving!")
 					If $ans = 6 Then
 						$gamepic = ""
-						GetGameFolderNameAndPath()
+						GetGameFolderNameAndPath($title, $slug)
 						If FileExists($gamefold) Then
 							$gamepic = $gamefold & "\Folder.jpg"
 						Else
@@ -991,7 +992,7 @@ Func MainGUI()
 			If FileExists($gamesfold) Then
 				If _IsPressed("11") Then GUISetState(@SW_MINIMIZE, $GOGcliGUI)
 				If $title <> "" Then
-					GetGameFolderNameAndPath()
+					GetGameFolderNameAndPath($title, $slug)
 					If FileExists($gamefold) Then
 						Run(@WindowsDir & "\Explorer.exe " & $gamefold)
 					Else
@@ -1070,38 +1071,191 @@ Func MainGUI()
 					MsgBox(262192, "Download ADD Error", "A validate option is enabled!", 0, $GOGcliGUI)
 				ElseIf $buttxt = "DOWNLOAD" & @LF & "LIST" Then
 					; Downloads from a list of games.
-					MsgBox(262192, "Download Error", "This feature is not yet supported!", 2, $GOGcliGUI)
+					;MsgBox(262192, "Download Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 					;Local $e, $IDD, $paramsD, $titleD
-;~ 					SetStateOfControls($GUI_DISABLE, "all")
-;~ 					GUICtrlSetImage($Pic_cover, $blackjpg)
-;~ 					$game = ""
-;~ 					$retrieve = ""
-;~ 					GUICtrlSetData($Label_mid, "Retrieving Game File Data")
-;~ 					; Check for multiple game entries.
-;~ 					If $getlatest = 1 Or Not FileExists($manifest) Then
-;~ 						RetrieveDataFromGOG($downloads, "download")
-;~ 					Else
-;~ 						; Retrieve game file data where needed from GOG
-;~ 						$read = FileRead($manifest)
-;~ 						If $read = "" Then
-;~ 							RetrieveDataFromGOG($downloads, "download")
-;~ 						Else
-;~ 							$entries = StringSplit($downloads, @CRLF, 1)
-;~ 							For $e = 1 To $entries[0]
-;~ 								$entry = $entries[$e]
-;~ 								$entry = StringSplit($entry, "|", 1)
-;~ 								$titleD = $entry[1]
-;~ 								$IDD = $entry[2]
-;~ 								$identry = '"Id": ' & $IDD & ','
-;~ 								If StringInStr($read, $identry) < 1 Then
-;~ 									; Retrieve game file data for one from GOG
-;~ 								Else
-;~ 								EndIf
-;~ 							Next
-;~ 						EndIf
-;~ 					EndIf
-;~ 					SetStateOfControls($GUI_ENABLE, "all")
-;~ 					GUICtrlSetData($Label_mid, "")
+					SetStateOfControls($GUI_DISABLE, "all")
+					GUICtrlSetImage($Pic_cover, $blackjpg)
+					$retrieve = ""
+					GUICtrlSetData($Label_mid, "Retrieving Game File Data")
+					_FileWriteLog($logfle, "Using DOWNLOADS LIST", -1)
+					_FileWriteLog($logfle, "Checking MANIFEST", -1)
+					; Check for multiple game entries.
+					If $getlatest = 1 Or Not FileExists($manifest) Then
+						RetrieveDataFromGOG($downloads, "download")
+					Else
+						; Retrieve game file data where needed from GOG
+						$read = FileRead($manifest)
+						If $read = "" Then
+							RetrieveDataFromGOG($downloads, "download")
+						Else
+							;MsgBox(262192, "$downloads", $downloads, 2, $GOGcliGUI)
+							$entries = StringSplit($downloads, @CRLF, 1)
+							For $e = 1 To $entries[0]
+								$entry = $entries[$e]
+								If $entry <> "" Then
+									;MsgBox(262192, "$entry", $entry, 2, $GOGcliGUI)
+									$game = StringSplit($entry, "|", 1)
+									$titleD = $game[1]
+									$IDD = $game[2]
+									$identry = '"Id": ' & $IDD & ','
+									If StringInStr($read, $identry) < 1 Then
+										; Retrieve game file data for one from GOG
+										If $retrieve = "" Then
+											$retrieve = $entry
+										Else
+											$retrieve = $retrieve & @CRLF & $entry
+										EndIf
+									EndIf
+								EndIf
+							Next
+							If $retrieve <> "" Then
+								RetrieveDataFromGOG($retrieve, "download")
+							EndIf
+						EndIf
+					EndIf
+					_FileCreate($downfiles)
+					Sleep(500)
+					$read = FileRead($manifest)
+					If $read = "" Then
+						_FileWriteLog($logfle, "Empty Manifest Error", -1)
+						MsgBox(262192, "Read Error", "The 'Manifest.txt' file appears to be empty!" & @LF & "It may need restoring from backup.", 0, $GOGcliGUI)
+					Else
+						_FileWriteLog($logfle, "Building FILE DATA", -1)
+						$caption = "Downloads List"
+						IniWrite($downfiles, "Title", "caption", $caption)
+						$game = ""
+						$entries = StringSplit($downloads, @CRLF, 1)
+						For $e = 1 To $entries[0]
+							$entry = $entries[$e]
+							If $entry <> "" Then
+								$entry = StringSplit($entry, "|", 1)
+								$titleD = $entry[1]
+								$IDD = $entry[2]
+								$slugD = IniRead($gamesini, $IDD, "slug", "")
+								$identry = '"Id": ' & $IDD & ','
+								If StringInStr($read, $identry) > 0 Then
+									; Extract just the relevant game entry
+									$game = StringSplit($read, $identry, 1)
+									$game = $game[2]
+									$game = StringSplit($game, '"Id":', 1)
+									$game = $game[1]
+									If $game <> "" Then
+										$alias = ""
+										$checksum = ""
+										;$col1 = 0
+										$col2 = ""
+										$col3 = ""
+										$col4 = ""
+										$filesize = ""
+										$language = ""
+										$OPS = ""
+										$URL = ""
+										$lines = StringSplit($game, @LF, 1)
+										For $l = 1 To $lines[0]
+											$line = $lines[$l]
+											If StringInStr($line, '"Installers":') > 0 Then
+												$col2 = "GAME"
+											ElseIf StringInStr($line, '"Extras":') > 0 Then
+												$col2 = "EXTRA"
+											ElseIf StringInStr($line, '"Language":') > 0 Then
+												$line = StringSplit($line, '"Language": "', 1)
+												$line = $line[2]
+												$line = StringSplit($line, '",', 1)
+												$language = $line[1]
+											ElseIf StringInStr($line, '"Os":') > 0 Then
+												$line = StringSplit($line, '"Os": "', 1)
+												$line = $line[2]
+												$line = StringSplit($line, '",', 1)
+												$OPS = $line[1]
+											ElseIf StringInStr($line, '"Url":') > 0 Then
+												$line = StringSplit($line, '"Url": "', 1)
+												$line = $line[2]
+												$line = StringSplit($line, '",', 1)
+												$URL = $line[1]
+											ElseIf StringInStr($line, '"Title":') > 0 Then
+												$line = StringSplit($line, '"Title": "', 1)
+												$line = $line[2]
+												$line = StringSplit($line, '",', 1)
+												$alias = $line[1]
+											ElseIf StringInStr($line, '"Name":') > 0 Then
+												$line = StringSplit($line, '"Name": "', 1)
+												$line = $line[2]
+												$line = StringSplit($line, '",', 1)
+												$col4 = $line[1]
+											ElseIf StringInStr($line, '"VerifiedSize":') > 0 Then
+												$line = StringSplit($line, '"VerifiedSize":', 1)
+												$line = $line[2]
+												$line = StringSplit($line, ',', 1)
+												$line = $line[1]
+												$col3 = StringStripWS($line, 8)
+												$filesize = $col3
+												If StringIsDigit($col3) Then
+													$size = $col3
+													GetTheSize()
+													$col3 = $size
+												Else
+													$col3 = "0 bytes"
+												EndIf
+											ElseIf StringInStr($line, '"Checksum":') > 0 Then
+												$line = StringSplit($line, '"Checksum": "', 1)
+												$line = $line[2]
+												$line = StringSplit($line, '"', 1)
+												$checksum = $line[1]
+												;
+												IniWrite($downfiles, $col4, "game", $titleD)
+												IniWrite($downfiles, $col4, "slug", $slugD)
+												IniWrite($downfiles, $col4, "ID", $IDD)
+												IniWrite($downfiles, $col4, "file", $col3)
+												IniWrite($downfiles, $col4, "language", $language)
+												IniWrite($downfiles, $col4, "OS", $OPS)
+												IniWrite($downfiles, $col4, "URL", $URL)
+												IniWrite($downfiles, $col4, "title", $alias)
+												IniWrite($downfiles, $col4, "bytes", $filesize)
+												IniWrite($downfiles, $col4, "size", $col4)
+												IniWrite($downfiles, $col4, "checksum", $checksum)
+												IniWrite($downfiles, $col4, "type", $col2)
+												$alias = ""
+												$checksum = ""
+												$col3 = ""
+												$col4 = ""
+												$filesize = ""
+												$language = ""
+												$OPS = ""
+												$URL = ""
+											EndIf
+										Next
+									EndIf
+								EndIf
+							EndIf
+						Next
+						; Download
+						If $selector = 1 Then
+							; Download with Game Files Selector window
+							GUICtrlSetData($Label_top, "Downloads")
+							GUICtrlSetData($Label_mid, "Game Files Selector")
+							GUICtrlSetData($Label_bed, "List")
+							_FileWriteLog($logfle, "Loading FILE SELECTOR", -1)
+							FileWriteLine($logfle, "")
+							FileSelectorGUI()
+							$ans = MsgBox(262209 + 256, "Remove Query", "Do you want to clear the 'Downloads' list?", 0, $GOGcliGUI)
+							If $ans = 1 Then
+								_FileWriteLog($logfle, "Clearing DOWNLOADS LIST", -1)
+								FileWriteLine($logfle, "")
+								GUICtrlSetData($Button_down, "DOWNLOAD")
+								GUICtrlSetTip($Button_down, "Download the selected game!")
+								GUICtrlSetState($Item_verify_file, $GUI_ENABLE)
+								GUICtrlSetState($Item_verify_game, $GUI_ENABLE)
+								_FileCreate($downlist)
+								$downloads = ""
+							EndIf
+							GUICtrlSetData($Label_top, "")
+							GUICtrlSetData($Label_bed, "")
+						Else
+							MsgBox(262192, "Download Error", "This feature is not yet supported!", 2, $GOGcliGUI)
+						EndIf
+					EndIf
+					SetStateOfControls($GUI_ENABLE, "all")
+					GUICtrlSetData($Label_mid, "")
 					If $ind > -1 Then _GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
 				Else
 					; Downloads from just one game.
@@ -1262,7 +1416,7 @@ Func MainGUI()
 							;MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 							If FileExists($gamesfold) Then
 								If $title <> "" Then
-									GetGameFolderNameAndPath()
+									GetGameFolderNameAndPath($title, $slug)
 									If FileExists($gamefold) Then
 										$valfold = $gamefold
 									Else
@@ -1427,7 +1581,7 @@ Func MainGUI()
 							;MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 							If FileExists($gamesfold) Then
 								If $title <> "" Then
-									GetGameFolderNameAndPath()
+									GetGameFolderNameAndPath($title, $slug)
 									If FileExists($gamefold) Then
 										$valfold = $gamefold
 									Else
@@ -1928,8 +2082,9 @@ Func FileSelectorGUI()
 	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Checkbox_skip, $Combo_OSfle, $Combo_shutdown, $Group_exist, $Group_files
 	Local $Group_OS, $Label_done, $Label_percent, $Label_shut, $Label_speed, $Label_warn, $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext
 	Local $Radio_selgame, $Radio_selpat, $Radio_selset
-	Local $amount, $begin, $checked, $code, $downloading, $edge, $ents, $fext, $gotten, $osfle, $secs, $shutdown, $skip, $sum, $taken, $tmpman, $wide
-	;, $final, $first, $p, $portion, $portions
+	Local $amount, $begin, $checked, $code, $col1, $col2, $col3, $col4, $downloading, $edge, $ents, $fext, $gotten, $osfle, $secs, $sect, $sections
+	Local $shutdown, $skip, $sum, $taken, $tmpman, $wide
+	;
 	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $style + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
 	GUISetBkColor(0xBBFFBB, $SelectorGUI)
 	; CONTROLS
@@ -2039,8 +2194,24 @@ Func FileSelectorGUI()
 	;
 	GUICtrlSetData($Combo_shutdown, "none|Hibernate|Logoff|Powerdown|Reboot|Shutdown|Standby", "none")
 	;
-	;_GUICtrlListView_SetColumn($ListView_files, 2, "", 200, -1, -1, False)
-	GetFileDownloadDetails($ListView_files)
+	If $caption = "Downloads List" Then
+		$col1 = 0
+		$sections = IniReadSectionNames($downfiles)
+		For $s = 1 To $sections[0]
+			$sect = $sections[$s]
+			If $sect <> "Title" Then
+				$col1 = $col1 + 1
+				$col2 = IniRead($downfiles, $sect, "type", "")
+				$col3 = IniRead($downfiles, $sect, "file", "")
+				$col4 = IniRead($downfiles, $sect, "size", "")
+				$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
+				;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
+				GUICtrlCreateListViewItem($entry, $ListView_files)
+			EndIf
+		Next
+	Else
+		GetFileDownloadDetails($ListView_files)
+	EndIf
 	;
 	_GUICtrlListView_JustifyColumn($ListView_files, 0, 0)
 	_GUICtrlListView_JustifyColumn($ListView_files, 1, 2)
@@ -2164,6 +2335,8 @@ Func FileSelectorGUI()
 						$files = StringSplit($downloading, "|", 1)
 						For $f = 1 To $files[0]
 							$file = $files[$f]
+							$titleD = IniRead($downfiles, $file, "game", "")
+							$slugD = IniRead($downfiles, $file, "slug", "")
 							$URL = IniRead($downfiles, $file, "URL", "")
 							If $URL <> "" Then
 								If GUICtrlRead($Checkbox_skip) = $GUI_CHECKED Then
@@ -2171,13 +2344,14 @@ Func FileSelectorGUI()
 										$skip = 1
 										IniWrite($inifle, "Existing Files", "skip", $skip)
 									EndIf
-									GetGameFolderNameAndPath()
+									GetGameFolderNameAndPath($titleD, $slugD)
 									If FileExists($gamefold) Then
 										$download = $gamefold & "\" & $file
 										If FileExists($download) Then
 											_FileWriteLog($logfle, "SKIPPED - " & $file, -1)
 											$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
 											If $i > -1 Then
+												_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
 												$row = $Button_quit + $i + 1
 												GUICtrlSetBkColor($row, $COLOR_SILVER)  ;$COLOR_MEDGRAY
 												_GUICtrlListView_SetItemText($ListView_files, $i, "SKIPPED..." & $file, 3)
@@ -2192,8 +2366,8 @@ Func FileSelectorGUI()
 								$free = $space * 1048576
 								$filesize = IniRead($downfiles, $file, "bytes", 0)
 								If $filesize < $free Then
-									$titleD = IniRead($downfiles, $file, "game", "")
-									$slugD = IniRead($downfiles, $file, "slug", "")
+									;$titleD = IniRead($downfiles, $file, "game", "")
+									;$slugD = IniRead($downfiles, $file, "slug", "")
 									$IDD = IniRead($downfiles, $file, "ID", "")
 									$checksum = IniRead($downfiles, $file, "checksum", "")
 									$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
@@ -2201,6 +2375,7 @@ Func FileSelectorGUI()
 										$row = $Button_quit + $i + 1
 										GUICtrlSetBkColor($row, $COLOR_YELLOW)
 										_GUICtrlListView_SetItemText($ListView_files, $i, "Downloading..." & $file, 3)
+										_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
 										If $test = 1 Then
 											Sleep(5000)
 										Else
@@ -2300,7 +2475,7 @@ Func FileSelectorGUI()
 													$filepth = ""
 													$zippath = ""
 													$gamepic = ""
-													GetGameFolderNameAndPath()
+													GetGameFolderNameAndPath($titleD, $slugD)
 													If Not FileExists($gamefold) Then DirCreate($gamefold)
 													If FileExists($gamefold) Then
 														FileMove($download, $gamefold & "\", 1)
@@ -2382,6 +2557,7 @@ Func FileSelectorGUI()
 								Else
 									$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
 									If $i > -1 Then
+										_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
 										$row = $Button_quit + $i + 1
 										GUICtrlSetBkColor($row, $COLOR_FUCHSIA)
 										_GUICtrlListView_SetItemText($ListView_files, $i, "SKIPPED..." & $file, 3)
@@ -2413,6 +2589,7 @@ Func FileSelectorGUI()
 									$filepth = $checkval[1]
 									$checksum = $checkval[2]
 									$i = $checkval[3]
+									_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
 									$row = $Button_quit + $i + 1
 									If FileExists($filepth) Then
 										$file = StringSplit($filepth, "\", 1)
@@ -2446,6 +2623,7 @@ Func FileSelectorGUI()
 									$checkval = StringSplit($checkval, "|", 1)
 									$zippath = $checkval[1]
 									$i = $checkval[2]
+									_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
 									$row = $Button_quit + $i + 1
 									If FileExists($zippath) Then
 										$file = StringSplit($zippath, "\", 1)
@@ -3262,12 +3440,12 @@ Func GetFileDownloadDetails($listview = "")
 	;EndIf
 EndFunc ;=> GetFileDownloadDetails
 
-Func GetGameFolderNameAndPath()
+Func GetGameFolderNameAndPath($titleF, $slugF)
 	$gamefold = $gamesfold
 	If $type = "Slug" Then
-		$name = $slug
+		$name = $slugF
 	ElseIf $type = "Title" Then
-		$name = FixTitle($title)
+		$name = FixTitle($titleF)
 	EndIf
 	If $alpha = 1 Then
 		$alf = StringUpper(StringLeft($name, 1))
