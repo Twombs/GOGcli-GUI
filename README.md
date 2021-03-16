@@ -1,5 +1,10 @@
 # GOGcli-GUI
+
+![gogcli_main_5](https://github.com/Twombs/GOGcli-GUI/blob/main/Screenshots/gogcli_main_8.png?raw=true)
+
 Frontend program for gogcli.exe by Magnitus.
+
+https://github.com/Magnitus-/gogcli
 
 In development at this stage, but nearing completion for version 1.
 
@@ -22,7 +27,3 @@ Multiple games (up to 10), can now be downloaded via the 'Game Files Selector' w
 See the Wiki link above, for more information and a tutorial.
 
 See the First Full Release!
-
-https://github.com/Magnitus-/gogcli
-
-![gogcli_main_5](https://github.com/Twombs/GOGcli-GUI/blob/main/Screenshots/gogcli_main_8.png?raw=true)
