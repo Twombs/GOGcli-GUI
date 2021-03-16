@@ -13,11 +13,15 @@ Multiple manifest retrieval (batch of 10 or less) is now supported.
 
 Download destination folder parameter is now supported (v0.8.0 gogcli.exe).
 
-Individual file validation now supported.
+Individual file and game validation now supported.
 
-See the Wiki link above, for more information.
+Shutdown options now supported.
 
-See the First Beta Release!
+Multiple games (up to 10), can now be downloaded via the 'Game Files Selector' window.
+
+See the Wiki link above, for more information and a tutorial.
+
+See the First Full Release!
 
 https://github.com/Magnitus-/gogcli
 
