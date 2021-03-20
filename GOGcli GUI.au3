@@ -40,24 +40,54 @@
 #include <GDIPlus.au3>
 #include <WinAPI.au3>
 
-_Singleton("gog-cli-gui-timboli")
+Local $exe, $script, $status, $w, $wins
 
-Global $Button_dest, $Button_down, $Button_exit, $Button_find, $Button_fold, $Button_game, $Button_get, $Button_info, $Button_last
-Global $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_sub, $Button_web, $Checkbox_alpha, $Checkbox_show, $Combo_dest
-Global $Group_cover, $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS, $Input_slug, $Input_title, $Input_ups
-Global $Item_verify_file, $Item_verify_game, $Label_bed, $Label_cat, $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top
-Global $Label_ups, $Listview_games, $Pic_cover
+Global $handle, $pid, $Scriptname, $version
+
+$version = "v1.1"
+$Scriptname = "GOGcli GUI " & $version
+
+$status = _Singleton("gog-cli-gui-timboli", 1)
+If $status = 0 Then
+	; Attempt to retore and activate a non-active or minimized window.
+	If @Compiled = 1 Then
+		$pid = ProcessExists(@ScriptName)
+		$exe = @ScriptName
+	Else
+		$pid = ProcessExists("AutoIt3.exe")
+		$exe = "AutoIt3.exe"
+	EndIf
+	$script = @AutoItPID
+	If $script <> $pid Then
+		$wins = WinList($Scriptname, "")
+		For $w = 1 to $wins[0][0]
+			$handle = $wins[$w][1]
+			If WinGetProcess($handle, "") = $pid Then
+				WinSetState($handle, "", @SW_RESTORE)
+				WinActivate($handle, "")
+				ExitLoop
+			EndIf
+		Next
+		Exit
+	EndIf
+EndIf
+
+Global $Button_dest, $Button_dir, $Button_down, $Button_exit, $Button_find, $Button_fold, $Button_game, $Button_get, $Button_info
+Global $Button_last, $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_sub, $Button_tag, $Button_web, $Checkbox_alpha
+Global $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS
+Global $Input_slug, $Input_title, $Input_ups, $Item_verify_file, $Item_verify_game, $Label_bed, $Label_cat, $Label_dlc, $Label_mid
+Global $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
 Global $7zip, $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum, $checkval
 Global $cnt, $cookie, $cookies, $cover, $covers, $covimg, $dest, $details, $DLC, $done, $downfiles, $downlist, $download, $downloads, $drv
 Global $entries, $entry, $erred, $exists, $f, $file, $filepth, $files, $filesize, $flag, $fold, $foldzip, $free, $game, $gamefold, $gamelist
-Global $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $handle, $hash, $head, $height, $i, $icoD, $icoF, $icoI
-Global $icoS, $icoT, $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed
-Global $listview, $logfle, $m, $manall, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num, $OP, $OS, $OSes
-Global $params, $part, $parts, $percent, $pid, $ping, $progress, $pth, $ratify, $read, $res, $resultfle, $ret, $row, $s, $second, $selector
-Global $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state, $style, $tail, $text, $title, $titleF
-Global $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $version, $web, $which, $width, $winpos, $z
-Global $zipcheck, $zipfile, $zippath
+Global $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT
+Global $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed, $listview
+Global $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num, $OP, $OS, $OSes
+Global $params, $part, $parts, $percent, $ping, $progress, $pth, $ratify, $read, $res, $resultfle, $ret, $row, $s, $second, $selector
+Global $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state, $style, $tag, $tagfle, $tail, $text
+Global $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $web, $which, $width, $winpos
+Global $z, $zipcheck, $zipfile, $zippath
 
 $addlist = @ScriptDir & "\Added.txt"
 $bigpic = @ScriptDir & "\Big.jpg"
@@ -79,9 +109,9 @@ $manifest = @ScriptDir & "\Manifest.txt"
 $manlist = @ScriptDir & "\Manifests.txt"
 $resultfle = @ScriptDir & "\Results.txt"
 $splash = @ScriptDir & "\Splash.jpg"
+$tagfle = @ScriptDir & "\Tags.ini"
 $titlist = @ScriptDir & "\Titles.txt"
 $updated = @ScriptDir & "\Updated.txt"
-$version = "v1.1"
 
 If Not FileExists($addlist) Then _FileCreate($addlist)
 If Not FileExists($covers) Then DirCreate($covers)
@@ -96,8 +126,10 @@ Exit
 
 Func MainGUI()
 	Local $Menu_down, $Menu_list, $Menu_man, $Item_clear_down, $Item_clear_man, $Item_down_all, $Item_view_down, $Item_view_man
+	;
 	Local $alias, $buttxt, $col1, $col2, $col3, $col4, $ctrl, $dir, $display, $dll, $exist, $existing, $fext, $filelist
-	Local $find, $flename, $foldpth, $ind, $language, $last, $latest, $mpos, $OPS, $result, $valfold, $xpos, $ypos
+	Local $find, $flename, $foldpth, $ids, $ind, $l, $language, $last, $latest, $mpos, $OPS, $pos, $prior, $result, $tagtxt
+	Local $valfold, $xpos, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -128,7 +160,7 @@ Func MainGUI()
 	$left = IniRead($inifle, "Program Window", "left", @DesktopWidth - $width - 25)
 	$top = IniRead($inifle, "Program Window", "top", @DesktopHeight - $height - 60)
 	$style = $WS_OVERLAPPED + $WS_CAPTION + $WS_SYSMENU + $WS_CLIPSIBLINGS + $WS_MINIMIZEBOX ; + $WS_VISIBLE
-	$GOGcliGUI = GuiCreate("GOGcli GUI " & $version, $width, $height, $left, $top, $style, $WS_EX_TOPMOST + $WS_EX_ACCEPTFILES)
+	$GOGcliGUI = GuiCreate($Scriptname, $width, $height, $left, $top, $style, $WS_EX_TOPMOST + $WS_EX_ACCEPTFILES)
 	GUISetBkColor($COLOR_SKYBLUE, $GOGcliGUI)
 	; CONTROLS
 	$Group_games = GuiCtrlCreateGroup("Games", 10, 10, 370, 323)
@@ -259,8 +291,18 @@ Func MainGUI()
 	GUICtrlSetFont($Button_web, 7, 600, 0, "Small Fonts")
 	GUICtrlSetTip($Button_web, "Visit the online page of selected game!")
 	;
-	$Button_log = GuiCtrlCreateButton("Log", 410, 345, 50, 50, $BS_ICON)
+	$Button_log = GuiCtrlCreateButton("Log", 410, 345, 23, 23, $BS_ICON)
 	GUICtrlSetTip($Button_log, "Log Record!")
+	;
+	$Button_dir = GuiCtrlCreateButton("D", 438, 345, 23, 23, $BS_ICON)
+	GUICtrlSetTip($Button_dir, "Open the program folder!")
+;~ 	;
+;~ 	$Button_log = GuiCtrlCreateButton("Log", 410, 345, 50, 50, $BS_ICON)
+;~ 	GUICtrlSetTip($Button_log, "Log Record!")
+	;
+	$Button_tag = GuiCtrlCreateButton("TAG IT", 410, 373, 52, 22)
+	GUICtrlSetFont($Button_tag, 7, 600, 0, "Small Fonts")
+	GUICtrlSetTip($Button_tag, "Tag (color mark) the selected game title!")
 	;
 	$Button_info = GuiCtrlCreateButton("Info", 470, 345, 50, 50, $BS_ICON)
 	GUICtrlSetTip($Button_info, "Program Information!")
@@ -305,7 +347,8 @@ Func MainGUI()
 	GUICtrlSetImage($Button_web, $shell, $icoW, 0)
 	GUICtrlSetImage($Button_dest, $shell, $icoF, 0)
 	GUICtrlSetImage($Button_fold, $shell, $icoD, 0)
-	GUICtrlSetImage($Button_log, $shell, $icoT, 1)
+	GUICtrlSetImage($Button_log, $shell, $icoT, 0)
+	GUICtrlSetImage($Button_dir, $shell, $icoD, 0)
 	GUICtrlSetImage($Button_info, $user, $icoI, 1)
 	GUICtrlSetImage($Button_exit, $user, $icoX, 1)
 	;
@@ -523,6 +566,64 @@ Func MainGUI()
 				ShellExecute($link)
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Button_tag
+			; Tag (color mark) the selected game title
+			If _IsPressed("11") Then
+				If FileExists($tagfle) Then ShellExecute($tagfle)
+			Else
+				$ind = _GUICtrlListView_GetSelectedIndices($Listview_games, False)
+				If $ind = "" Then $ind = -1
+				If $ind = -1 Then
+					MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+				Else
+					$ind = Number($ind)
+					If $title = _GUICtrlListView_GetItemText($Listview_games, $ind, 1) Then
+						$tag = IniRead($tagfle, $ID, "tagged", "")
+						If $tag = "" Then
+							$tagtxt = InputBox("Game Tag - " & $title, "OK = Tag. Add some comments if you wish.", "", "", 500, 130, Default, Default, 0, $GOGcliGUI)
+							If Not @error Then
+								$tag = 1
+								IniWrite($tagfle, $ID, "tagged", $tag)
+								IniWrite($tagfle, $ID, "title", $title)
+								IniWrite($tagfle, $ID, "comment", $tagtxt)
+								$row = $lowid + $ind + 1
+								If $updates = 0 Then
+									GUICtrlSetBkColor($row, $COLOR_AQUA)
+								Else
+									GUICtrlSetBkColor($row, 0x8080FF)
+								EndIf
+								_FileWriteLog($logfle, "Tagged = " & $title, -1)
+							EndIf
+						Else
+							$ans = MsgBox(262179 + 256, "Removal Query", "Do you want to remove the tag?" & @LF & @LF & _
+								"YES = Remove. NO = Edit. CANCEL = Skip.", 0, $GOGcliGUI)
+							If $ans = 6 Then
+								IniDelete($tagfle, $ID)
+								$row = $lowid + $ind + 1
+								If $updates = 0 Then
+									If StringIsDigit($row / 2) Then
+										GUICtrlSetBkColor($row, 0xBBFFBB)
+									Else
+										GUICtrlSetBkColor($row, 0xF0D0F0)
+									EndIf
+								Else
+									GUICtrlSetBkColor($row, $COLOR_RED)
+								EndIf
+								_FileWriteLog($logfle, "Tag Removed = " & $title, -1)
+							ElseIf $ans = 7 Then
+								$tagtxt = IniRead($tagfle, $ID, "comment", "")
+								$tagtxt = InputBox("Game Tag", "Edit the current comments.", $tagtxt, "", 400, 130, Default, Default, 0, $GOGcliGUI)
+								If Not @error Then
+									IniWrite($tagfle, $ID, "comment", $tagtxt)
+								EndIf
+							EndIf
+						EndIf
+					Else
+						MsgBox(262192, "Title Error", "A game is not selected correctly!", 0, $GOGcliGUI)
+					EndIf
+				EndIf
+			EndIf
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_sub
 			; Create a Slug named sub-folder in the selected game folder
 			If FileExists($gamesfold) Then
@@ -724,6 +825,7 @@ Func MainGUI()
 													EndIf
 													FileChangeDir(@ScriptDir)
 													$erred = 0
+													$read = ""
 													If $buttxt = "MANIFEST" & @LF & "FOR ALL" Then
 														$cnt = _GUICtrlListView_GetItemCount($Listview_games)
 														If $cnt > 0 Then
@@ -875,7 +977,7 @@ Func MainGUI()
 				"Width of the 'Game Files Selector' window is adjustable." & @LF & @LF & _
 				"Click OK to see more information.", 0, $GOGcliGUI)
 			If $ans = 1 Then
-				MsgBox(262208, "Program Information (continued)", _
+				$ans = MsgBox(262209 + 256, "Program Information (continued)", _
 					"DISCLAIMER - As always, you use my programs at your own" & @LF & _
 					"risk. That said, I strive to ensure they work safe. I also cannot" & @LF & _
 					"guarantee the results (or my read) of any 3rd party programs." & @LF & _
@@ -884,7 +986,9 @@ Func MainGUI()
 					"BIG thanks to j0kky (AutoIt Forum) for download size help," & @LF & _
 					"and to torels_ & smashley (AutoIt Forum) for zip functions." & @LF & _
 					"Praise & BIG thanks as always, to Jon & team for free AutoIt." & @LF & @LF & _
-					"© February 2021 - Created by Timboli (aka TheSaint). (" & $version & ")", 0, $GOGcliGUI)
+					"© February 2021 - Created by Timboli (aka TheSaint). (" & $version & ")" & @LF & @LF & _
+					"Click OK to open the program folder.", 0, $GOGcliGUI)
+				If $ans = 1 Then ShellExecute(@ScriptDir)
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_get
@@ -1356,7 +1460,11 @@ Func MainGUI()
 												$OP = StringReplace($OS, " ", " -o=")
 												$params = "-c Cookie.txt manifest generate -l=" & $params & " -o=" & $OP & ' -i="' & $title & '"'
 												;$params = "-c Cookie.txt manifest generate -l english -o windows linux mac -i " & $title
-												$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params, @ScriptDir, $flag)
+												If StringInStr($title, "&") > 0 Then
+													$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params, @ScriptDir, $flag)
+												Else
+													$pid = RunWait(@ComSpec & ' /c ECHO ' & $title & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+												EndIf
 												Sleep(1000)
 												If FileExists($json) Then
 													$game = FileRead($json)
@@ -1365,6 +1473,44 @@ Func MainGUI()
 														$identry = '"Id": ' & $ID & ','
 														If StringInStr($game, $identry) > 0 Then
 															_FileWriteLog($logfle, "GET MANIFEST - " & $title, -1)
+															$ids = StringSplit($game, '"Id":', 1)
+															If $ids[0] > 2 Then
+																; More than one game returned, need to extract the right one.
+																_FileWriteLog($logfle, "Multiple games return.", -1)
+																$lines = StringSplit($game, @LF, 1)
+																$game = $lines[1] & @LF & $lines[2] & @LF & $lines[3]
+																For $l = 4 To $lines[0]
+																	$line = $lines[$l]
+																	If StringInStr($line, $identry) > 0 Then
+																		;$game = $game & @LF & $line
+																		$ids = 1
+																		$prior = $line
+																	ElseIf $ids = 1 Then
+																		If StringInStr($line, '"Id":') > 0 Then
+																			$ids = 2
+																		Else
+																			$game = $game & @LF & $prior
+																			If $line = "}" Then
+																				$game = $game & @LF & $line
+																				ExitLoop
+																			EndIf
+																			$prior = $line
+																		EndIf
+																	ElseIf $l = $lines[0] Then
+																		$game = StringStripWS($game, 2)
+																		$game = StringTrimRight($game, 1)
+																		$game = $game & @LF & $prior
+																		If $line = "}" Then
+																			$game = $game & @LF & $line
+																		EndIf
+																	Else
+																		$prior = $line
+																	EndIf
+																Next
+																$ids = ""
+															Else
+																$ids = 1
+															EndIf
 															If FileExists($manifest) Then
 																$read = FileRead($manifest)
 																If StringInStr($read, $identry) < 1 Then
@@ -1378,9 +1524,11 @@ Func MainGUI()
 																	FileCopy($manifest, $manifest & ".bak", 1)
 																	$head = StringSplit($read, $identry, 1)
 																	$tail = $head[2]
-																	$tail = StringSplit($tail, @LF & "}", 1)
-																	$tail = $tail[2]
 																	$head = $head[1]
+																	$pos = StringInStr($tail, @LF & "}")
+																	$tail = StringMid($tail, $pos + 2)
+																	;$tail = StringSplit($tail, @LF & "}", 1)
+																	;$tail = $tail[2]
 																	$game = StringSplit($game, $identry, 1)
 																	$game = $game[2]
 																	$read = $head & $identry & $game & $tail
@@ -1391,7 +1539,11 @@ Func MainGUI()
 																Sleep(1000)
 															Else
 																; Start the manifest
-																FileCopy($json, $manifest)
+																If $ids = 1 Then
+																	FileCopy($json, $manifest)
+																Else
+																	FileWrite($manifest, $game)
+																EndIf
 																_FileWriteLog($logfle, "ADD to manifest", -1)
 															EndIf
 															FileWriteLine($logfle, "")
@@ -1695,6 +1847,11 @@ Func MainGUI()
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 			;_GUICtrlListView_SetItemSelected($Listview_games, $ind, True, True)
+		Case $msg = $Button_dir
+			; Open the program folder
+			If _IsPressed("11") Then GUISetState(@SW_MINIMIZE, $GOGcliGUI)
+			ShellExecute(@ScriptDir)
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_dest
 			; Browse to set the destination folder
 			If $dest = "" Then
@@ -1826,7 +1983,10 @@ Func MainGUI()
 			GUICtrlSetData($Input_dlc, $DLC)
 			$updates = IniRead($gamesini, $ID, "updates", "")
 			GUICtrlSetData($Input_ups, $updates)
-			;GUICtrlSetData($Input_ups, $ind)
+			$tagtxt = IniRead($tagfle, $ID, "comment", "")
+			If $tagtxt <> "" Then
+				MsgBox(262208, "Tag Comment", $tagtxt, 0, $GOGcliGUI)
+			EndIf
 		Case $msg = $Pic_cover
 			; Cover Image - Click For Large Preview
 			If $imgfle <> "" Then
@@ -3325,6 +3485,7 @@ Func ClearFieldValues()
 EndFunc ;=> ClearFieldValues
 
 Func FillTheGamesList()
+	Local $idx, $sect, $sects
 	If FileExists($titlist) Then
 		$res = _FileReadToArray($titlist, $array)
 		If $res = 1 Then
@@ -3356,6 +3517,24 @@ Func FillTheGamesList()
 			If $games > 0 Then GUICtrlSetData($Group_games, "Games  (" & $games & ")")
 			;_GUICtrlListView_SimpleSort($Listview_games, False, 1, True)
 			;_GUICtrlListView_SetItemSelected($Listview_games, -1, False, False)
+			If FileExists($tagfle) Then
+				$sects = IniReadSectionNames($tagfle)
+				If Not @error Then
+					For $s = 1 To $sects[0]
+						$sect = $sects[$s]
+						$idx = _GUICtrlListView_FindText($Listview_games, $sect, -1, False, False)
+						If $idx > -1 Then
+							$row = $lowid + $idx + 1
+							$updates = IniRead($gamesini, $sect, "updates", "")
+							If $updates = 0 Then
+								GUICtrlSetBkColor($row, $COLOR_AQUA)
+							Else
+								GUICtrlSetBkColor($row, 0x8080FF)
+							EndIf
+						EndIf
+					Next
+				EndIf
+			EndIf
 			GUICtrlSetData($Label_mid, "")
 		EndIf
 	Else
@@ -3377,7 +3556,7 @@ Func FixTitle($text)
 EndFunc ;=> FixTitle
 
 Func GetFileDownloadDetails($listview = "")
-	Local $alias, $col1, $col2, $col3, $col4, $language, $OPS
+	Local $alias, $col1, $col2, $col3, $col4, $l, $language, $OPS
 	;$caption
 	_FileCreate($downfiles)
 	Sleep(500)
@@ -3496,8 +3675,11 @@ Func GetGameFolderNameAndPath($titleF, $slugF)
 EndFunc ;=> GetGameFolderNameAndPath
 
 Func GetManifestForTitle()
+	Local $ids, $l, $pos, $prior, $titleM
 	_FileWriteLog($logfle, "GET MANIFEST - " & $title, -1)
-	$read = ""
+	$titleM = '"' & $title & '"'
+	;MsgBox(262208, "Title", $titleM, 0, $GOGcliGUI)
+	;$read = ""
 	If $manall = 1 And $getlatest = 4 Then
 		If FileExists($manifest) Then
 			$identry = '"Id": ' & $ID & ','
@@ -3516,9 +3698,13 @@ Func GetManifestForTitle()
 	$params = StringStripWS($lang & " " & $second, 3)
 	$params = StringReplace($params, " ", " -l=")
 	$OP = StringReplace($OS, " ", " -o=")
-	$params = "-c Cookie.txt manifest generate -l=" & $params & ' -o=' & $OP & ' -i="' & $title & '"'
-	;$params = "-c Cookie.txt manifest generate -l english -o windows linux mac -i " & $title
-	$pid = RunWait(@ComSpec & ' /c ECHO ' & $title & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+	$params = "-c Cookie.txt manifest generate -l=" & $params & ' -o=' & $OP & ' -i=' & $titleM
+	;$params = "-c Cookie.txt manifest generate -l english -o windows linux mac -i " & $titleM
+	If StringInStr($title, "&") > 0 Then
+		$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params, @ScriptDir, $flag)
+	Else
+		$pid = RunWait(@ComSpec & ' /c ECHO ' & $title & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+	EndIf
 	Sleep(1000)
 	If FileExists($json) Then
 		$game = FileRead($json)
@@ -3526,6 +3712,44 @@ Func GetManifestForTitle()
 			; Something was returned, check for game ID in the return.
 			$identry = '"Id": ' & $ID & ','
 			If StringInStr($game, $identry) > 0 Then
+				$ids = StringSplit($game, '"Id":', 1)
+				If $ids[0] > 2 Then
+					; More than one game returned, need to extract the right one.
+					_FileWriteLog($logfle, "Multiple games return.", -1)
+					$lines = StringSplit($game, @LF, 1)
+					$game = $lines[1] & @LF & $lines[2] & @LF & $lines[3]
+					For $l = 4 To $lines[0]
+						$line = $lines[$l]
+						If StringInStr($line, $identry) > 0 Then
+							;$game = $game & @LF & $line
+							$ids = 1
+							$prior = $line
+						ElseIf $ids = 1 Then
+							If StringInStr($line, '"Id":') > 0 Then
+								$ids = 2
+							Else
+								$game = $game & @LF & $prior
+								If $line = "}" Then
+									$game = $game & @LF & $line
+									ExitLoop
+								EndIf
+								$prior = $line
+							EndIf
+						ElseIf $l = $lines[0] Then
+							$game = StringStripWS($game, 2)
+							$game = StringTrimRight($game, 1)
+							$game = $game & @LF & $prior
+							If $line = "}" Then
+								$game = $game & @LF & $line
+							EndIf
+						Else
+							$prior = $line
+						EndIf
+					Next
+					$ids = ""
+				Else
+					$ids = 1
+				EndIf
 				If FileExists($manifest) Then
 					If $read = "" Then $read = FileRead($manifest)
 					If StringInStr($read, $identry) < 1 Then
@@ -3535,12 +3759,16 @@ Func GetManifestForTitle()
 					Else
 						; Replace in manifest
 						GUICtrlSetData($Label_mid, "Replacing Game in Manifest")
+						$read = FileRead($manifest)
+						Sleep(1000)
 						FileCopy($manifest, $manifest & ".bak", 1)
 						$head = StringSplit($read, $identry, 1)
 						$tail = $head[2]
-						$tail = StringSplit($tail, @LF & "}", 1)
-						$tail = $tail[2]
 						$head = $head[1]
+						$pos = StringInStr($tail, @LF & "}")
+						$tail = StringMid($tail, $pos + 2)
+						;$tail = StringSplit($tail, @LF & "}", 1)
+						;$tail = $tail[2]
 						$game = StringSplit($game, $identry, 1)
 						$game = $game[2]
 						$read = $head & $identry & $game & $tail
@@ -3551,7 +3779,11 @@ Func GetManifestForTitle()
 					Sleep(1000)
 				Else
 					; Start the manifest
-					FileCopy($json, $manifest)
+					If $ids = 1 Then
+						FileCopy($json, $manifest)
+					Else
+						FileWrite($manifest, $game)
+					EndIf
 					_FileWriteLog($logfle, "ADD to manifest.", -1)
 				EndIf
 				FileWriteLine($logfle, "")
@@ -3716,7 +3948,7 @@ Func ParseTheGamelist()
 EndFunc ;=> ParseTheGamelist
 
 Func RetrieveDataFromGOG($listed, $list)
-	Local $e, $IDD, $paramsD, $titleD
+	Local $e, $IDD, $ids, $l, $paramsD, $pos, $prior, $titleD
 	; Retrieve game file data for all listed from GOG
 	$cookie = ""
 	If FileExists($cookies) Then
@@ -3748,7 +3980,11 @@ Func RetrieveDataFromGOG($listed, $list)
 									$titleD = $entry[1]
 									$IDD = $entry[2]
 									$paramsD = $params & ' -i="' & $titleD & '"'
-									$pid = RunWait(@ComSpec & ' /c ECHO ' & $titleD & ' && gogcli.exe ' & $paramsD, @ScriptDir, $flag)
+									If StringInStr($titleD, "&") > 0 Then
+										$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params, @ScriptDir, $flag)
+									Else
+										$pid = RunWait(@ComSpec & ' /c ECHO ' & $titleD & ' && gogcli.exe ' & $paramsD, @ScriptDir, $flag)
+									EndIf
 									Sleep(1000)
 									If FileExists($json) Then
 										$game = FileRead($json)
@@ -3757,6 +3993,44 @@ Func RetrieveDataFromGOG($listed, $list)
 											$identry = '"Id": ' & $IDD & ','
 											If StringInStr($game, $identry) > 0 Then
 												_FileWriteLog($logfle, "GET MANIFEST - " & $titleD, -1)
+												$ids = StringSplit($game, '"Id":', 1)
+												If $ids[0] > 2 Then
+													; More than one game returned, need to extract the right one.
+													_FileWriteLog($logfle, "Multiple games return.", -1)
+													$lines = StringSplit($game, @LF, 1)
+													$game = $lines[1] & @LF & $lines[2] & @LF & $lines[3]
+													For $l = 4 To $lines[0]
+														$line = $lines[$l]
+														If StringInStr($line, $identry) > 0 Then
+															;$game = $game & @LF & $line
+															$ids = 1
+															$prior = $line
+														ElseIf $ids = 1 Then
+															If StringInStr($line, '"Id":') > 0 Then
+																$ids = 2
+															Else
+																$game = $game & @LF & $prior
+																If $line = "}" Then
+																	$game = $game & @LF & $line
+																	ExitLoop
+																EndIf
+																$prior = $line
+															EndIf
+														ElseIf $l = $lines[0] Then
+															$game = StringStripWS($game, 2)
+															$game = StringTrimRight($game, 1)
+															$game = $game & @LF & $prior
+															If $line = "}" Then
+																$game = $game & @LF & $line
+															EndIf
+														Else
+															$prior = $line
+														EndIf
+													Next
+													$ids = ""
+												Else
+													$ids = 1
+												EndIf
 												If FileExists($manifest) Then
 													$name = StringLeft($titleD, 20)
 													If $name <> $titleD Then $name = $name & "...."
@@ -3774,9 +4048,11 @@ Func RetrieveDataFromGOG($listed, $list)
 														FileCopy($manifest, $manifest & ".bak", 1)
 														$head = StringSplit($read, $identry, 1)
 														$tail = $head[2]
-														$tail = StringSplit($tail, @LF & "}", 1)
-														$tail = $tail[2]
 														$head = $head[1]
+														;$tail = StringSplit($tail, @LF & "}", 1)
+														;$tail = $tail[2]
+														$pos = StringInStr($tail, @LF & "}")
+														$tail = StringMid($tail, $pos + 2)
 														$game = StringSplit($game, $identry, 1)
 														$game = $game[2]
 														$read = $head & $identry & $game & $tail
@@ -3787,7 +4063,11 @@ Func RetrieveDataFromGOG($listed, $list)
 													Sleep(1000)
 												Else
 													; Start the manifest
-													FileCopy($json, $manifest)
+													If $ids = 1 Then
+														FileCopy($json, $manifest)
+													Else
+														FileWrite($manifest, $game)
+													EndIf
 													_FileWriteLog($logfle, "ADD to manifest", -1)
 												EndIf
 												FileWriteLine($logfle, "")
@@ -3855,9 +4135,11 @@ Func SetStateOfControls($state, $which = "")
 	GUICtrlSetState($Checkbox_alpha, $state)
 	GUICtrlSetState($Button_dest, $state)
 	GUICtrlSetState($Button_fold, $state)
+	GUICtrlSetState($Button_tag, $state)
 	If $which = "all" Then
 		GUICtrlSetState($Button_setup, $state)
 		GUICtrlSetState($Button_log, $state)
+		GUICtrlSetState($Button_dir, $state)
 		GUICtrlSetState($Button_info, $state)
 		GUICtrlSetState($Button_exit, $state)
 	EndIf

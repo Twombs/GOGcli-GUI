@@ -1,3 +1,31 @@
 Added a 'Download ALL' right-click menu option on the 'ADD TO MANIFEST' button. This changes the button text to 'MANIFEST FOR ALL' and allows downloading of manifest entries for all listed games.
 
+The second 'Program Information' dialog window, now has an option to open the program folder.
+
+BUGFIX for an ampersand in a game title, preventing retrieval for the manifest.
+
+BUGFIX for adding to or replacing a game title entry in the manifest.
+
+LOG button has been shrunk and an open the program folder button added to its right, plus a TAG IT button added below.
+
+The TAG IT button allows you to tag (mark) a game title entry, as well as add some comments if you wish. The tagging is indicated as a colored row on the 'Games' list - Aqua usually, unless the game title has updates indicated, in which case Red is changed to Purple.
+
+Clicking a tagged game with a comment, pops up a message box showing the comment.
+
+When GUI program is minimized, if forgetting and executing it again, it now restores it.
+
 Always check the latest images in either the 'Screenshots' or 'Tutorial' folders.
+
+Tutor_16.png
+Tutor_17.png
+Tutor_18.png
+Tutor_19.png
+
+gogcli_main_10.png
+
+Tutor_20.png
+Tutor_21.png
+Tutor_22.png
+Tutor_23.png
+Tutor_24.png
+Tutor_25.png
