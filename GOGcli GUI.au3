@@ -44,7 +44,7 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $version
 
-$version = "v1.1"
+$version = "v1.2"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -125,11 +125,12 @@ Exit
 
 
 Func MainGUI()
-	Local $Menu_down, $Menu_list, $Menu_man, $Item_clear_down, $Item_clear_man, $Item_down_all, $Item_view_down, $Item_view_man
+	Local $Menu_down, $Menu_get, $Menu_list, $Menu_man
+	Local $Item_clear_down, $Item_clear_man, $Item_compare_all, $Item_compare_one, $Item_down_all, $Item_view_down, $Item_view_man
 	;
-	Local $alias, $buttxt, $col1, $col2, $col3, $col4, $ctrl, $dir, $display, $dll, $exist, $existing, $fext, $filelist
-	Local $find, $flename, $foldpth, $ids, $ind, $l, $language, $last, $latest, $mpos, $OPS, $pos, $prior, $result, $tagtxt
-	Local $valfold, $xpos, $ypos
+	Local $alias, $buttxt, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display, $dll, $exist, $existing, $fext
+	Local $filelist, $find, $flename, $foldpth, $ids, $ind, $l, $language, $last, $latest, $mpos, $OPS, $pos, $prior, $result
+	Local $tagtxt, $valfold, $xpos, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -323,6 +324,11 @@ Func MainGUI()
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Item_view_man = GUICtrlCreateMenuItem("View Manifests List", $Menu_list)
 	;
+	$Menu_get = GUICtrlCreateContextMenu($Button_get)
+	$Item_compare_one = GUICtrlCreateMenuItem("Compare One Game", $Menu_get, -1, 0)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Item_compare_all = GUICtrlCreateMenuItem("Compare ALL Games", $Menu_get, -1, 0)
+	;
 	$Menu_down = GUICtrlCreateContextMenu($Button_down)
 	$Item_verify_file = GUICtrlCreateMenuItem("Validate File", $Menu_down, -1, 0)
 	GUICtrlCreateMenuItem("", $Menu_list)
@@ -512,6 +518,8 @@ Func MainGUI()
 ;~ 	EndIf
 	;If $7zip = "" Then GUICtrlSetState($Item_verify, $GUI_DISABLE)
 	;
+	$compall = 4
+	$compone = 4
 	$existing = ""
 	$find = ""
 	$last = ""
@@ -993,79 +1001,220 @@ Func MainGUI()
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_get
 			; Get game titles from GOG library
-			If FileExists($cookies) Then
-				$res = _FileReadToArray($cookies, $array)
-				If $res = 1 Then
-					For $a = 1 To $array[0]
-						$line = $array[$a]
-						If $line <> "" Then
-							If StringLeft($line, 7) = "gog-al=" Then
-								SetStateOfControls($GUI_DISABLE, "all")
-								$ping = Ping("gog.com", 4000)
-								If $ping > 0 Then
-									GUICtrlSetImage($Pic_cover, $blackjpg)
-									GUICtrlSetData($Label_top, "100 Games per Page")
-									GUICtrlSetData($Label_mid, "Obtaining Games List")
-									GUICtrlSetData($Label_bed, "Page 1")
-									ClearFieldValues()
-									If $minimize = 1 Then
-										$flag = @SW_MINIMIZE
-									Else
-										$flag = @SW_SHOW
-									EndIf
-									FileChangeDir(@ScriptDir)
-									$params = "-c Cookie.txt gog-api owned-games -p="
-									$pid = RunWait(@ComSpec & ' /c echo Page 1 && gogcli.exe ' & $params & '1 >"' & $gamelist & '"', @ScriptDir, $flag)
-									If FileExists($gamelist) Then
-										$res = _FileReadToArray($gamelist, $lines)
-										If $res = 1 Then
-											For $l = 1 To $lines[0]
-												$line = $lines[$l]
-												If $line <> "" Then
-													If StringLeft($line, 11) = "TotalPages:" Then
-														$line = StringReplace($line, "TotalPages:", "")
-														$num = StringStripWS($line, 3)
-														If StringIsDigit($num) Then
-															If $num > 1 Then
-																For $n = 2 To $num
-																	Sleep(500)
-																	GUICtrlSetData($Label_bed, "Page " & $n)
-																	$pid = RunWait(@ComSpec & ' /c echo Page ' & $n & ' && gogcli.exe ' & $params & $n & ' >>"' & $gamelist & '"', @ScriptDir, $flag)
-																Next
-																GUICtrlSetData($Label_top, "")
-																GUICtrlSetData($Label_bed, "")
+			$buttxt = GUICtrlRead($Button_get)
+			If $buttxt = "CHECK or GET" & @LF & "GAMES LIST" Then
+				If FileExists($cookies) Then
+					$res = _FileReadToArray($cookies, $array)
+					If $res = 1 Then
+						For $a = 1 To $array[0]
+							$line = $array[$a]
+							If $line <> "" Then
+								If StringLeft($line, 7) = "gog-al=" Then
+									SetStateOfControls($GUI_DISABLE, "all")
+									$ping = Ping("gog.com", 4000)
+									If $ping > 0 Then
+										GUICtrlSetImage($Pic_cover, $blackjpg)
+										GUICtrlSetData($Label_top, "100 Games per Page")
+										GUICtrlSetData($Label_mid, "Obtaining Games List")
+										GUICtrlSetData($Label_bed, "Page 1")
+										ClearFieldValues()
+										If $minimize = 1 Then
+											$flag = @SW_MINIMIZE
+										Else
+											$flag = @SW_SHOW
+										EndIf
+										FileChangeDir(@ScriptDir)
+										$params = "-c Cookie.txt gog-api owned-games -p="
+										$pid = RunWait(@ComSpec & ' /c echo Page 1 && gogcli.exe ' & $params & '1 >"' & $gamelist & '"', @ScriptDir, $flag)
+										If FileExists($gamelist) Then
+											$res = _FileReadToArray($gamelist, $lines)
+											If $res = 1 Then
+												For $l = 1 To $lines[0]
+													$line = $lines[$l]
+													If $line <> "" Then
+														If StringLeft($line, 11) = "TotalPages:" Then
+															$line = StringReplace($line, "TotalPages:", "")
+															$num = StringStripWS($line, 3)
+															If StringIsDigit($num) Then
+																If $num > 1 Then
+																	For $n = 2 To $num
+																		Sleep(500)
+																		GUICtrlSetData($Label_bed, "Page " & $n)
+																		$pid = RunWait(@ComSpec & ' /c echo Page ' & $n & ' && gogcli.exe ' & $params & $n & ' >>"' & $gamelist & '"', @ScriptDir, $flag)
+																	Next
+																	GUICtrlSetData($Label_top, "")
+																	GUICtrlSetData($Label_bed, "")
+																EndIf
+																Sleep(1000)
+																ParseTheGamelist()
+																_FileWriteLog($logfle, "RETRIEVE GAMES LIST.", -1)
+																FileWriteLine($logfle, "")
+																SetStateOfControls($GUI_ENABLE, "all")
+																ContinueLoop 3
 															EndIf
-															Sleep(1000)
-															ParseTheGamelist()
-															_FileWriteLog($logfle, "RETRIEVE GAMES LIST.", -1)
-															FileWriteLine($logfle, "")
-															SetStateOfControls($GUI_ENABLE, "all")
-															ContinueLoop 3
 														EndIf
 													EndIf
-												EndIf
-											Next
-											MsgBox(262192, "List Error", "The 'Game.txt' file appears to be empty!", 0, $GOGcliGUI)
+												Next
+												MsgBox(262192, "List Error", "The 'Game.txt' file appears to be empty!", 0, $GOGcliGUI)
+											EndIf
 										EndIf
+										GUICtrlSetData($Label_top, "")
+										GUICtrlSetData($Label_mid, "")
+										GUICtrlSetData($Label_bed, "")
+									Else
+										MsgBox(262192, "Web Error", "No connection detected!", 0, $GOGcliGUI)
 									EndIf
-									GUICtrlSetData($Label_top, "")
-									GUICtrlSetData($Label_mid, "")
-									GUICtrlSetData($Label_bed, "")
-								Else
-									MsgBox(262192, "Web Error", "No connection detected!", 0, $GOGcliGUI)
+									SetStateOfControls($GUI_ENABLE, "all")
+									ContinueLoop 2
 								EndIf
-								SetStateOfControls($GUI_ENABLE, "all")
-								ContinueLoop 2
 							EndIf
-						EndIf
-					Next
-					MsgBox(262192, "Cookie Error", "The 'Cookie.txt' file doesn't contain a line starting with 'gog-al='.", 0, $GOGcliGUI)
+						Next
+						MsgBox(262192, "Cookie Error", "The 'Cookie.txt' file doesn't contain a line starting with 'gog-al='.", 0, $GOGcliGUI)
+					Else
+						MsgBox(262192, "Content Error", "The 'Cookie.txt' file appears to be empty!", 0, $GOGcliGUI)
+					EndIf
 				Else
-					MsgBox(262192, "Content Error", "The 'Cookie.txt' file appears to be empty!", 0, $GOGcliGUI)
+					MsgBox(262192, "File Error", "The 'Cookie.txt' file is missing!", 0, $GOGcliGUI)
 				EndIf
 			Else
-				MsgBox(262192, "File Error", "The 'Cookie.txt' file is missing!", 0, $GOGcliGUI)
+				If FileExists($gamesfold) Then
+					If FileExists($manifest) Then
+						SetStateOfControls($GUI_DISABLE, "all")
+						GUICtrlSetImage($Pic_cover, $blackjpg)
+						GUICtrlSetData($Label_mid, "Game Folder && Manifest Check")
+						$read = FileRead($manifest)
+						If $read = "" Then
+							MsgBox(262192, "Data Error", "Manifest is empty!" & @LF & @LF & "Populate the manifest first.", 0, $GOGcliGUI)
+						Else
+							If $buttxt = "COMPARE" & @LF & "ONE GAME" Then
+								If $ID = "" Then
+									MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+								Else
+									If $title <> "" Then
+										GUICtrlSetData($Label_top, "COMPARING ONE")
+										_FileWriteLog($logfle, "COMPARING - " & $title, -1)
+										GetGameFolderNameAndPath($title, $slug)
+										If FileExists($gamefold) Then
+											_FileWriteLog($logfle, $gamefold, -1)
+											_FileWriteLog($logfle, "Checking MANIFEST", -1)
+											$identry = '"Id": ' & $ID & ','
+											If StringInStr($read, $identry) > 0 Then
+												GUICtrlSetData($Label_bed, "GAME FOUND")
+												$game = StringSplit($read, $identry, 1)
+												$game = $game[2]
+												$game = StringSplit($game, '"Id":', 1)
+												$game = $game[1]
+												If $game <> "" Then
+													GUICtrlSetData($Label_mid, "Comparing Game Files")
+													_FileWriteLog($logfle, "Comparing Game Files.", -1)
+													GetFileDownloadDetails()
+													$entries = IniReadSectionNames($downfiles)
+													$cnt = $entries[0]
+													If $cnt > 1 Then
+														_FileWriteLog($logfle, $cnt & " files listed in the manifest.", -1)
+														$filelist = _FileListToArrayRec($gamefold, "*.*", 1, 1, 0, 1)
+														If @error Then $filelist = ""
+														If IsArray($filelist) Then
+															$files = ""
+															$result = ""
+															$tested = 0
+															For $f = 1 To $filelist[0]
+																$file = $filelist[$f]
+																$filepth = $gamefold & "\" & $file
+																_PathSplit($filepth, $drv, $dir, $flename, $fext)
+																If $fext = ".exe" Or $fext = ".bin" Or $fext = ".dmg" Or $fext = ".pkg" Or $fext = ".sh" Or $fext = ".zip" Then
+																	_FileWriteLog($logfle, $file, -1)
+																	If $result = "" Then
+																		$result = $file
+																	Else
+																		$result = $result & @LF & $file
+																	EndIf
+																	$tested = $tested + 1
+																	If StringInStr($file, "\") > 0 Then $file = $flename & $fext
+																	If $files = "" Then
+																		$files = "|" & $file & "|"
+																	Else
+																		$files = $files & $file & "|"
+																	EndIf
+																	$filesize = IniRead($downfiles, $file, "bytes", 0)
+																	If $filesize = 0 Then
+																		$type = IniRead($downfiles, $file, "type", "")
+																		If $type = "" Then
+																			$result = $result & @LF & "Manifest entry for file is missing."
+																			_FileWriteLog($logfle, "Manifest entry for file is missing.", -1)
+																		Else
+																			$result = $result & @LF & "File Size is missing."
+																			_FileWriteLog($logfle, "File Size is missing.", -1)
+																		EndIf
+																	Else
+																		$bytes = FileGetSize($filepth)
+																		If $bytes = $filesize Then
+																			$result = $result & @LF & "File Size passed."
+																			_FileWriteLog($logfle, "File Size passed.", -1)
+																		Else
+																			$result = $result & @LF & "File Size failed."
+																			_FileWriteLog($logfle, "File Size failed.", -1)
+																		EndIf
+																	EndIf
+																EndIf
+															Next
+															For $c = 1 To $cnt
+																$entry = $entries[$c]
+																If StringInStr($files, "|" & $entry & "|") < 1 Then
+																	_FileWriteLog($logfle, $entry, -1)
+																	If $result = "" Then
+																		$result = $entry
+																	Else
+																		$result = $result & @LF & $entry
+																	EndIf
+																	$result = $result & @LF & "File is missing from game folder."
+																	_FileWriteLog($logfle, "File is missing from game folder.", -1)
+																EndIf
+															Next
+															MsgBox(262208, "Compare Results", $result, 0, $GOGcliGUI)
+														Else
+															_FileWriteLog($logfle, "Game folder content issue.", -1)
+															MsgBox(262192, "Source Error", "Folder or content issue (i.e. no files found).", 0, $GOGcliGUI)
+														EndIf
+													Else
+														_FileWriteLog($logfle, "Manifest Error - No game files found.", -1)
+														MsgBox(262192, "Manifest Error", "No game files found.", 0, $GOGcliGUI)
+													EndIf
+												Else
+													_FileWriteLog($logfle, "Game data could not be extracted.", -1)
+													MsgBox(262192, "Details Error", "Game data could not be extracted!", 0, $GOGcliGUI)
+												EndIf
+											Else
+												_FileWriteLog($logfle, "Game manifest entry not found.", -1)
+												MsgBox(262192, "Entry Error", "Manifest does not contain selected game!" & @LF & @LF & "Use 'ADD TO MANIFEST' first.", 0, $GOGcliGUI)
+											EndIf
+										Else
+											_FileWriteLog($logfle, "Game folder not found.", -1)
+											MsgBox(262192, "Path Error", "Game folder does not exist!" & @LF & @LF & "( i.e. not yet created )", 0, $GOGcliGUI)
+										EndIf
+										FileWriteLine($logfle, "")
+										GUICtrlSetData($Label_top, "")
+										GUICtrlSetData($Label_bed, "")
+									Else
+										MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+									EndIf
+								EndIf
+							ElseIf $buttxt = "COMPARE" & @LF & "ALL GAMES" Then
+								MsgBox(262192, "Compare Error", "This feature is not yet supported!", 2, $GOGcliGUI)
+								_FileWriteLog($logfle, "COMPARING all games.", -1)
+							EndIf
+						EndIf
+						SetStateOfControls($GUI_ENABLE, "all")
+						GUICtrlSetData($Label_mid, "")
+						If $ind > -1 Then _GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+					Else
+						MsgBox(262192, "Source Error", "Manifest.txt file does not exist!" & @LF & @LF & "( i.e. not yet created )", 0, $GOGcliGUI)
+					EndIf
+				Else
+					MsgBox(262192, "Path Error", "Games folder does not exist!" & @LF & @LF & "( i.e. Drive is disconnected )", 0, $GOGcliGUI)
+				EndIf
 			EndIf
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_game
 			; View details of selected game
 			If $ID = "" Then
@@ -1938,6 +2087,38 @@ Func MainGUI()
 				GUICtrlSetTip($Button_man, "Add selected game to manifest!")
 			EndIf
 			GUICtrlSetState($Item_down_all, $manall)
+		Case $msg = $Item_compare_one
+			; Compare One Game
+			If $compone = 4 Then
+				$compone = 1
+				If $compall = 1 Then
+					$compall = 4
+					GUICtrlSetState($Item_compare_all, $compall)
+				EndIf
+				GUICtrlSetData($Button_get, "COMPARE" & @LF & "ONE GAME")
+				GUICtrlSetTip($Button_get, "Compare one game in the games folder with manifest!")
+			Else
+				$compone = 4
+				GUICtrlSetData($Button_get, "CHECK or GET" & @LF & "GAMES LIST")
+				GUICtrlSetTip($Button_get, "Get game titles from GOG library!")
+			EndIf
+			GUICtrlSetState($Item_compare_one, $compone)
+		Case $msg = $Item_compare_all
+			; Compare ALL Games
+			If $compall = 4 Then
+				$compall = 1
+				If $compone = 1 Then
+					$compone = 4
+					GUICtrlSetState($Item_compare_one, $compone)
+				EndIf
+				GUICtrlSetData($Button_get, "COMPARE" & @LF & "ALL GAMES")
+				GUICtrlSetTip($Button_get, "Compare all games in the games folder with manifest!")
+			Else
+				$compall = 4
+				GUICtrlSetData($Button_get, "CHECK or GET" & @LF & "GAMES LIST")
+				GUICtrlSetTip($Button_get, "Get game titles from GOG library!")
+			EndIf
+			GUICtrlSetState($Item_compare_all, $compall)
 		Case $msg = $Item_clear_man
 			; Clear Manifests List
 			GUICtrlSetState($Item_down_all, $GUI_ENABLE)
