@@ -1,7 +1,20 @@
-Added two compare options to the right-click menu for the 'CHECK or GET GAMES LIST' button. This changes the button text to either 'COMPARE ONE GAME' or 'COMPARE ALL GAMES' and allows comparing of existing files against manifest entries and vice-a-versa. Only the 'COMPARE ONE GAME' option is enabled at this stage.
+Added two compare options to the right-click menu for the 'CHECK or GET GAMES LIST' button. This changes the button text to either 'COMPARE ONE GAME' or 'COMPARE ALL GAMES' and allows comparing of existing files against manifest entries and vice-a-versa. You get a simple dialog report for the 'COMPARE ONE GAME' option, but a stand-alone 'Report.exe' GUI for the 'COMPARE ALL GAMES' option.
+
+The 'Games' list has three more right-click menu options, related to the 'Compare' feature.
+
+FIND process has had a slight improvement.
 
 Always check the latest images in either the 'Screenshots' or 'Tutorial' folders.
 
 Tutor_26.png
 Tutor_27.png
 Tutor_28.png
+
+gogcli_compare.png
+
+Tutor_29.png
+Tutor_30.png
+Tutor_31.png
+Tutor_32.png
+Tutor_33.png
+Tutor_34.png

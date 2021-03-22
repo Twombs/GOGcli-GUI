@@ -12,9 +12,9 @@
 
 ; FUNCTIONS
 ; MainGUI(), SetupGUI(), FileSelectorGUI()
-; ClearFieldValues(), FillTheGamesList(), FixTitle($text), GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF)
-; GetManifestForTitle(), GetTheSize(), ParseTheGamelist(), RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which)
-; ShowCorrectImage()
+; ClearFieldValues(), CompareFilesToManifest($numb), FillTheGamesList(), FixTitle($text), GetFileDownloadDetails($listview)
+; GetGameFolderNameAndPath($titleF, $slugF), GetManifestForTitle(), GetTheSize(), ParseTheGamelist(), RetrieveDataFromGOG($listed, $list)
+; SetStateOfControls($state, $which), ShowCorrectImage()
 ;
 ; , SetTheColumnWidths() UNUSED
 ;
@@ -83,15 +83,16 @@ Global $cnt, $cookie, $cookies, $cover, $covers, $covimg, $dest, $details, $DLC,
 Global $entries, $entry, $erred, $exists, $f, $file, $filepth, $files, $filesize, $flag, $fold, $foldzip, $free, $game, $gamefold, $gamelist
 Global $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT
 Global $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed, $listview
-Global $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num, $OP, $OS, $OSes
-Global $params, $part, $parts, $percent, $ping, $progress, $pth, $ratify, $read, $res, $resultfle, $ret, $row, $s, $second, $selector
-Global $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state, $style, $tag, $tagfle, $tail, $text
-Global $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $web, $which, $width, $winpos
-Global $z, $zipcheck, $zipfile, $zippath
+Global $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num, $numb, $OP, $OS, $OSes
+Global $params, $part, $parts, $percent, $ping, $progress, $pth, $ratify, $read, $reportfle, $res, $resultfle, $ret, $row, $s, $second
+Global $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state, $style, $tag, $tagfle, $tail
+Global $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $web, $which, $width
+Global $winpos, $z, $zipcheck, $zipfile, $zippath
 
 $addlist = @ScriptDir & "\Added.txt"
 $bigpic = @ScriptDir & "\Big.jpg"
 $blackjpg = @ScriptDir & "\Black.jpg"
+$compare = @ScriptDir & "\Comparisons.txt"
 $cookies = @ScriptDir & "\Cookie.txt"
 $covers = @ScriptDir & "\Covers"
 $details = @ScriptDir & "\Detail.txt"
@@ -107,6 +108,7 @@ $json = @ScriptDir & "\manifest.json"
 $logfle = @ScriptDir & "\Log.txt"
 $manifest = @ScriptDir & "\Manifest.txt"
 $manlist = @ScriptDir & "\Manifests.txt"
+$reportfle = @ScriptDir & "\Report.exe"
 $resultfle = @ScriptDir & "\Results.txt"
 $splash = @ScriptDir & "\Splash.jpg"
 $tagfle = @ScriptDir & "\Tags.ini"
@@ -125,12 +127,13 @@ Exit
 
 
 Func MainGUI()
-	Local $Menu_down, $Menu_get, $Menu_list, $Menu_man
-	Local $Item_clear_down, $Item_clear_man, $Item_compare_all, $Item_compare_one, $Item_down_all, $Item_view_down, $Item_view_man
+	Local $Checkbox_quit, $Checkbox_stop, $Menu_down, $Menu_get, $Menu_list, $Menu_man
+	Local $Item_clear_down, $Item_clear_man, $Item_compare_all, $Item_compare_one, $Item_compare_rep, $Item_compare_view
+	Local $Item_compare_wipe, $Item_down_all, $Item_view_down, $Item_view_man
 	;
-	Local $alias, $buttxt, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display, $dll, $exist, $existing, $fext
-	Local $filelist, $find, $flename, $foldpth, $ids, $ind, $l, $language, $last, $latest, $mpos, $OPS, $pos, $prior, $result
-	Local $tagtxt, $valfold, $xpos, $ypos
+	Local $alias, $buttxt, $c, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display, $dll, $exist, $existing
+	Local $fext, $filelist, $find, $flename, $foldpth, $ids, $ind, $l, $language, $last, $latest, $mpos, $OPS, $pos, $prior
+	Local $result, $tagtxt, $tested, $valfold, $xpos, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -226,7 +229,10 @@ Func MainGUI()
 	$Checkbox_show = GUICtrlCreateCheckbox("Show", 525, 138, 45, 20)
 	GUICtrlSetTip($Checkbox_show, "Show the cover image!")
 	;
-	;$Button_get = GuiCtrlCreateButton("RETRIEVE LIST" & @LF & "OF GAMES", 390, 180, 105, 40, $BS_MULTILINE)
+	$Checkbox_quit = GUICtrlCreateCheckbox("STOP", 420, 199, 50, 18)
+	GUICtrlSetTip($Checkbox_quit, "STOP comparing!")
+	GUICtrlSetState($Checkbox_quit, $GUI_HIDE)
+	;
 	$Button_get = GuiCtrlCreateButton("CHECK or GET" & @LF & "GAMES LIST", 390, 180, 100, 35, $BS_MULTILINE)
 	GUICtrlSetFont($Button_get, 7, 600, 0, "Small Fonts")
 	GUICtrlSetTip($Button_get, "Get game titles from GOG library!")
@@ -276,7 +282,6 @@ Func MainGUI()
 	GUICtrlSetTip($Button_game, "View details of selected game!")
 	;
 	$Checkbox_stop = GUICtrlCreateCheckbox("STOP", 410, 319, 50, 18)
-	;GUICtrlSetBkColor($Checkbox_stop, $COLOR_RED)
 	GUICtrlSetTip($Checkbox_stop, "STOP getting manifests!")
 	GUICtrlSetState($Checkbox_stop, $GUI_HIDE)
 	;
@@ -297,9 +302,6 @@ Func MainGUI()
 	;
 	$Button_dir = GuiCtrlCreateButton("D", 438, 345, 23, 23, $BS_ICON)
 	GUICtrlSetTip($Button_dir, "Open the program folder!")
-;~ 	;
-;~ 	$Button_log = GuiCtrlCreateButton("Log", 410, 345, 50, 50, $BS_ICON)
-;~ 	GUICtrlSetTip($Button_log, "Log Record!")
 	;
 	$Button_tag = GuiCtrlCreateButton("TAG IT", 410, 373, 52, 22)
 	GUICtrlSetFont($Button_tag, 7, 600, 0, "Small Fonts")
@@ -323,15 +325,22 @@ Func MainGUI()
 	$Item_clear_man = GUICtrlCreateMenuItem("Clear Manifests List", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Item_view_man = GUICtrlCreateMenuItem("View Manifests List", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Item_compare_rep = GUICtrlCreateMenuItem("Comparison Report", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Item_compare_view = GUICtrlCreateMenuItem("View Comparison File", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Item_compare_wipe = GUICtrlCreateMenuItem("Wipe Comparison File", $Menu_list)
 	;
 	$Menu_get = GUICtrlCreateContextMenu($Button_get)
 	$Item_compare_one = GUICtrlCreateMenuItem("Compare One Game", $Menu_get, -1, 0)
-	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_get)
 	$Item_compare_all = GUICtrlCreateMenuItem("Compare ALL Games", $Menu_get, -1, 0)
 	;
 	$Menu_down = GUICtrlCreateContextMenu($Button_down)
 	$Item_verify_file = GUICtrlCreateMenuItem("Validate File", $Menu_down, -1, 0)
-	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_down)
 	$Item_verify_game = GUICtrlCreateMenuItem("Validate Game", $Menu_down, -1, 0)
 	;
 	$Menu_man = GUICtrlCreateContextMenu($Button_man)
@@ -1092,106 +1101,7 @@ Func MainGUI()
 								Else
 									If $title <> "" Then
 										GUICtrlSetData($Label_top, "COMPARING ONE")
-										_FileWriteLog($logfle, "COMPARING - " & $title, -1)
-										GetGameFolderNameAndPath($title, $slug)
-										If FileExists($gamefold) Then
-											_FileWriteLog($logfle, $gamefold, -1)
-											_FileWriteLog($logfle, "Checking MANIFEST", -1)
-											$identry = '"Id": ' & $ID & ','
-											If StringInStr($read, $identry) > 0 Then
-												GUICtrlSetData($Label_bed, "GAME FOUND")
-												$game = StringSplit($read, $identry, 1)
-												$game = $game[2]
-												$game = StringSplit($game, '"Id":', 1)
-												$game = $game[1]
-												If $game <> "" Then
-													GUICtrlSetData($Label_mid, "Comparing Game Files")
-													_FileWriteLog($logfle, "Comparing Game Files.", -1)
-													GetFileDownloadDetails()
-													$entries = IniReadSectionNames($downfiles)
-													$cnt = $entries[0]
-													If $cnt > 1 Then
-														_FileWriteLog($logfle, $cnt & " files listed in the manifest.", -1)
-														$filelist = _FileListToArrayRec($gamefold, "*.*", 1, 1, 0, 1)
-														If @error Then $filelist = ""
-														If IsArray($filelist) Then
-															$files = ""
-															$result = ""
-															$tested = 0
-															For $f = 1 To $filelist[0]
-																$file = $filelist[$f]
-																$filepth = $gamefold & "\" & $file
-																_PathSplit($filepth, $drv, $dir, $flename, $fext)
-																If $fext = ".exe" Or $fext = ".bin" Or $fext = ".dmg" Or $fext = ".pkg" Or $fext = ".sh" Or $fext = ".zip" Then
-																	_FileWriteLog($logfle, $file, -1)
-																	If $result = "" Then
-																		$result = $file
-																	Else
-																		$result = $result & @LF & $file
-																	EndIf
-																	$tested = $tested + 1
-																	If StringInStr($file, "\") > 0 Then $file = $flename & $fext
-																	If $files = "" Then
-																		$files = "|" & $file & "|"
-																	Else
-																		$files = $files & $file & "|"
-																	EndIf
-																	$filesize = IniRead($downfiles, $file, "bytes", 0)
-																	If $filesize = 0 Then
-																		$type = IniRead($downfiles, $file, "type", "")
-																		If $type = "" Then
-																			$result = $result & @LF & "Manifest entry for file is missing."
-																			_FileWriteLog($logfle, "Manifest entry for file is missing.", -1)
-																		Else
-																			$result = $result & @LF & "File Size is missing."
-																			_FileWriteLog($logfle, "File Size is missing.", -1)
-																		EndIf
-																	Else
-																		$bytes = FileGetSize($filepth)
-																		If $bytes = $filesize Then
-																			$result = $result & @LF & "File Size passed."
-																			_FileWriteLog($logfle, "File Size passed.", -1)
-																		Else
-																			$result = $result & @LF & "File Size failed."
-																			_FileWriteLog($logfle, "File Size failed.", -1)
-																		EndIf
-																	EndIf
-																EndIf
-															Next
-															For $c = 1 To $cnt
-																$entry = $entries[$c]
-																If StringInStr($files, "|" & $entry & "|") < 1 Then
-																	_FileWriteLog($logfle, $entry, -1)
-																	If $result = "" Then
-																		$result = $entry
-																	Else
-																		$result = $result & @LF & $entry
-																	EndIf
-																	$result = $result & @LF & "File is missing from game folder."
-																	_FileWriteLog($logfle, "File is missing from game folder.", -1)
-																EndIf
-															Next
-															MsgBox(262208, "Compare Results", $result, 0, $GOGcliGUI)
-														Else
-															_FileWriteLog($logfle, "Game folder content issue.", -1)
-															MsgBox(262192, "Source Error", "Folder or content issue (i.e. no files found).", 0, $GOGcliGUI)
-														EndIf
-													Else
-														_FileWriteLog($logfle, "Manifest Error - No game files found.", -1)
-														MsgBox(262192, "Manifest Error", "No game files found.", 0, $GOGcliGUI)
-													EndIf
-												Else
-													_FileWriteLog($logfle, "Game data could not be extracted.", -1)
-													MsgBox(262192, "Details Error", "Game data could not be extracted!", 0, $GOGcliGUI)
-												EndIf
-											Else
-												_FileWriteLog($logfle, "Game manifest entry not found.", -1)
-												MsgBox(262192, "Entry Error", "Manifest does not contain selected game!" & @LF & @LF & "Use 'ADD TO MANIFEST' first.", 0, $GOGcliGUI)
-											EndIf
-										Else
-											_FileWriteLog($logfle, "Game folder not found.", -1)
-											MsgBox(262192, "Path Error", "Game folder does not exist!" & @LF & @LF & "( i.e. not yet created )", 0, $GOGcliGUI)
-										EndIf
+										CompareFilesToManifest("one")
 										FileWriteLine($logfle, "")
 										GUICtrlSetData($Label_top, "")
 										GUICtrlSetData($Label_bed, "")
@@ -1200,8 +1110,76 @@ Func MainGUI()
 									EndIf
 								EndIf
 							ElseIf $buttxt = "COMPARE" & @LF & "ALL GAMES" Then
-								MsgBox(262192, "Compare Error", "This feature is not yet supported!", 2, $GOGcliGUI)
-								_FileWriteLog($logfle, "COMPARING all games.", -1)
+								$ans = MsgBox(262193 + 256, "Compare Advice", "Don't perform this option, unless all of your games" & @LF _
+									& "have manifest entries ... preferrably up-to-date." & @LF & @LF _
+									& "NOTE - If you are not continuing on from a previous" & @LF _
+									& "'COMPARE ALL GAMES' process, it is recommended" & @LF _
+									& "you first clear the last results before clicking OK (see" & @LF _
+									& "the right-click 'Games' list menu 'Wipe ...' option).", 0, $GOGcliGUI)
+								If $ans = 1 Then
+									;MsgBox(262192, "Compare Error", "This feature is not yet fully supported!", 2, $GOGcliGUI)advised
+									$cnt = _GUICtrlListView_GetItemCount($Listview_games)
+									If $cnt > 0 Then
+										GUICtrlSetData($Button_get, "Compare All")
+										GUICtrlSetPos($Button_get, 390, 180, 100, 18)
+										GUICtrlSetState($Checkbox_quit, $GUI_SHOW)
+										_FileWriteLog($logfle, "COMPARING all games.", -1)
+										GUICtrlSetData($Label_top, "COMPARING ALL")
+										$erred = 0
+										$ind = _GUICtrlListView_GetSelectedIndices($Listview_games, False)
+										If $ind = "" Then $ind = -1
+										If $ind > -1 And $ind < $cnt Then
+											$ans = MsgBox(262177 + 256, "Start Query", _
+												"Do you want to start at the selected entry?" & @LF & @LF & _
+												"OK = Start at selected entry, skipping any prior ones." & @LF & _
+												"CANCEL = Start over from the beginning.", 0, $GOGcliGUI)
+											If $ans = 2 Then
+												$ind = 0
+											EndIf
+										Else
+											$ind = 0
+										EndIf
+										$ind = Number($ind)
+										For $i = $ind To ($cnt - 1)
+											$ind = $i
+											$num = $i + 1
+											GUICtrlSetData($Label_bed, $num & " of " & $cnt)
+											_GUICtrlListView_SetItemSelected($Listview_games, $ind, True, True)
+											_GUICtrlListView_EnsureVisible($Listview_games, $ind, False)
+											$ID = _GUICtrlListView_GetItemText($Listview_games, $ind, 0)
+											$title = _GUICtrlListView_GetItemText($Listview_games, $ind, 1)
+											GUICtrlSetData($Input_title, $title)
+											$slug = IniRead($gamesini, $ID, "slug", "")
+											GUICtrlSetData($Input_slug, $slug)
+											$web = IniRead($gamesini, $ID, "URL", "")
+											$category = IniRead($gamesini, $ID, "category", "")
+											GUICtrlSetData($Input_cat, $category)
+											$OSes = IniRead($gamesini, $ID, "OSes", "")
+											GUICtrlSetData($Input_OS, $OSes)
+											$DLC = IniRead($gamesini, $ID, "DLC", "")
+											GUICtrlSetData($Input_dlc, $DLC)
+											$updates = IniRead($gamesini, $ID, "updates", "")
+											GUICtrlSetData($Input_ups, $updates)
+											CompareFilesToManifest("all")
+											If $erred > 0 Then ExitLoop
+											If GUICtrlRead($Checkbox_quit) = $GUI_CHECKED Then
+												GUICtrlSetState($Checkbox_quit, $GUI_UNCHECKED)
+												ExitLoop
+											EndIf
+											;Sleep(500)
+											;ExitLoop
+										Next
+										FileWriteLine($logfle, "")
+										GUICtrlSetData($Label_top, "")
+										GUICtrlSetData($Label_bed, "")
+										GUICtrlSetState($Checkbox_quit, $GUI_HIDE)
+										GUICtrlSetPos($Button_get, 390, 180, 100, 35)
+										GUICtrlSetData($Button_get, "COMPARE" & @LF & "ALL GAMES")
+										If FileExists($reportfle) Then Run($reportfle)
+									Else
+										MsgBox(262192, "List Error", "No games found!", 0, $GOGcliGUI)
+									EndIf
+								EndIf
 							EndIf
 						EndIf
 						SetStateOfControls($GUI_ENABLE, "all")
@@ -1301,7 +1279,7 @@ Func MainGUI()
 					EndIf
 				EndIf
 				If $ind = "" Then
-					$ind = -1
+					$ind = 0
 				EndIf
 				$ind = _GUICtrlListView_FindInText($Listview_games, $find, $ind, True, False)
 				If $ind > -1 Then
@@ -2087,6 +2065,20 @@ Func MainGUI()
 				GUICtrlSetTip($Button_man, "Add selected game to manifest!")
 			EndIf
 			GUICtrlSetState($Item_down_all, $manall)
+		Case $msg = $Item_compare_wipe
+			; Wipe Comparison File
+			$ans = MsgBox(262177 + 256, "Wipe Query", _
+				"OK = Wipe (clear) the 'Comparisons.txt' file." & @LF & _
+				"CANCEL = Abort any wipe.", 0, $GOGcliGUI)
+			If $ans = 1 Then
+				If FileExists($compare) Then _FileCreate($compare)
+			EndIf
+		Case $msg = $Item_compare_view
+			; View Comparison File
+			If FileExists($compare) Then ShellExecute($compare)
+		Case $msg = $Item_compare_rep
+			; Comparison Report
+			If FileExists($reportfle) Then Run($reportfle)
 		Case $msg = $Item_compare_one
 			; Compare One Game
 			If $compone = 4 Then
@@ -3664,6 +3656,147 @@ Func ClearFieldValues()
 	$updates = ""
 	GUICtrlSetData($Input_ups, $updates)
 EndFunc ;=> ClearFieldValues
+
+Func CompareFilesToManifest($numb)
+	Local $c, $date, $dir, $fext, $filelist, $flename, $kind, $report, $result, $tested, $tot
+	_FileWriteLog($logfle, "COMPARING - " & $title, -1)
+	GetGameFolderNameAndPath($title, $slug)
+	If FileExists($gamefold) Then
+		_FileWriteLog($logfle, $gamefold, -1)
+		_FileWriteLog($logfle, "Checking MANIFEST", -1)
+		$identry = '"Id": ' & $ID & ','
+		If StringInStr($read, $identry) > 0 Then
+			If $numb = "one" Then GUICtrlSetData($Label_bed, "GAME FOUND")
+			$game = StringSplit($read, $identry, 1)
+			$game = $game[2]
+			$game = StringSplit($game, '"Id":', 1)
+			$game = $game[1]
+			If $game <> "" Then
+				;MsgBox(262208, "Game Results", $game, 0, $GOGcliGUI)
+				GUICtrlSetData($Label_mid, "Comparing Game Files")
+				_FileWriteLog($logfle, "Comparing Game Files.", -1)
+				GetFileDownloadDetails()
+				$entries = IniReadSectionNames($downfiles)
+				$tot = $entries[0]
+				If $tot > 0 Then
+					_FileWriteLog($logfle, $tot & " files listed in the manifest.", -1)
+					$filelist = _FileListToArrayRec($gamefold, "*.*", 1, 1, 0, 1)
+					If @error Then $filelist = ""
+					If IsArray($filelist) Then
+						$files = ""
+						$result = ""
+						$tested = 0
+						; Check files with manifest entries
+						For $f = 1 To $filelist[0]
+							$file = $filelist[$f]
+							$filepth = $gamefold & "\" & $file
+							_PathSplit($filepth, $drv, $dir, $flename, $fext)
+							If $fext = ".exe" Or $fext = ".bin" Or $fext = ".dmg" Or $fext = ".pkg" Or $fext = ".sh" Or $fext = ".zip" Then
+								$report = ""
+								If $numb = "one" Then
+									_FileWriteLog($logfle, $file, -1)
+									If $result = "" Then
+										$result = $file
+									Else
+										$result = $result & @LF & $file
+									EndIf
+								Else
+									$report = $name & " | " & $file
+									$date = @YEAR & "-" & @MON & "-" & @MDAY
+								EndIf
+								$tested = $tested + 1
+								If StringInStr($file, "\") > 0 Then $file = $flename & $fext
+								If $files = "" Then
+									$files = "|" & $file & "|"
+								Else
+									$files = $files & $file & "|"
+								EndIf
+								$filesize = IniRead($downfiles, $file, "bytes", 0)
+								If $filesize = 0 Then
+									$kind = IniRead($downfiles, $file, "type", "")
+									If $kind = "" Then
+										If $numb = "one" Then
+											$result = $result & @LF & "Manifest entry for file is missing."
+											_FileWriteLog($logfle, "Manifest entry for file is missing.", -1)
+										Else
+											$report = $report & " | no | yes | no | " & $date
+										EndIf
+									Else
+										If $numb = "one" Then
+											$result = $result & @LF & "File Size is missing."
+											_FileWriteLog($logfle, "File Size is missing.", -1)
+										Else
+											$report = $report & " | yes | yes | no | " & $date
+										EndIf
+									EndIf
+								Else
+									$bytes = FileGetSize($filepth)
+									If $bytes = $filesize Then
+										If $numb = "one" Then
+											$result = $result & @LF & "File Size passed."
+											_FileWriteLog($logfle, "File Size passed.", -1)
+										Else
+											$report = $report & " | yes | yes | pass | " & $date
+										EndIf
+									Else
+										If $numb = "one" Then
+											$result = $result & @LF & "File Size failed."
+											_FileWriteLog($logfle, "File Size failed.", -1)
+										Else
+											$report = $report & " | yes | yes | fail | " & $date
+										EndIf
+									EndIf
+								EndIf
+								If $report <> "" Then FileWriteLine($compare, $report)
+							EndIf
+						Next
+						; Check manifest entries with files
+						$date = @YEAR & "-" & @MON & "-" & @MDAY
+						For $c = 1 To $tot
+							$entry = $entries[$c]
+							If StringInStr($files, "|" & $entry & "|") < 1 Then
+								If $numb = "one" Then
+									_FileWriteLog($logfle, $entry, -1)
+									If $result = "" Then
+										$result = $entry
+									Else
+										$result = $result & @LF & $entry
+									EndIf
+									$result = $result & @LF & "File is missing from game folder."
+									_FileWriteLog($logfle, "File is missing from game folder.", -1)
+								Else
+									$report = $name & " | " & $entry & " | yes | no | NA | " & $date
+									FileWriteLine($compare, $report)
+								EndIf
+							EndIf
+						Next
+						If $numb = "one" Then MsgBox(262208, "Compare Results", $result, 0, $GOGcliGUI)
+					Else
+						$erred = 5
+						_FileWriteLog($logfle, "Game folder content issue.", -1)
+						MsgBox(262192, "Source Error", "Folder or content issue (i.e. no files found).", 0, $GOGcliGUI)
+					EndIf
+				Else
+					$erred = 4
+					_FileWriteLog($logfle, "Manifest Error - No game files found.", -1)
+					MsgBox(262192, "Manifest Error", "No game files found.", 0, $GOGcliGUI)
+				EndIf
+			Else
+				$erred = 3
+				_FileWriteLog($logfle, "Game data could not be extracted.", -1)
+				MsgBox(262192, "Details Error", "Game data could not be extracted!", 0, $GOGcliGUI)
+			EndIf
+		Else
+			$erred = 2
+			_FileWriteLog($logfle, "Game manifest entry not found.", -1)
+			MsgBox(262192, "Entry Error", "Manifest does not contain selected game!" & @LF & @LF & "Use 'ADD TO MANIFEST' first.", 0, $GOGcliGUI)
+		EndIf
+	Else
+		$erred = 1
+		_FileWriteLog($logfle, "Game folder not found.", -1)
+		MsgBox(262192, "Path Error", "Game folder does not exist!" & @LF & @LF & "( i.e. not yet created )", 0, $GOGcliGUI)
+	EndIf
+EndFunc ;=> CompareFilesToManifest
 
 Func FillTheGamesList()
 	Local $idx, $sect, $sects
