@@ -28,6 +28,8 @@ Multiple games (up to 10), can now be downloaded via the 'Game Files Selector' w
 
 Game title entry tagging (with comments) now implemented.
 
+Compare options added and 'Manifest Comparison Report' GUI.
+
 See the Wiki link above, for more information and a tutorial.
 
 See the First Full Release!
