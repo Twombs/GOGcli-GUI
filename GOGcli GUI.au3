@@ -44,7 +44,7 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $version
 
-$version = "v1.2"
+$version = "v1.3"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -79,14 +79,14 @@ Global $Input_slug, $Input_title, $Input_ups, $Item_verify_file, $Item_verify_ga
 Global $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
 Global $7zip, $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum, $checkval
-Global $cnt, $cookie, $cookies, $cover, $covers, $covimg, $dest, $details, $DLC, $done, $downfiles, $downlist, $download, $downloads, $drv
-Global $entries, $entry, $erred, $exists, $f, $file, $filepth, $files, $filesize, $flag, $fold, $foldzip, $free, $game, $gamefold, $gamelist
+Global $cnt, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest, $details, $DLC, $done, $downfiles, $downlist, $download, $downloads
+Global $drv, $entries, $entry, $erred, $exists, $f, $file, $filepth, $files, $filesize, $flag, $fold, $foldzip, $free, $game, $gamefold, $gamelist
 Global $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT
-Global $icoW, $icoX, $ID, $identry, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed, $listview
+Global $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed, $listview
 Global $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num, $numb, $OP, $OS, $OSes
-Global $params, $part, $parts, $percent, $ping, $progress, $pth, $ratify, $read, $reportfle, $res, $resultfle, $ret, $row, $s, $second
-Global $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state, $style, $tag, $tagfle, $tail
-Global $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $web, $which, $width
+Global $overlook, $params, $part, $parts, $percent, $ping, $progress, $pth, $ratify, $read, $record, $reportexe, $res, $resultfle, $ret, $row
+Global $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state, $style, $tag, $tagfle
+Global $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $web, $which, $width
 Global $winpos, $z, $zipcheck, $zipfile, $zippath
 
 $addlist = @ScriptDir & "\Added.txt"
@@ -108,7 +108,7 @@ $json = @ScriptDir & "\manifest.json"
 $logfle = @ScriptDir & "\Log.txt"
 $manifest = @ScriptDir & "\Manifest.txt"
 $manlist = @ScriptDir & "\Manifests.txt"
-$reportfle = @ScriptDir & "\Report.exe"
+$reportexe = @ScriptDir & "\Report.exe"
 $resultfle = @ScriptDir & "\Results.txt"
 $splash = @ScriptDir & "\Splash.jpg"
 $tagfle = @ScriptDir & "\Tags.ini"
@@ -127,13 +127,14 @@ Exit
 
 
 Func MainGUI()
-	Local $Checkbox_quit, $Checkbox_stop, $Menu_down, $Menu_get, $Menu_list, $Menu_man
-	Local $Item_clear_down, $Item_clear_man, $Item_compare_all, $Item_compare_one, $Item_compare_rep, $Item_compare_view
-	Local $Item_compare_wipe, $Item_down_all, $Item_view_down, $Item_view_man
+	Local $Checkbox_quit, $Checkbox_stop, $Menu_down, $Menu_get, $Menu_list, $Menu_man, $Menu_compare_opts
+	Local $Item_clear_down, $Item_clear_man, $Item_compare_all, $Item_compare_aqua, $Item_compare_declare, $Item_compare_ignore
+	Local $Item_compare_one, $Item_compare_orange, $Item_compare_overlook, $Item_compare_red, $Item_compare_rep, $Item_compare_report
+	Local $Item_compare_view, $Item_compare_wipe, $Item_compare_yellow, $Item_down_all, $Item_view_down, $Item_view_man
 	;
-	Local $alias, $buttxt, $c, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display, $dll, $exist, $existing
-	Local $fext, $filelist, $find, $flename, $foldpth, $ids, $ind, $l, $language, $last, $latest, $mpos, $OPS, $pos, $prior
-	Local $result, $tagtxt, $tested, $valfold, $xpos, $ypos
+	Local $accept, $alias, $aqua, $buttxt, $c, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display, $dll
+	Local $exist, $existing, $fext, $filelist, $find, $flename, $foldpth, $ids, $ind, $l, $language, $last, $latest, $mpos
+	Local $OPS, $orange, $pos, $prior, $red, $result, $tagtxt, $tested, $valfold, $xpos, $yellow, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -331,6 +332,18 @@ Func MainGUI()
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Item_compare_view = GUICtrlCreateMenuItem("View Comparison File", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
+	$Menu_compare_opts = GUICtrlCreateMenu("Comparison Settings", $Menu_list)
+	$Item_compare_ignore = GUICtrlCreateMenuItem("Ignore Missing Folders", $Menu_compare_opts, -1, 0)
+	$Item_compare_report = GUICtrlCreateMenuItem("Report Missing Folders", $Menu_compare_opts, -1, 0)
+	GUICtrlCreateMenuItem("", $Menu_compare_opts)
+	$Item_compare_overlook = GUICtrlCreateMenuItem("Ignore Missing Manifest Entry", $Menu_compare_opts, -1, 0)
+	$Item_compare_declare = GUICtrlCreateMenuItem("Report Missing Manifest Entry", $Menu_compare_opts, -1, 0)
+	GUICtrlCreateMenuItem("", $Menu_compare_opts)
+	$Item_compare_red = GUICtrlCreateMenuItem("Missing Files (RED)", $Menu_compare_opts, -1, 0)
+	$Item_compare_orange = GUICtrlCreateMenuItem("Wrong Size (ORANGE)", $Menu_compare_opts, -1, 0)
+	$Item_compare_yellow = GUICtrlCreateMenuItem("No Size (YELLOW)", $Menu_compare_opts, -1, 0)
+	$Item_compare_aqua = GUICtrlCreateMenuItem("No Manifest Entry (AQUA)", $Menu_compare_opts, -1, 0)
+	GUICtrlCreateMenuItem("", $Menu_list)
 	$Item_compare_wipe = GUICtrlCreateMenuItem("Wipe Comparison File", $Menu_list)
 	;
 	$Menu_get = GUICtrlCreateContextMenu($Button_get)
@@ -390,6 +403,55 @@ Func MainGUI()
 	EndIf
 	$manall = 4
 	;
+	$ignore = IniRead($inifle, "Compare Options", "ignore", "")
+	If $ignore = "" Then
+		$ignore = 4
+		IniWrite($inifle, "Compare Options", "ignore", $ignore)
+	EndIf
+	GUICtrlSetState($Item_compare_ignore, $ignore)
+	$record = IniRead($inifle, "Compare Options", "report", "")
+	If $record = "" Then
+		$record = 4
+		IniWrite($inifle, "Compare Options", "report", $record)
+	EndIf
+	GUICtrlSetState($Item_compare_report, $record)
+	$overlook = IniRead($inifle, "Compare Options", "overlook", "")
+	If $overlook = "" Then
+		$overlook = 4
+		IniWrite($inifle, "Compare Options", "overlook", $overlook)
+	EndIf
+	GUICtrlSetState($Item_compare_overlook, $overlook)
+	$declare = IniRead($inifle, "Compare Options", "declare", "")
+	If $declare = "" Then
+		$declare = 4
+		IniWrite($inifle, "Compare Options", "declare", $declare)
+	EndIf
+	GUICtrlSetState($Item_compare_declare, $declare)
+	$red = IniRead($inifle, "Compare Options", "red", "")
+	If $red = "" Then
+		$red = 1
+		IniWrite($inifle, "Compare Options", "red", $red)
+	EndIf
+	GUICtrlSetState($Item_compare_red, $red)
+	$orange = IniRead($inifle, "Compare Options", "orange", "")
+	If $orange = "" Then
+		$orange = 1
+		IniWrite($inifle, "Compare Options", "orange", $orange)
+	EndIf
+	GUICtrlSetState($Item_compare_orange, $orange)
+	$yellow = IniRead($inifle, "Compare Options", "yellow", "")
+	If $yellow = "" Then
+		$yellow = 1
+		IniWrite($inifle, "Compare Options", "yellow", $yellow)
+	EndIf
+	GUICtrlSetState($Item_compare_yellow, $yellow)
+	$aqua = IniRead($inifle, "Compare Options", "aqua", "")
+	If $aqua = "" Then
+		$aqua = 4
+		IniWrite($inifle, "Compare Options", "aqua", $aqua)
+	EndIf
+	GUICtrlSetState($Item_compare_aqua, $aqua)
+	;
 	$types = "Slug|Title"
 	$type = IniRead($inifle, "Game Folder Names", "type", "")
 	If $type = "" Then
@@ -440,10 +502,28 @@ Func MainGUI()
 			$model = 7
 		ElseIf $hash = "9d3cb9df6fae01ab13f608de5cbc8bbf" Or $hash = "2b0cea101bb12a00bd73dfd1b58f5253" Then
 			$model = 8
-		Else
+		ElseIf $hash = "ba659ad7e3cc33b0bc0b600302fe308e" Or $hash = "336c9416f6dc6d28c8337ad8283173ad" Then
 			$model = 9
+		ElseIf $hash = "4e9024fafe084b48aab64dc079436e82" Or $hash = "d9caee3343f5dad898ceefff5860d8d8" Then
+			$model = 10
+		Else
+			$model = 666
+			$accept = IniRead($inifle, "gogcli.exe", "accept", "")
+			If $accept <> 1 Then
+				IniWrite($inifle, "gogcli.exe", "accept", 4)
+				$ans = MsgBox(262177 + 256, "WARNING", "The version of 'gogcli.exe' isn't recognized!" & @LF & @LF _
+					& "THIS VERSION MAY CAUSE PROBLEMS" & @LF & @LF _
+					& "Do you want to continue?" & @LF & @LF _
+					& "NOTE - If you are happy to continue and" & @LF _
+					& "want to avoid seeing this message every" & @LF _
+					& "program start, then you could manually" & @LF _
+					& "adjust the 'accept=4' value to 'accept=1'" & @LF _
+					& "in the 'Settings.ini' file.", 0, $GOGcliGUI)
+				If $ans = 2 Then Exit
+			EndIf
 		EndIf
 		IniWrite($inifle, "gogcli.exe", "version", $model)
+		If $model <> 666 Then IniWrite($inifle, "gogcli.exe", "accept", 4)
 		_Crypt_Shutdown()
 	EndIf
 	;
@@ -644,7 +724,7 @@ Func MainGUI()
 		Case $msg = $Button_sub
 			; Create a Slug named sub-folder in the selected game folder
 			If FileExists($gamesfold) Then
-				$ans = MsgBox(262177 + 256, "Create & Locate Query", _
+				$ans = MsgBox(262177 + 256, "Create & Relocate Query", _
 					"This option creates a sub-folder in the destination folder" & @LF & _
 					"of the selected game title, using the 'Slug' title as name." & @LF & @LF & _
 					"The process also copies any 'Folder.jpg' file to that new" & @LF & _
@@ -1110,14 +1190,23 @@ Func MainGUI()
 									EndIf
 								EndIf
 							ElseIf $buttxt = "COMPARE" & @LF & "ALL GAMES" Then
-								$ans = MsgBox(262193 + 256, "Compare Advice", "Don't perform this option, unless all of your games" & @LF _
-									& "have manifest entries ... preferrably up-to-date." & @LF & @LF _
+								$ans = MsgBox(262195 + 512, "Compare Advice", "See the right-click 'Games' list menu options." & @LF _
+									& "Those options dictate how the compare process works." & @LF & @LF _
+									& "If both 'Ignore ...' options are enabled, then the process" & @LF _
+									& "won't stop even if a folder or manifest entry is missing." & @LF _
+									& "If you want missing game folders and manifest entries" & @LF _
+									& "to be reported (recorded), enable a 'Report ...' option." & @LF & @LF _
+									& "Do you want to wipe any prior report and continue?" & @LF & @LF _
+									& "YES = Wipe & Continue." & @LF _
+									& "NO = Just Continue, No Wipe." & @LF _
+									& "CANCEL = Abort Comparing." & @LF & @LF _
 									& "NOTE - If you are not continuing on from a previous" & @LF _
 									& "'COMPARE ALL GAMES' process, it is recommended" & @LF _
-									& "you first clear the last results before clicking OK (see" & @LF _
-									& "the right-click 'Games' list menu 'Wipe ...' option).", 0, $GOGcliGUI)
-								If $ans = 1 Then
+									& "to clear (wipe) any prior report results. This prevents" & @LF _
+									& "the possible mess (confusion) of duplicate entries.", 0, $GOGcliGUI)
+								If $ans <> 2 Then
 									;MsgBox(262192, "Compare Error", "This feature is not yet fully supported!", 2, $GOGcliGUI)advised
+									If $ans = 6 Then _FileCreate($compare)
 									$cnt = _GUICtrlListView_GetItemCount($Listview_games)
 									If $cnt > 0 Then
 										GUICtrlSetData($Button_get, "Compare All")
@@ -1161,7 +1250,7 @@ Func MainGUI()
 											$updates = IniRead($gamesini, $ID, "updates", "")
 											GUICtrlSetData($Input_ups, $updates)
 											CompareFilesToManifest("all")
-											If $erred > 0 Then ExitLoop
+											If $erred > 2 Or ($erred = 1 And $ignore = 4) Or ($erred = 2 And $overlook = 4) Then ExitLoop
 											If GUICtrlRead($Checkbox_quit) = $GUI_CHECKED Then
 												GUICtrlSetState($Checkbox_quit, $GUI_UNCHECKED)
 												ExitLoop
@@ -1175,7 +1264,7 @@ Func MainGUI()
 										GUICtrlSetState($Checkbox_quit, $GUI_HIDE)
 										GUICtrlSetPos($Button_get, 390, 180, 100, 35)
 										GUICtrlSetData($Button_get, "COMPARE" & @LF & "ALL GAMES")
-										If FileExists($reportfle) Then Run($reportfle)
+										If FileExists($reportexe) Then Run($reportexe)
 									Else
 										MsgBox(262192, "List Error", "No games found!", 0, $GOGcliGUI)
 									EndIf
@@ -2065,6 +2154,15 @@ Func MainGUI()
 				GUICtrlSetTip($Button_man, "Add selected game to manifest!")
 			EndIf
 			GUICtrlSetState($Item_down_all, $manall)
+		Case $msg = $Item_compare_yellow
+			; Comparison Settings - No Size (YELLOW)
+			If $yellow = 4 Then
+				$yellow = 1
+			Else
+				$yellow = 4
+			EndIf
+			GUICtrlSetState($Item_compare_yellow, $yellow)
+			IniWrite($inifle, "Compare Options", "yellow", $yellow)
 		Case $msg = $Item_compare_wipe
 			; Wipe Comparison File
 			$ans = MsgBox(262177 + 256, "Wipe Query", _
@@ -2076,9 +2174,45 @@ Func MainGUI()
 		Case $msg = $Item_compare_view
 			; View Comparison File
 			If FileExists($compare) Then ShellExecute($compare)
+		Case $msg = $Item_compare_report
+			; Comparison Settings - Report Missing Folders
+			If $record = 4 Then
+				$record = 1
+			Else
+				$record = 4
+			EndIf
+			GUICtrlSetState($Item_compare_report, $record)
+			IniWrite($inifle, "Compare Options", "report", $record)
 		Case $msg = $Item_compare_rep
 			; Comparison Report
-			If FileExists($reportfle) Then Run($reportfle)
+			If FileExists($reportexe) Then Run($reportexe)
+		Case $msg = $Item_compare_red
+			; Comparison Settings - Missing Files (RED)
+			If $red = 4 Then
+				$red = 1
+			Else
+				$red = 4
+			EndIf
+			GUICtrlSetState($Item_compare_red, $red)
+			IniWrite($inifle, "Compare Options", "red", $red)
+		Case $msg = $Item_compare_overlook
+			; Comparison Settings - Ignore Missing Manifest Entry
+			If $overlook = 4 Then
+				$overlook = 1
+			Else
+				$overlook = 4
+			EndIf
+			GUICtrlSetState($Item_compare_overlook, $overlook)
+			IniWrite($inifle, "Compare Options", "overlook", $overlook)
+		Case $msg = $Item_compare_orange
+			; Comparison Settings - Wrong Size (ORANGE)
+			If $orange = 4 Then
+				$orange = 1
+			Else
+				$orange = 4
+			EndIf
+			GUICtrlSetState($Item_compare_orange, $orange)
+			IniWrite($inifle, "Compare Options", "orange", $orange)
 		Case $msg = $Item_compare_one
 			; Compare One Game
 			If $compone = 4 Then
@@ -2095,6 +2229,33 @@ Func MainGUI()
 				GUICtrlSetTip($Button_get, "Get game titles from GOG library!")
 			EndIf
 			GUICtrlSetState($Item_compare_one, $compone)
+		Case $msg = $Item_compare_ignore
+			; Comparison Settings - Ignore Missing Folders
+			If $ignore = 4 Then
+				$ignore = 1
+			Else
+				$ignore = 4
+			EndIf
+			GUICtrlSetState($Item_compare_ignore, $ignore)
+			IniWrite($inifle, "Compare Options", "ignore", $ignore)
+		Case $msg = $Item_compare_declare
+			; Comparison Settings - Report Missing Manifest Entry
+			If $declare = 4 Then
+				$declare = 1
+			Else
+				$declare = 4
+			EndIf
+			GUICtrlSetState($Item_compare_declare, $declare)
+			IniWrite($inifle, "Compare Options", "declare", $declare)
+		Case $msg = $Item_compare_aqua
+			; Comparison Settings - No Manifest Entry (AQUA)
+			If $aqua = 4 Then
+				$aqua = 1
+			Else
+				$aqua = 4
+			EndIf
+			GUICtrlSetState($Item_compare_aqua, $aqua)
+			IniWrite($inifle, "Compare Options", "aqua", $aqua)
 		Case $msg = $Item_compare_all
 			; Compare ALL Games
 			If $compall = 4 Then
@@ -3789,12 +3950,22 @@ Func CompareFilesToManifest($numb)
 		Else
 			$erred = 2
 			_FileWriteLog($logfle, "Game manifest entry not found.", -1)
-			MsgBox(262192, "Entry Error", "Manifest does not contain selected game!" & @LF & @LF & "Use 'ADD TO MANIFEST' first.", 0, $GOGcliGUI)
+			If $declare = 1 Then
+				$date = @YEAR & "-" & @MON & "-" & @MDAY
+				$report = $name & " | manifest entry missing | NA | NA | NA | " & $date
+				FileWriteLine($compare, $report)
+			EndIf
+			If $overlook = 4 Then MsgBox(262192, "Entry Error", "Manifest does not contain selected game!" & @LF & @LF & "Use 'ADD TO MANIFEST' first.", 0, $GOGcliGUI)
 		EndIf
 	Else
 		$erred = 1
 		_FileWriteLog($logfle, "Game folder not found.", -1)
-		MsgBox(262192, "Path Error", "Game folder does not exist!" & @LF & @LF & "( i.e. not yet created )", 0, $GOGcliGUI)
+		If $record = 1 Then
+			$date = @YEAR & "-" & @MON & "-" & @MDAY
+			$report = $name & " | folder missing | NA | NA | NA | " & $date
+			FileWriteLine($compare, $report)
+		EndIf
+		If $ignore = 4 Then MsgBox(262192, "Path Error", "Game folder does not exist!" & @LF & @LF & "( i.e. not yet created )", 0, $GOGcliGUI)
 	EndIf
 EndFunc ;=> CompareFilesToManifest
 

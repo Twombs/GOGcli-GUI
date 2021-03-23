@@ -1,20 +1,23 @@
-Added two compare options to the right-click menu for the 'CHECK or GET GAMES LIST' button. This changes the button text to either 'COMPARE ONE GAME' or 'COMPARE ALL GAMES' and allows comparing of existing files against manifest entries and vice-a-versa. You get a simple dialog report for the 'COMPARE ONE GAME' option, but a stand-alone 'Report.exe' GUI for the 'COMPARE ALL GAMES' option.
+The compare process for 'COMPARE ALL GAMES' has had some improvements. Missing game folders can now be optionally ignored and skipped over, same for missing manifest entries, and both of those can optionally be (recorded) reported on. The 'Manifest Comparison Report' GUI (Report.exe) has been updated to support the new row colors and reporting.
 
-The 'Games' list has three more right-click menu options, related to the 'Compare' feature.
+The 'Games' list now has an additional right-click menu option for the Compare process, called 'Comparison Settings', which gives access to 8 comparison settings, and they control the compare process and reporting.
 
-FIND process has had a slight improvement.
+Ignore Missing Folders
+Report Missing Folders
+Ignore Missing Manifest Entry
+Report Missing Manifest Entry
+Missing Files (RED)
+Wrong Size (ORANGE)
+No Size (YELLOW)
+No Manifest Entry (AQUA)
+
+The version checking of 'gogcli.exe' has been updated to include recognition for v0.9.0 and v0.10.0, and includes an improvement in regard to any unrecognized version, presenting the user with a WARNING query etc.
 
 Always check the latest images in either the 'Screenshots' or 'Tutorial' folders.
 
-Tutor_26.png
-Tutor_27.png
-Tutor_28.png
+gogcli_compare_2.png
+gogcli_compare_3.png
 
-gogcli_compare.png
-
-Tutor_29.png
-Tutor_30.png
-Tutor_31.png
-Tutor_32.png
-Tutor_33.png
-Tutor_34.png
+Tutor_35.png
+Tutor_36.png
+Tutor_37.png

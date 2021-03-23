@@ -26,7 +26,7 @@ Local $exe, $script, $status, $w, $wins
 
 Global $compare, $handle, $inifle, $pid, $Scriptname, $version
 
-$version = "v1.0"
+$version = "v1.1"
 $Scriptname = "Manifest Comparison Report " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -65,8 +65,8 @@ Exit
 Func MainGUI()
 	Local $Button_clr, $Button_find, $Input_file, $Input_title, $Listview_games
 	;
-	Local $cnt, $col, $color, $date, $entry, $file, $find, $height, $icoR, $icoS, $id, $ind, $l, $last, $left, $line, $lines
-	Local $lowid, $num, $read, $ReportGUI, $shell, $style, $text, $title, $top, $user, $width, $winpos
+	Local $aqua, $cnt, $col, $color, $date, $entry, $file, $files, $find, $height, $icoR, $icoS, $id, $ind, $l, $last, $left, $line, $lines, $lowid
+	Local $manifest, $num, $orange, $read, $red, $ReportGUI, $shell, $size, $style, $text, $title, $top, $user, $width, $winpos, $yellow
 	;
 	$width = 690
 	$height = 405
@@ -114,6 +114,11 @@ Func MainGUI()
 	GUICtrlSetImage($Button_clr, $shell, $icoR, 0)
 	;
 	; SETTINGS
+	$red = IniRead($inifle, "Compare Options", "red", "")
+	$orange = IniRead($inifle, "Compare Options", "orange", "")
+	$yellow = IniRead($inifle, "Compare Options", "yellow", "")
+	$aqua = IniRead($inifle, "Compare Options", "aqua", "")
+	;
 	$cnt = _FileCountLines($compare)
 	If $cnt > 0 Then
 		$last = ""
@@ -124,27 +129,38 @@ Func MainGUI()
 			$line = $lines[$l]
 			If $line <> "" Then
 				$title = StringSplit($line, " | ", 1)
-				$folder = $title[4]
-				$title = $title[1]
-				;$num = StringRight( "00" & $num + 1, 4)
-				$num = $num + 1
-				$entry = $num & "|" & StringReplace($line, " | ", "|")
-				$id = GUICtrlCreateListViewItem($entry, $Listview_games)
-				If $folder = "no" Then
-					GUICtrlSetBkColor($id, $COLOR_RED)
-				Else
-					If $last = "" Then
-						$last = $title
-						$color = 0xFFB9DC
-					ElseIf $last <> $title Then
-						$last = $title
-						If $color = 0xFFB9DC Then
-							$color = $COLOR_SKYBLUE
-						Else
+				If $title[0] = 6 Then
+					$files = $title[2]
+					$manifest = $title[3]
+					$folder = $title[4]
+					$size = $title[5]
+					$title = $title[1]
+					;$num = StringRight( "00" & $num + 1, 4)
+					$num = $num + 1
+					$entry = $num & "|" & StringReplace($line, " | ", "|")
+					$id = GUICtrlCreateListViewItem($entry, $Listview_games)
+					If $folder = "no" And $red = 1 Then
+						GUICtrlSetBkColor($id, $COLOR_RED)
+					ElseIf $size = "fail" And $orange = 1 Then
+						GUICtrlSetBkColor($id, 0xFF8000)
+					ElseIf $size = "no" And $manifest = "yes" And $yellow = 1 Then
+						GUICtrlSetBkColor($id, $COLOR_YELLOW)
+					ElseIf $files = "manifest entry missing" And $aqua = 1 Then
+						GUICtrlSetBkColor($id, $COLOR_AQUA)
+					Else
+						If $last = "" Then
+							$last = $title
 							$color = 0xFFB9DC
+						ElseIf $last <> $title Then
+							$last = $title
+							If $color = 0xFFB9DC Then
+								$color = $COLOR_SKYBLUE
+							Else
+								$color = 0xFFB9DC
+							EndIf
 						EndIf
+						GUICtrlSetBkColor($id, $color)
 					EndIf
-					GUICtrlSetBkColor($id, $color)
 				EndIf
 			EndIf
 		Next
