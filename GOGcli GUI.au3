@@ -75,8 +75,8 @@ EndIf
 Global $Button_dest, $Button_dir, $Button_down, $Button_exit, $Button_find, $Button_fold, $Button_game, $Button_get, $Button_info
 Global $Button_last, $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_sub, $Button_tag, $Button_web, $Checkbox_alpha
 Global $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS
-Global $Input_slug, $Input_title, $Input_ups, $Item_verify_file, $Item_verify_game, $Label_bed, $Label_cat, $Label_dlc, $Label_mid
-Global $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
+Global $Input_slug, $Input_title, $Input_ups, $Item_down_all, $Item_verify_file, $Item_verify_game, $Label_bed, $Label_cat
+Global $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
 Global $7zip, $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum, $checkval
 Global $cnt, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest, $details, $DLC, $done, $downfiles, $downlist, $download, $downloads
@@ -130,7 +130,7 @@ Func MainGUI()
 	Local $Checkbox_quit, $Checkbox_stop, $Menu_down, $Menu_get, $Menu_list, $Menu_man, $Menu_compare_opts
 	Local $Item_clear_down, $Item_clear_man, $Item_compare_all, $Item_compare_aqua, $Item_compare_declare, $Item_compare_ignore
 	Local $Item_compare_one, $Item_compare_orange, $Item_compare_overlook, $Item_compare_red, $Item_compare_rep, $Item_compare_report
-	Local $Item_compare_view, $Item_compare_wipe, $Item_compare_yellow, $Item_down_all, $Item_view_down, $Item_view_man
+	Local $Item_compare_view, $Item_compare_wipe, $Item_compare_yellow, $Item_view_down, $Item_view_man
 	;
 	Local $accept, $alias, $aqua, $buttxt, $c, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display
 	Local $dll, $exist, $existing, $fext, $filelist, $find, $flename, $foldpth, $ids, $ind, $l, $language, $languages
@@ -1566,14 +1566,14 @@ Func MainGUI()
 												IniWrite($downfiles, $col4, "game", $titleD)
 												IniWrite($downfiles, $col4, "slug", $slugD)
 												IniWrite($downfiles, $col4, "ID", $IDD)
-												IniWrite($downfiles, $col4, "file", $col3)
+												IniWrite($downfiles, $col4, "file", $col4)
 												IniWrite($downfiles, $col4, "language", $language)
 												IniWrite($downfiles, $col4, "languages", $languages)
 												IniWrite($downfiles, $col4, "OS", $OPS)
 												IniWrite($downfiles, $col4, "URL", $URL)
 												IniWrite($downfiles, $col4, "title", $alias)
 												IniWrite($downfiles, $col4, "bytes", $filesize)
-												IniWrite($downfiles, $col4, "size", $col4)
+												IniWrite($downfiles, $col4, "size", $col3)
 												IniWrite($downfiles, $col4, "checksum", $checksum)
 												IniWrite($downfiles, $col4, "type", $col2)
 												$alias = ""
@@ -2762,8 +2762,8 @@ Func FileSelectorGUI()
 			If $sect <> "Title" Then
 				$col1 = $col1 + 1
 				$col2 = IniRead($downfiles, $sect, "type", "")
-				$col3 = IniRead($downfiles, $sect, "file", "")
-				$col4 = IniRead($downfiles, $sect, "size", "")
+				$col3 = IniRead($downfiles, $sect, "size", "")
+				$col4 = IniRead($downfiles, $sect, "file", "")
 				$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
 				;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
 				GUICtrlCreateListViewItem($entry, $ListView_files)
@@ -2911,6 +2911,7 @@ Func FileSelectorGUI()
 											_FileWriteLog($logfle, "SKIPPED - " & $file, -1)
 											$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
 											If $i > -1 Then
+												_GUICtrlListView_SetItemSelected($ListView_files, $i, True, True)
 												_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
 												$row = $Button_quit + $i + 1
 												GUICtrlSetBkColor($row, $COLOR_SILVER)  ;$COLOR_MEDGRAY
@@ -2921,9 +2922,9 @@ Func FileSelectorGUI()
 										EndIf
 									EndIf
 								EndIf
-								$drv = StringLeft(@ScriptDir, 3)
+								$drv = StringLeft($gamesfold, 3)
 								$space = DriveSpaceFree($drv)
-								$free = $space * 1048576
+								$free = Floor($space * 1048576)
 								$filesize = IniRead($downfiles, $file, "bytes", 0)
 								If $filesize < $free Then
 									;$titleD = IniRead($downfiles, $file, "game", "")
@@ -2934,8 +2935,9 @@ Func FileSelectorGUI()
 									If $i > -1 Then
 										$row = $Button_quit + $i + 1
 										GUICtrlSetBkColor($row, $COLOR_YELLOW)
-										_GUICtrlListView_SetItemText($ListView_files, $i, "Downloading..." & $file, 3)
+										_GUICtrlListView_SetItemSelected($ListView_files, $i, True, True)
 										_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
+										_GUICtrlListView_SetItemText($ListView_files, $i, "Downloading..." & $file, 3)
 										If $test = 1 Then
 											Sleep(5000)
 										Else
@@ -3117,6 +3119,7 @@ Func FileSelectorGUI()
 								Else
 									$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
 									If $i > -1 Then
+										_GUICtrlListView_SetItemSelected($ListView_files, $i, True, True)
 										_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
 										$row = $Button_quit + $i + 1
 										GUICtrlSetBkColor($row, $COLOR_FUCHSIA)
@@ -3124,7 +3127,7 @@ Func FileSelectorGUI()
 									EndIf
 									_FileWriteLog($logfle, "Not enough drive space.", -1)
 									$space = Round($space, 3)
-									MsgBox(262192, "Drive Space Error", "Not enough free space on destination drive, only " & $space & " Mb's", 6, $SelectorGUI)
+									MsgBox(262192, "Drive Space Error", "Not enough free space on destination drive, only " & $space & " Mb's", 7, $SelectorGUI)
 								EndIf
 								FileWriteLine($logfle, "")
 							EndIf
@@ -3149,6 +3152,8 @@ Func FileSelectorGUI()
 									$filepth = $checkval[1]
 									$checksum = $checkval[2]
 									$i = $checkval[3]
+									$i = Number($i)
+									_GUICtrlListView_SetItemSelected($ListView_files, $i, True, True)
 									_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
 									$row = $Button_quit + $i + 1
 									If FileExists($filepth) Then
@@ -3183,6 +3188,8 @@ Func FileSelectorGUI()
 									$checkval = StringSplit($checkval, "|", 1)
 									$zippath = $checkval[1]
 									$i = $checkval[2]
+									$i = Number($i)
+									_GUICtrlListView_SetItemSelected($ListView_files, $i, True, True)
 									_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
 									$row = $Button_quit + $i + 1
 									If FileExists($zippath) Then
@@ -3207,6 +3214,7 @@ Func FileSelectorGUI()
 							EndIf
 							FileWriteLine($logfle, "")
 						EndIf
+						_GUICtrlListView_SetItemSelected($ListView_files, -1, False, False)
 						_GUICtrlListView_SetColumnWidth($ListView_files, 3, $LVSCW_AUTOSIZE)
 					Else
 						MsgBox(262192, "Program Error", "Nothing to download!", 2, $SelectorGUI)
@@ -4149,14 +4157,14 @@ Func GetFileDownloadDetails($listview = "")
 			IniWrite($downfiles, $col4, "game", $title)
 			IniWrite($downfiles, $col4, "slug", $slug)
 			IniWrite($downfiles, $col4, "ID", $ID)
-			IniWrite($downfiles, $col4, "file", $col3)
+			IniWrite($downfiles, $col4, "file", $col4)
 			IniWrite($downfiles, $col4, "language", $language)
 			IniWrite($downfiles, $col4, "languages", $languages)
 			IniWrite($downfiles, $col4, "OS", $OPS)
 			IniWrite($downfiles, $col4, "URL", $URL)
 			IniWrite($downfiles, $col4, "title", $alias)
 			IniWrite($downfiles, $col4, "bytes", $filesize)
-			IniWrite($downfiles, $col4, "size", $col4)
+			IniWrite($downfiles, $col4, "size", $col3)
 			IniWrite($downfiles, $col4, "checksum", $checksum)
 			IniWrite($downfiles, $col4, "type", $col2)
 			;

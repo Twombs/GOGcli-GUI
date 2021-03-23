@@ -1,25 +1,7 @@
-The compare process for 'COMPARE ALL GAMES' has had some improvements. Missing game folders can now be optionally ignored and skipped over, same for missing manifest entries, and both of those can optionally be (recorded) reported on. The 'Manifest Comparison Report' GUI (Report.exe) has been updated to support the new row colors and reporting.
+Bugfix (program crash) for variable declared in the Local scope when should have been Global.
 
-The 'Games' list now has an additional right-click menu option for the Compare process, called 'Comparison Settings', which gives access to 8 comparison settings, and they control the compare process and reporting.
+Improvements to the 'Game Files Selector' list selection feedback during processing (cursor and active row highlighting).
 
-Ignore Missing Folders
-Report Missing Folders
-Ignore Missing Manifest Entry
-Report Missing Manifest Entry
-Missing Files (RED)
-Wrong Size (ORANGE)
-No Size (YELLOW)
-No Manifest Entry (AQUA)
+Bugfix for value storage mixup (file & size) for download list.
 
-The version checking of 'gogcli.exe' has been updated to include recognition for v0.9.0 and v0.10.0, and includes an improvement in regard to any unrecognized version, presenting the user with a WARNING query etc.
-
-Updated the 'Language' key to now also be a 'Languages' key, to support 'gogcli.exe v0.10.0'.
-
-Always check the latest images in either the 'Screenshots' or 'Tutorial' folders.
-
-gogcli_compare_2.png
-gogcli_compare_3.png
-
-Tutor_35.png
-Tutor_36.png
-Tutor_37.png
+Bugfix for possible wrong drive free space check.
