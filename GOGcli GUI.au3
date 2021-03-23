@@ -132,9 +132,10 @@ Func MainGUI()
 	Local $Item_compare_one, $Item_compare_orange, $Item_compare_overlook, $Item_compare_red, $Item_compare_rep, $Item_compare_report
 	Local $Item_compare_view, $Item_compare_wipe, $Item_compare_yellow, $Item_down_all, $Item_view_down, $Item_view_man
 	;
-	Local $accept, $alias, $aqua, $buttxt, $c, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display, $dll
-	Local $exist, $existing, $fext, $filelist, $find, $flename, $foldpth, $ids, $ind, $l, $language, $last, $latest, $mpos
-	Local $OPS, $orange, $pos, $prior, $red, $result, $tagtxt, $tested, $valfold, $xpos, $yellow, $ypos
+	Local $accept, $alias, $aqua, $buttxt, $c, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display
+	Local $dll, $exist, $existing, $fext, $filelist, $find, $flename, $foldpth, $ids, $ind, $l, $language, $languages
+	Local $last, $latest, $loop, $mpos, $OPS, $orange, $pos, $prior, $red, $result, $tagtxt, $tested, $valfold, $xpos
+	Local $yellow, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -1496,6 +1497,8 @@ Func MainGUI()
 										$col4 = ""
 										$filesize = ""
 										$language = ""
+										$languages = ""
+										$loop = 0
 										$OPS = ""
 										$URL = ""
 										$lines = StringSplit($game, @LF, 1)
@@ -1510,6 +1513,16 @@ Func MainGUI()
 												$line = $line[2]
 												$line = StringSplit($line, '",', 1)
 												$language = $line[1]
+											ElseIf StringInStr($line, '"Languages":') > 0 Then
+												$line = StringSplit($line, '"Languages": [', 1)
+												$line = $line[2]
+												If StringInStr($line, '",') > 0 Then
+													$line = StringSplit($line, '",', 1)
+													$languages = $line[1]
+												Else
+													$languages = $line
+													$loop = 1
+												EndIf
 											ElseIf StringInStr($line, '"Os":') > 0 Then
 												$line = StringSplit($line, '"Os": "', 1)
 												$line = $line[2]
@@ -1555,6 +1568,7 @@ Func MainGUI()
 												IniWrite($downfiles, $col4, "ID", $IDD)
 												IniWrite($downfiles, $col4, "file", $col3)
 												IniWrite($downfiles, $col4, "language", $language)
+												IniWrite($downfiles, $col4, "languages", $languages)
 												IniWrite($downfiles, $col4, "OS", $OPS)
 												IniWrite($downfiles, $col4, "URL", $URL)
 												IniWrite($downfiles, $col4, "title", $alias)
@@ -1568,8 +1582,19 @@ Func MainGUI()
 												$col4 = ""
 												$filesize = ""
 												$language = ""
+												$languages = ""
 												$OPS = ""
 												$URL = ""
+											ElseIf $loop = 1 Then
+												;MsgBox(262192, "Line", $line, 2, $GOGcliGUI)
+												$line = StringStripWS($line, 3)
+												If $line = '],' Then
+													$languages = StringReplace($languages, '"', '')
+													$loop = 0
+												Else
+													$languages = $languages & $line
+													$languages = StringReplace($languages, '""', ', ')
+												EndIf
 											EndIf
 										Next
 									EndIf
@@ -4041,7 +4066,7 @@ Func FixTitle($text)
 EndFunc ;=> FixTitle
 
 Func GetFileDownloadDetails($listview = "")
-	Local $alias, $col1, $col2, $col3, $col4, $l, $language, $OPS
+	Local $alias, $col1, $col2, $col3, $col4, $l, $language, $languages, $loop, $OPS
 	;$caption
 	_FileCreate($downfiles)
 	Sleep(500)
@@ -4055,6 +4080,8 @@ Func GetFileDownloadDetails($listview = "")
 	$col4 = ""
 	$filesize = ""
 	$language = ""
+	$languages = ""
+	$loop = 0
 	$OPS = ""
 	$URL = ""
 	$lines = StringSplit($game, @LF, 1)
@@ -4069,6 +4096,16 @@ Func GetFileDownloadDetails($listview = "")
 			$line = $line[2]
 			$line = StringSplit($line, '",', 1)
 			$language = $line[1]
+		ElseIf StringInStr($line, '"Languages":') > 0 Then
+			$line = StringSplit($line, '"Languages": [', 1)
+			$line = $line[2]
+			If StringInStr($line, '",') > 0 Then
+				$line = StringSplit($line, '",', 1)
+				$languages = $line[1]
+			Else
+				$languages = $line
+				$loop = 1
+			EndIf
 		ElseIf StringInStr($line, '"Os":') > 0 Then
 			$line = StringSplit($line, '"Os": "', 1)
 			$line = $line[2]
@@ -4114,6 +4151,7 @@ Func GetFileDownloadDetails($listview = "")
 			IniWrite($downfiles, $col4, "ID", $ID)
 			IniWrite($downfiles, $col4, "file", $col3)
 			IniWrite($downfiles, $col4, "language", $language)
+			IniWrite($downfiles, $col4, "languages", $languages)
 			IniWrite($downfiles, $col4, "OS", $OPS)
 			IniWrite($downfiles, $col4, "URL", $URL)
 			IniWrite($downfiles, $col4, "title", $alias)
@@ -4139,6 +4177,16 @@ Func GetFileDownloadDetails($listview = "")
 			$language = ""
 			$OPS = ""
 			$URL = ""
+		ElseIf $loop = 1 Then
+			;MsgBox(262192, "Line", $line, 2, $GOGcliGUI)
+			$line = StringStripWS($line, 3)
+			If $line = '],' Then
+				$languages = StringReplace($languages, '"', '')
+				$loop = 0
+			Else
+				$languages = $languages & $line
+				$languages = StringReplace($languages, '""', ', ')
+			EndIf
 		EndIf
 	Next
 	;If $cover = 1 Then

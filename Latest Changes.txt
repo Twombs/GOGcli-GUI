@@ -13,6 +13,8 @@ No Manifest Entry (AQUA)
 
 The version checking of 'gogcli.exe' has been updated to include recognition for v0.9.0 and v0.10.0, and includes an improvement in regard to any unrecognized version, presenting the user with a WARNING query etc.
 
+Updated the 'Language' key to now also be a 'Languages' key, to support 'gogcli.exe v0.10.0'.
+
 Always check the latest images in either the 'Screenshots' or 'Tutorial' folders.
 
 gogcli_compare_2.png
