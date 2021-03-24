@@ -44,7 +44,7 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $version
 
-$version = "v1.3"
+$version = "v1.4"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -79,7 +79,7 @@ Global $Input_slug, $Input_title, $Input_ups, $Item_down_all, $Item_verify_file,
 Global $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
 Global $7zip, $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum, $checkval
-Global $cnt, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest, $details, $DLC, $done, $downfiles, $downlist, $download, $downloads
+Global $cnt, $compare, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest, $details, $DLC, $done, $downfiles, $downlist, $download, $downloads
 Global $drv, $entries, $entry, $erred, $exists, $f, $file, $filepth, $files, $filesize, $flag, $fold, $foldzip, $free, $game, $gamefold, $gamelist
 Global $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT
 Global $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed, $listview
@@ -132,10 +132,10 @@ Func MainGUI()
 	Local $Item_compare_one, $Item_compare_orange, $Item_compare_overlook, $Item_compare_red, $Item_compare_rep, $Item_compare_report
 	Local $Item_compare_view, $Item_compare_wipe, $Item_compare_yellow, $Item_view_down, $Item_view_man
 	;
-	Local $accept, $alias, $aqua, $buttxt, $c, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display
-	Local $dll, $exist, $existing, $fext, $filelist, $find, $flename, $foldpth, $ids, $ind, $l, $language, $languages
-	Local $last, $latest, $loop, $mpos, $OPS, $orange, $pos, $prior, $red, $result, $tagtxt, $tested, $valfold, $xpos
-	Local $yellow, $ypos
+	Local $accept, $alias, $aqua, $buttxt, $c, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display, $dll
+	Local $e, $exist, $existing, $fext, $filelist, $find, $flename, $foldpth, $IDD, $ids, $ind, $l, $language, $languages
+	Local $last, $latest, $loop, $mans, $mpos, $OPS, $orange, $pos, $prior, $red, $result, $retrieve, $slugD, $tagtxt
+	Local $tested, $titleD, $valfold, $xpos, $yellow, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -760,7 +760,7 @@ Func MainGUI()
 			GuiSetState(@SW_DISABLE, $GOGcliGUI)
 			SetupGUI()
 			GuiSetState(@SW_ENABLE, $GOGcliGUI)
-			$window = $GOGcliGUI
+			;$window = $GOGcliGUI
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_pic
 			; Download the selected image
@@ -1191,83 +1191,96 @@ Func MainGUI()
 									EndIf
 								EndIf
 							ElseIf $buttxt = "COMPARE" & @LF & "ALL GAMES" Then
-								$ans = MsgBox(262195 + 512, "Compare Advice", "See the right-click 'Games' list menu options." & @LF _
-									& "Those options dictate how the compare process works." & @LF & @LF _
-									& "If both 'Ignore ...' options are enabled, then the process" & @LF _
-									& "won't stop even if a folder or manifest entry is missing." & @LF _
-									& "If you want missing game folders and manifest entries" & @LF _
-									& "to be reported (recorded), enable a 'Report ...' option." & @LF & @LF _
-									& "Do you want to wipe any prior report and continue?" & @LF & @LF _
-									& "YES = Wipe & Continue." & @LF _
-									& "NO = Just Continue, No Wipe." & @LF _
-									& "CANCEL = Abort Comparing." & @LF & @LF _
-									& "NOTE - If you are not continuing on from a previous" & @LF _
-									& "'COMPARE ALL GAMES' process, it is recommended" & @LF _
-									& "to clear (wipe) any prior report results. This prevents" & @LF _
-									& "the possible mess (confusion) of duplicate entries.", 0, $GOGcliGUI)
-								If $ans <> 2 Then
-									;MsgBox(262192, "Compare Error", "This feature is not yet fully supported!", 2, $GOGcliGUI)advised
-									If $ans = 6 Then _FileCreate($compare)
-									$cnt = _GUICtrlListView_GetItemCount($Listview_games)
-									If $cnt > 0 Then
-										GUICtrlSetData($Button_get, "Compare All")
-										GUICtrlSetPos($Button_get, 390, 180, 100, 18)
-										GUICtrlSetState($Checkbox_quit, $GUI_SHOW)
-										_FileWriteLog($logfle, "COMPARING all games.", -1)
-										GUICtrlSetData($Label_top, "COMPARING ALL")
-										$erred = 0
-										$ind = _GUICtrlListView_GetSelectedIndices($Listview_games, False)
-										If $ind = "" Then $ind = -1
-										If $ind > -1 And $ind < $cnt Then
-											$ans = MsgBox(262177 + 256, "Start Query", _
-												"Do you want to start at the selected entry?" & @LF & @LF & _
-												"OK = Start at selected entry, skipping any prior ones." & @LF & _
-												"CANCEL = Start over from the beginning.", 0, $GOGcliGUI)
-											If $ans = 2 Then
+								If ProcessExists("Report.exe") Then
+									$ans = MsgBox(262177 + 256, "Program Alert", "The 'Manifest Comparison Report' program" & @LF _
+										& "window is running and needs to close." & @LF & @LF _
+										& "OK = Close & Continue." & @LF _
+										& "CANCEL = Abort Closure.", 0, $GOGcliGUI)
+									If $ans = 1 Then
+										ProcessClose("Report.exe")
+									EndIf
+								Else
+									$ans = 1
+								EndIf
+								If $ans = 1 Then
+									$ans = MsgBox(262195 + 512, "Compare Advice", "See the right-click 'Games' list menu compare options." & @LF _
+										& "Those options dictate how the compare process works." & @LF & @LF _
+										& "If both 'Ignore ...' options are enabled, then the process" & @LF _
+										& "won't stop even if a folder or manifest entry is missing." & @LF _
+										& "If you want missing game folders and manifest entries" & @LF _
+										& "to be reported (recorded), enable a 'Report ...' option." & @LF & @LF _
+										& "Do you want to wipe any prior report and continue?" & @LF & @LF _
+										& "YES = Wipe & Continue." & @LF _
+										& "NO = Just Continue, No Wipe." & @LF _
+										& "CANCEL = Abort Comparing." & @LF & @LF _
+										& "NOTE - If you are not continuing on from a previous" & @LF _
+										& "'COMPARE ALL GAMES' process, it is recommended" & @LF _
+										& "to clear (wipe) any prior report results. This prevents" & @LF _
+										& "the possible mess (confusion) of duplicate entries.", 0, $GOGcliGUI)
+									If $ans <> 2 Then
+										;MsgBox(262192, "Compare Error", "This feature is not yet fully supported!", 2, $GOGcliGUI)advised
+										If $ans = 6 Then _FileCreate($compare)
+										$cnt = _GUICtrlListView_GetItemCount($Listview_games)
+										If $cnt > 0 Then
+											GUICtrlSetData($Button_get, "Compare All")
+											GUICtrlSetPos($Button_get, 390, 180, 100, 18)
+											GUICtrlSetState($Checkbox_quit, $GUI_SHOW)
+											_FileWriteLog($logfle, "COMPARING all games.", -1)
+											GUICtrlSetData($Label_top, "COMPARING ALL")
+											$erred = 0
+											$ind = _GUICtrlListView_GetSelectedIndices($Listview_games, False)
+											If $ind = "" Then $ind = -1
+											If $ind > -1 And $ind < $cnt Then
+												$ans = MsgBox(262177 + 256, "Start Query", _
+													"Do you want to start at the selected entry?" & @LF & @LF & _
+													"OK = Start at selected entry, skipping any prior ones." & @LF & _
+													"CANCEL = Start over from the beginning.", 0, $GOGcliGUI)
+												If $ans = 2 Then
+													$ind = 0
+												EndIf
+											Else
 												$ind = 0
 											EndIf
+											$ind = Number($ind)
+											For $i = $ind To ($cnt - 1)
+												$ind = $i
+												$num = $i + 1
+												GUICtrlSetData($Label_bed, $num & " of " & $cnt)
+												_GUICtrlListView_SetItemSelected($Listview_games, $ind, True, True)
+												_GUICtrlListView_EnsureVisible($Listview_games, $ind, False)
+												$ID = _GUICtrlListView_GetItemText($Listview_games, $ind, 0)
+												$title = _GUICtrlListView_GetItemText($Listview_games, $ind, 1)
+												GUICtrlSetData($Input_title, $title)
+												$slug = IniRead($gamesini, $ID, "slug", "")
+												GUICtrlSetData($Input_slug, $slug)
+												$web = IniRead($gamesini, $ID, "URL", "")
+												$category = IniRead($gamesini, $ID, "category", "")
+												GUICtrlSetData($Input_cat, $category)
+												$OSes = IniRead($gamesini, $ID, "OSes", "")
+												GUICtrlSetData($Input_OS, $OSes)
+												$DLC = IniRead($gamesini, $ID, "DLC", "")
+												GUICtrlSetData($Input_dlc, $DLC)
+												$updates = IniRead($gamesini, $ID, "updates", "")
+												GUICtrlSetData($Input_ups, $updates)
+												CompareFilesToManifest("all")
+												If $erred > 2 Or ($erred = 1 And $ignore = 4) Or ($erred = 2 And $overlook = 4) Then ExitLoop
+												If GUICtrlRead($Checkbox_quit) = $GUI_CHECKED Then
+													GUICtrlSetState($Checkbox_quit, $GUI_UNCHECKED)
+													ExitLoop
+												EndIf
+												;Sleep(500)
+												;ExitLoop
+											Next
+											FileWriteLine($logfle, "")
+											GUICtrlSetData($Label_top, "")
+											GUICtrlSetData($Label_bed, "")
+											GUICtrlSetState($Checkbox_quit, $GUI_HIDE)
+											GUICtrlSetPos($Button_get, 390, 180, 100, 35)
+											GUICtrlSetData($Button_get, "COMPARE" & @LF & "ALL GAMES")
+											If FileExists($reportexe) Then Run($reportexe)
 										Else
-											$ind = 0
+											MsgBox(262192, "List Error", "No games found!", 0, $GOGcliGUI)
 										EndIf
-										$ind = Number($ind)
-										For $i = $ind To ($cnt - 1)
-											$ind = $i
-											$num = $i + 1
-											GUICtrlSetData($Label_bed, $num & " of " & $cnt)
-											_GUICtrlListView_SetItemSelected($Listview_games, $ind, True, True)
-											_GUICtrlListView_EnsureVisible($Listview_games, $ind, False)
-											$ID = _GUICtrlListView_GetItemText($Listview_games, $ind, 0)
-											$title = _GUICtrlListView_GetItemText($Listview_games, $ind, 1)
-											GUICtrlSetData($Input_title, $title)
-											$slug = IniRead($gamesini, $ID, "slug", "")
-											GUICtrlSetData($Input_slug, $slug)
-											$web = IniRead($gamesini, $ID, "URL", "")
-											$category = IniRead($gamesini, $ID, "category", "")
-											GUICtrlSetData($Input_cat, $category)
-											$OSes = IniRead($gamesini, $ID, "OSes", "")
-											GUICtrlSetData($Input_OS, $OSes)
-											$DLC = IniRead($gamesini, $ID, "DLC", "")
-											GUICtrlSetData($Input_dlc, $DLC)
-											$updates = IniRead($gamesini, $ID, "updates", "")
-											GUICtrlSetData($Input_ups, $updates)
-											CompareFilesToManifest("all")
-											If $erred > 2 Or ($erred = 1 And $ignore = 4) Or ($erred = 2 And $overlook = 4) Then ExitLoop
-											If GUICtrlRead($Checkbox_quit) = $GUI_CHECKED Then
-												GUICtrlSetState($Checkbox_quit, $GUI_UNCHECKED)
-												ExitLoop
-											EndIf
-											;Sleep(500)
-											;ExitLoop
-										Next
-										FileWriteLine($logfle, "")
-										GUICtrlSetData($Label_top, "")
-										GUICtrlSetData($Label_bed, "")
-										GUICtrlSetState($Checkbox_quit, $GUI_HIDE)
-										GUICtrlSetPos($Button_get, 390, 180, 100, 35)
-										GUICtrlSetData($Button_get, "COMPARE" & @LF & "ALL GAMES")
-										If FileExists($reportexe) Then Run($reportexe)
-									Else
-										MsgBox(262192, "List Error", "No games found!", 0, $GOGcliGUI)
 									EndIf
 								EndIf
 							EndIf
@@ -1563,19 +1576,22 @@ Func MainGUI()
 												$line = StringSplit($line, '"', 1)
 												$checksum = $line[1]
 												;
-												IniWrite($downfiles, $col4, "game", $titleD)
-												IniWrite($downfiles, $col4, "slug", $slugD)
-												IniWrite($downfiles, $col4, "ID", $IDD)
-												IniWrite($downfiles, $col4, "file", $col4)
-												IniWrite($downfiles, $col4, "language", $language)
-												IniWrite($downfiles, $col4, "languages", $languages)
-												IniWrite($downfiles, $col4, "OS", $OPS)
-												IniWrite($downfiles, $col4, "URL", $URL)
-												IniWrite($downfiles, $col4, "title", $alias)
-												IniWrite($downfiles, $col4, "bytes", $filesize)
-												IniWrite($downfiles, $col4, "size", $col3)
-												IniWrite($downfiles, $col4, "checksum", $checksum)
-												IniWrite($downfiles, $col4, "type", $col2)
+												; Check to skip duplicates.
+												If IniRead($downfiles, $col4, "file", "") <> $col4 Then
+													IniWrite($downfiles, $col4, "game", $titleD)
+													IniWrite($downfiles, $col4, "slug", $slugD)
+													IniWrite($downfiles, $col4, "ID", $IDD)
+													IniWrite($downfiles, $col4, "file", $col4)
+													IniWrite($downfiles, $col4, "language", $language)
+													IniWrite($downfiles, $col4, "languages", $languages)
+													IniWrite($downfiles, $col4, "OS", $OPS)
+													IniWrite($downfiles, $col4, "URL", $URL)
+													IniWrite($downfiles, $col4, "title", $alias)
+													IniWrite($downfiles, $col4, "bytes", $filesize)
+													IniWrite($downfiles, $col4, "size", $col3)
+													IniWrite($downfiles, $col4, "checksum", $checksum)
+													IniWrite($downfiles, $col4, "type", $col2)
+												EndIf
 												$alias = ""
 												$checksum = ""
 												$col3 = ""
@@ -2512,7 +2528,7 @@ Func SetupGUI()
 	GUICtrlSetState($Checkbox_select, $selector)
 	GUICtrlSetState($Checkbox_image, $cover)
 	;
-	$window = $SetupGUI
+	;$window = $SetupGUI
 
 
 	GuiSetState(@SW_SHOW, $SetupGUI)
@@ -2640,10 +2656,10 @@ EndFunc ;=> SetupGUI
 
 Func FileSelectorGUI()
 	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Checkbox_skip, $Combo_OSfle, $Combo_shutdown, $Group_exist, $Group_files
-	Local $Group_OS, $Label_done, $Label_percent, $Label_shut, $Label_speed, $Label_warn, $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext
-	Local $Radio_selgame, $Radio_selpat, $Radio_selset
-	Local $amount, $begin, $checked, $code, $col1, $col2, $col3, $col4, $downloading, $edge, $ents, $fext, $gotten, $osfle, $secs, $sect, $sections
-	Local $shutdown, $skip, $sum, $taken, $tmpman, $wide
+	Local $Group_OS, $Group_select, $Label_done, $Label_percent, $Label_shut, $Label_speed, $Label_warn, $ListView_files, $Progress_bar, $Radio_selall
+	Local $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
+	Local $amount, $begin, $cancel, $checked, $code, $col1, $col2, $col3, $col4, $color, $downloading, $edge, $ents, $fext, $gotten, $IDD, $idx, $imageD
+	Local $osfle, $prior, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $sum, $taken, $titleD, $tmpman, $val, $wide
 	;
 	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $style + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
 	GUISetBkColor(0xBBFFBB, $SelectorGUI)
@@ -2652,7 +2668,7 @@ Func FileSelectorGUI()
 	GUICtrlSetResizing($Group_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
 	$ListView_files = GUICtrlCreateListView("||||", 20, 30, $width - 45, 270, $LVS_SHOWSELALWAYS + $LVS_SINGLESEL + $LVS_REPORT + $LVS_NOCOLUMNHEADER, _
 													$LVS_EX_FULLROWSELECT + $LVS_EX_GRIDLINES + $LVS_EX_CHECKBOXES) ;
-	GUICtrlSetBkColor($ListView_files, 0xB9FFFF)
+	GUICtrlSetBkColor($ListView_files, 0xF0D0F0)
 	GUICtrlSetResizing($ListView_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
 	;
 	$Label_shut = GuiCtrlCreateLabel("SHUTDOWN", $width - 325, 5, 76, 21, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
@@ -2756,6 +2772,7 @@ Func FileSelectorGUI()
 	;
 	If $caption = "Downloads List" Then
 		$col1 = 0
+		$prior = ""
 		$sections = IniReadSectionNames($downfiles)
 		For $s = 1 To $sections[0]
 			$sect = $sections[$s]
@@ -2764,9 +2781,22 @@ Func FileSelectorGUI()
 				$col2 = IniRead($downfiles, $sect, "type", "")
 				$col3 = IniRead($downfiles, $sect, "size", "")
 				$col4 = IniRead($downfiles, $sect, "file", "")
+				$titleD = IniRead($downfiles, $sect, "game", "")
 				$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
 				;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
-				GUICtrlCreateListViewItem($entry, $ListView_files)
+				$idx = GUICtrlCreateListViewItem($entry, $ListView_files)
+				If $prior = "" Then
+					$prior = $titleD
+					$color = 0xB9FFFF
+				ElseIf $prior <> $titleD Then
+					$prior = $titleD
+					If $color = 0xB9FFFF Then
+						$color = 0xFFFFB0
+					Else
+						$color = 0xB9FFFF
+					EndIf
+				EndIf
+				GUICtrlSetBkColor($idx, $color)
 			EndIf
 		Next
 	Else
@@ -2842,7 +2872,7 @@ Func FileSelectorGUI()
 		Case $msg = $Button_download
 			; Download selected files
 			;MsgBox(262192, "Download Error", "This feature is not yet supported!", 1.5, $SelectorGUI)
-			Local $cancel, $IDD, $imageD, $slugD, $titleD, $test = ""
+			Local $test = ""
 			If GUICtrlRead($Checkbox_cancel) = $GUI_CHECKED Then
 				MsgBox(262192, "Download Error", "Cancel is selected!", 0, $SelectorGUI)
 			Else
@@ -4154,27 +4184,30 @@ Func GetFileDownloadDetails($listview = "")
 			$line = StringSplit($line, '"', 1)
 			$checksum = $line[1]
 			;
-			IniWrite($downfiles, $col4, "game", $title)
-			IniWrite($downfiles, $col4, "slug", $slug)
-			IniWrite($downfiles, $col4, "ID", $ID)
-			IniWrite($downfiles, $col4, "file", $col4)
-			IniWrite($downfiles, $col4, "language", $language)
-			IniWrite($downfiles, $col4, "languages", $languages)
-			IniWrite($downfiles, $col4, "OS", $OPS)
-			IniWrite($downfiles, $col4, "URL", $URL)
-			IniWrite($downfiles, $col4, "title", $alias)
-			IniWrite($downfiles, $col4, "bytes", $filesize)
-			IniWrite($downfiles, $col4, "size", $col3)
-			IniWrite($downfiles, $col4, "checksum", $checksum)
-			IniWrite($downfiles, $col4, "type", $col2)
-			;
-			If $listview <> "" Then
-				;If $col3 <> "" And $col4 <> "" Then
-				If $col4 <> "" Then
-					$col1 = $col1 + 1
-					$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
-					;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
-					GUICtrlCreateListViewItem($entry, $listview)
+			; Check to skip duplicates.
+			If IniRead($downfiles, $col4, "file", "") <> $col4 Then
+				IniWrite($downfiles, $col4, "game", $title)
+				IniWrite($downfiles, $col4, "slug", $slug)
+				IniWrite($downfiles, $col4, "ID", $ID)
+				IniWrite($downfiles, $col4, "file", $col4)
+				IniWrite($downfiles, $col4, "language", $language)
+				IniWrite($downfiles, $col4, "languages", $languages)
+				IniWrite($downfiles, $col4, "OS", $OPS)
+				IniWrite($downfiles, $col4, "URL", $URL)
+				IniWrite($downfiles, $col4, "title", $alias)
+				IniWrite($downfiles, $col4, "bytes", $filesize)
+				IniWrite($downfiles, $col4, "size", $col3)
+				IniWrite($downfiles, $col4, "checksum", $checksum)
+				IniWrite($downfiles, $col4, "type", $col2)
+				;
+				If $listview <> "" Then
+					;If $col3 <> "" And $col4 <> "" Then
+					If $col4 <> "" Then
+						$col1 = $col1 + 1
+						$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
+						;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
+						GUICtrlCreateListViewItem($entry, $listview)
+					EndIf
 				EndIf
 			EndIf
 			$alias = ""
@@ -4368,7 +4401,7 @@ Func GetTheSize()
 EndFunc ;=> GetTheSize
 
 Func ParseTheGamelist()
-	Local $p, $titles, $uplist
+	Local $new, $p, $titles, $uplist
 	If FileExists($gamelist) Then
 		; Parse for titles
 		;SplashTextOn("", "Please Wait!", 140, 120, Default, Default, 33)

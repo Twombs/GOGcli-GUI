@@ -1,7 +1,11 @@
 Bugfix (program crash) for variable declared in the Local scope when should have been Global.
 
-Improvements to the 'Game Files Selector' list selection feedback during processing (cursor and active row highlighting).
+Improvements to the 'Game Files Selector' window, including list selection feedback during processing (cursor move and active row highlighting), and row color changing on change of game title for files (on loading) when using the 'DOWNLOAD LIST' option. Duplicate file names are now explicitly excluded (one copy only allowed).
+
+The 'Manifest Comparison Report' (Report.exe) program window, is now checked for when starting a 'COMPARE ALL GAMES' process, and if it is running prompts the user for closure or aborts compare.
 
 Bugfix for value storage mixup (file & size) for download list.
 
 Bugfix for possible wrong drive free space check.
+
+Minor improvements to the 'Manifest Comparison Report' (Report.exe) program.

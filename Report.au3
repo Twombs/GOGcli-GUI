@@ -26,7 +26,7 @@ Local $exe, $script, $status, $w, $wins
 
 Global $compare, $handle, $inifle, $pid, $Scriptname, $version
 
-$version = "v1.1"
+$version = "v1.2"
 $Scriptname = "Manifest Comparison Report " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -65,7 +65,7 @@ Exit
 Func MainGUI()
 	Local $Button_clr, $Button_find, $Input_file, $Input_title, $Listview_games
 	;
-	Local $aqua, $cnt, $col, $color, $date, $entry, $file, $files, $find, $height, $icoR, $icoS, $id, $ind, $l, $last, $left, $line, $lines, $lowid
+	Local $aqua, $cnt, $col, $color, $date, $entry, $file, $files, $find, $folder, $height, $icoR, $icoS, $id, $ind, $l, $last, $left, $line, $lines, $lowid
 	Local $manifest, $num, $orange, $read, $red, $ReportGUI, $shell, $size, $style, $text, $title, $top, $user, $width, $winpos, $yellow
 	;
 	$width = 690
@@ -121,6 +121,7 @@ Func MainGUI()
 	;
 	$cnt = _FileCountLines($compare)
 	If $cnt > 0 Then
+		SplashTextOn("", "Please Wait!", 200, 120, Default, Default, 33)
 		$last = ""
 		$num = 0
 		$read = FileRead($compare)
@@ -165,6 +166,7 @@ Func MainGUI()
 			EndIf
 		Next
 		;SetTheColumnWidths()
+		SplashOff()
 	EndIf
 
 	GuiSetState(@SW_SHOWNORMAL, $ReportGUI)
