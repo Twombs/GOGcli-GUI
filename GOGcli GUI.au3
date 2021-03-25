@@ -39,12 +39,14 @@
 #include <ScreenCapture.au3>
 #include <GDIPlus.au3>
 #include <WinAPI.au3>
+#include <SendMessage.au3>
+#include <MsgBoxConstants.au3>
 
 Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $version
 
-$version = "v1.4"
+$version = "v1.5"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -859,7 +861,7 @@ Func MainGUI()
 						Else
 							; CTRL
 							$cnt = _FileCountLines($manlist)
-							If $cnt < 10 Then
+							If $cnt < 20 Then
 								If FileExists($manifest) Then
 									If $existing = "" Then $existing = FileRead($manifest)
 									$identry = '"Id": ' & $ID & ','
@@ -889,7 +891,7 @@ Func MainGUI()
 									EndIf
 								EndIf
 							Else
-								MsgBox(262192, "Add Error", "Limit of 10 games has been reached!", 2, $GOGcliGUI)
+								MsgBox(262192, "Add Error", "Limit of 20 games has been reached!", 2, $GOGcliGUI)
 							EndIf
 						EndIf
 					Else
@@ -1404,7 +1406,7 @@ Func MainGUI()
 				If $ctrl = True And ($buttxt <> "VALIDATE" & @LF & "GAME" And $buttxt <> "VALIDATE" & @LF & "FILE") Then
 					; Build a download list of games.
 					$cnt = _FileCountLines($downlist)
-					If $cnt < 10 Then
+					If $cnt < 15 Then
 						If $buttxt <> "DOWNLOAD" & @LF & "LIST" Then
 							GUICtrlSetStyle($Button_down, $BS_MULTILINE)
 							GUICtrlSetData($Button_down, "DOWNLOAD" & @LF & "LIST")
@@ -1426,7 +1428,7 @@ Func MainGUI()
 							EndIf
 						EndIf
 					Else
-						MsgBox(262192, "Add Error", "Limit of 10 games has been reached!", 2, $GOGcliGUI)
+						MsgBox(262192, "Add Error", "Limit of 15 games has been reached!", 2, $GOGcliGUI)
 					EndIf
 				ElseIf $ctrl = True Then
 					; Abort adding to or building a download list of games.
@@ -2658,9 +2660,10 @@ Func FileSelectorGUI()
 	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Checkbox_skip, $Combo_OSfle, $Combo_shutdown, $Group_exist, $Group_files
 	Local $Group_OS, $Group_select, $Label_done, $Label_percent, $Label_shut, $Label_speed, $Label_warn, $ListView_files, $Progress_bar, $Radio_selall
 	Local $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
-	Local $amount, $begin, $cancel, $checked, $code, $col1, $col2, $col3, $col4, $color, $downloading, $edge, $ents, $fext, $gotten, $IDD, $idx, $imageD
-	Local $osfle, $prior, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $sum, $taken, $titleD, $tmpman, $val, $wide
+	Local $amount, $begin, $cancel, $checked, $code, $col1, $col2, $col3, $col4, $color, $dllcall, $downloading, $edge, $ents, $fext, $gotten, $IDD, $idx
+	Local $imageD, $osfle, $prior, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $sum, $taken, $theme, $titleD, $tmpman, $val, $wide
 	;
+	;$style = $WS_CAPTION + $WS_MINIMIZEBOX + $WS_POPUP ; + $WS_VISIBLE + $WS_OVERLAPPED + $WS_CLIPSIBLINGS + $WS_SYSMENU
 	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $style + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
 	GUISetBkColor(0xBBFFBB, $SelectorGUI)
 	; CONTROLS
@@ -2697,7 +2700,8 @@ Func FileSelectorGUI()
 	GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
 	;GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
 	;
-	$Progress_bar = GUICtrlCreateProgress($width - 166, 317, 80, 20, $PBS_SMOOTH)
+	;$Progress_bar = GUICtrlCreateProgress($width - 166, 317, 80, 20, $PBS_SMOOTH)
+	$Progress_bar = GUICtrlCreateProgress($width - 166, 317, 80, 20)
 	GUICtrlSetResizing($Progress_bar, $GUI_DOCKRIGHT + $GUI_DOCKHEIGHT + $GUI_DOCKAUTO + $GUI_DOCKAUTO)
 	$Label_percent = GUICtrlCreateLabel("0%", $width - 160, 318, 75, 20, $SS_CENTER + $SS_CENTERIMAGE)
 	GUICtrlSetBkColor($Label_percent, $GUI_BKCOLOR_TRANSPARENT)
@@ -2767,6 +2771,26 @@ Func FileSelectorGUI()
 	;
 	; SETTINGS
 	GUICtrlSetImage($Button_quit, $user, $icoX, 1)
+	;
+	; Testing only
+	$dllcall = ""
+	$theme = ""
+	If $theme = 1 Then
+		If FileExists(@SystemDir & "\UxTheme.dll") Then
+			$dllcall = 1
+			DllCall("UxTheme.dll", "int", "SetWindowTheme", "hwnd", GUICtrlGetHandle($Progress_bar), "wstr", 0, "wstr", 0)
+			GUICtrlSetStyle($Progress_bar, BitOr($GUI_SS_DEFAULT_PROGRESS, $PBS_SMOOTH))
+			;GUICtrlSetStyle($Progress_bar, $PBS_SMOOTH)
+			;GUICtrlSetColor($Progress_bar, $COLOR_RED)
+			;GUICtrlSetBkColor($Progress_bar, $COLOR_BLACK)
+			;GUICtrlSetBkColor($Label_percent, $GUI_BKCOLOR_TRANSPARENT)
+			;
+			;GUICtrlSetData($Progress_bar, 50)
+			;GUICtrlSendMsg($Progress_bar, $PBM_SETSTATE, 2, 50)
+			;;_SendMessage(GUICtrlGetHandle($Progress_bar), $PBM_SETSTATE, 2) ; Red
+			;GUICtrlSetData($Label_percent, "50%")
+		EndIf
+	EndIf
 	;
 	GUICtrlSetData($Combo_shutdown, "none|Hibernate|Logoff|Powerdown|Reboot|Shutdown|Standby", "none")
 	;
@@ -2919,6 +2943,7 @@ Func FileSelectorGUI()
 						Else
 							$flag = @SW_SHOW
 						EndIf
+						GUICtrlSetStyle($Progress_bar, $PBS_SMOOTH)
 						$md5check = ""
 						$zipcheck = ""
 						FileChangeDir(@ScriptDir)
@@ -2952,7 +2977,11 @@ Func FileSelectorGUI()
 										EndIf
 									EndIf
 								EndIf
-								$drv = StringLeft($gamesfold, 3)
+								If $model > 7 Then
+									$drv = StringLeft($gamesfold, 3)
+								Else
+									$drv = StringLeft(@ScriptDir, 3)
+								EndIf
 								$space = DriveSpaceFree($drv)
 								$free = Floor($space * 1048576)
 								$filesize = IniRead($downfiles, $file, "bytes", 0)
@@ -2974,6 +3003,7 @@ Func FileSelectorGUI()
 											_FileWriteLog($logfle, "DOWNLOADING - " & $file, -1)
 											GUICtrlSetData($Progress_bar, 0)
 											GUICtrlSetData($Label_percent, "0%")
+											$begin = ""
 											$exists = ""
 											If $model > 7 And FileExists($gamesfold) Then
 												$params = "-c Cookie.txt gog-api download-url-path -p=" & $URL & " -r=" & $gamesfold
@@ -3069,6 +3099,9 @@ Func FileSelectorGUI()
 													$gamepic = ""
 													GetGameFolderNameAndPath($titleD, $slugD)
 													If Not FileExists($gamefold) Then DirCreate($gamefold)
+													;
+													; NOTE - If $gamesfold is on a different drive to download folder, then a free space check should be done.
+													;
 													If FileExists($gamefold) Then
 														FileMove($download, $gamefold & "\", 1)
 														If $cover = 1 Then
@@ -3082,6 +3115,7 @@ Func FileSelectorGUI()
 															EndIf
 														EndIf
 													ElseIf FileExists($gamesfold) Then
+														; Shouldn't really be here. In theory $gamesfold could be download folder, so no move needed.
 														FileMove($download, $gamesfold & "\", 1)
 														If $cover = 1 Then
 															$gamepic = $gamesfold & "\" & $name & ".jpg"
@@ -3175,6 +3209,7 @@ Func FileSelectorGUI()
 						If $validate = 1 Then
 							If $md5check <> "" Then
 								; Compare MD5 values.
+								GUICtrlSetData($Label_percent, "")
 								$md5check = StringSplit($md5check, "||", 1)
 								For $m = 1 To $md5check[0]
 									$checkval = $md5check[$m]
@@ -3190,8 +3225,38 @@ Func FileSelectorGUI()
 										$file = StringSplit($filepth, "\", 1)
 										$file = $file[$file[0]]
 										_GUICtrlListView_SetItemText($ListView_files, $i, "MD5check..." & $file, 3)
+										GUICtrlSetStyle($Progress_bar, $PBS_MARQUEE)
+										GUICtrlSetData($Progress_bar, 0)
+										If $dllcall = 1 Then
+											GUICtrlSetColor($Progress_bar, 0xDD0000)
+										Else
+											GUICtrlSendMsg($Progress_bar, $PBM_SETMARQUEE, 1, 50)
+										EndIf
+										GUICtrlSetData($Label_percent, "")
+										;GUICtrlSetData($Progress_bar, 0)
+										;GUICtrlSetData($Label_percent, "0%")
+										;$filesize = IniRead($downfiles, $file, "bytes", 0)
+										;If $filesize > 0 Then
+										;	$factor = IniRead($inifle, "Download Options", "md5_factor", "")
+										;	$begin = TimerInit()
+										;EndIf
 										_Crypt_Startup()
 										$hash = _Crypt_HashFile($filepth, $CALG_MD5)
+										_Crypt_Shutdown()
+										;If $filesize > 0 Then
+										;	$taken = TimerDiff($begin)
+										;	$factor = $taken / $filesize
+										;	IniWrite($inifle, "Download Options", "md5_factor", $factor)
+										;EndIf
+										Sleep(1000)
+										GUICtrlSendMsg($Progress_bar, $PBM_SETMARQUEE, 0, 50)
+										GUICtrlSetStyle($Progress_bar, $PBS_SMOOTH)
+										GUICtrlSetData($Progress_bar, 100)
+										If $dllcall = "" Then
+											GUICtrlSendMsg($Progress_bar, $PBM_SETSTATE, 2, 50)
+										EndIf
+										GUICtrlSetData($Label_percent, "100%")
+										Sleep(2000)
 										$hash = StringTrimLeft($hash, 2)
 										If $hash = $checksum Then
 											GUICtrlSetBkColor($row, $COLOR_LIME)
@@ -3205,8 +3270,11 @@ Func FileSelectorGUI()
 											_FileWriteLog($logfle, "MD5 Check failed.", -1)
 											;MsgBox(262192, "Checksum Failure", "MD5 = " & $checksum & @LF & "Hash = " & $hash, 0, $SelectorGUI)
 										EndIf
-										_Crypt_Shutdown()
 										;$foldpth = StringTrimRight($filepth, StringLen($file) + 1)
+										If $dllcall = "" Then
+											GUICtrlSetStyle($Progress_bar, $PBS_SMOOTH)
+											_SendMessage(GUICtrlGetHandle($Progress_bar), $PBM_SETSTATE, 1)
+										EndIf
 									EndIf
 								Next
 							EndIf
@@ -3226,6 +3294,14 @@ Func FileSelectorGUI()
 										$file = StringSplit($zippath, "\", 1)
 										$file = $file[$file[0]]
 										_GUICtrlListView_SetItemText($ListView_files, $i, "ZIPcheck..." & $file, 3)
+										GUICtrlSetStyle($Progress_bar, $PBS_MARQUEE)
+										GUICtrlSetData($Progress_bar, 0)
+										If $dllcall = 1 Then
+											GUICtrlSetColor($Progress_bar, $COLOR_YELLOW)
+										Else
+											GUICtrlSendMsg($Progress_bar, $PBM_SETMARQUEE, 1, 50)
+										EndIf
+										GUICtrlSetData($Label_percent, "")
 										$ret = _Zip_List($zippath)
 										$ret = $ret[0]
 										If $ret > 0 Then
@@ -3239,10 +3315,24 @@ Func FileSelectorGUI()
 											_FileWriteLog($logfle, $file, -1)
 											_FileWriteLog($logfle, "ZIP Check failed.", -1)
 										EndIf
+										Sleep(1000)
+										GUICtrlSendMsg($Progress_bar, $PBM_SETMARQUEE, 0, 50)
+										GUICtrlSetStyle($Progress_bar, $PBS_SMOOTH)
+										GUICtrlSetData($Progress_bar, 100)
+										If $dllcall = "" Then
+											GUICtrlSendMsg($Progress_bar, $PBM_SETSTATE, 3, 50)
+										EndIf
+										GUICtrlSetData($Label_percent, "100%")
+										Sleep(2000)
+										If $dllcall = "" Then
+											GUICtrlSetStyle($Progress_bar, $PBS_SMOOTH)
+											_SendMessage(GUICtrlGetHandle($Progress_bar), $PBM_SETSTATE, 1)
+										EndIf
 									EndIf
 								Next
 							EndIf
 							FileWriteLine($logfle, "")
+							If $dllcall = 1 Then GUICtrlSetColor($Progress_bar, $COLOR_LIME)
 						EndIf
 						_GUICtrlListView_SetItemSelected($ListView_files, -1, False, False)
 						_GUICtrlListView_SetColumnWidth($ListView_files, 3, $LVSCW_AUTOSIZE)

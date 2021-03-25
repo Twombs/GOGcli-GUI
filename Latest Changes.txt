@@ -1,11 +1,11 @@
-Bugfix (program crash) for variable declared in the Local scope when should have been Global.
+Bugfix for download speed (forgot to reset the timer after a download completes).
 
-Improvements to the 'Game Files Selector' window, including list selection feedback during processing (cursor move and active row highlighting), and row color changing on change of game title for files (on loading) when using the 'DOWNLOAD LIST' option. Duplicate file names are now explicitly excluded (one copy only allowed).
+The progress bar on the 'Game Files Selector' window, has had some improvements.
+Bar is GREEN when downloading.
+Bar is RED after MD5 checking.
+Bar is YELLOW after zip checking.
+Bar remains an incremental percentage when downloading, but changes to a green continuous scrolling marquee when MD5 or zip checking. It remains GREEN until each checking process has completed, then shows 100% and changes to either RED or YELLOW momentarily.
 
-The 'Manifest Comparison Report' (Report.exe) program window, is now checked for when starting a 'COMPARE ALL GAMES' process, and if it is running prompts the user for closure or aborts compare.
-
-Bugfix for value storage mixup (file & size) for download list.
-
-Bugfix for possible wrong drive free space check.
-
-Minor improvements to the 'Manifest Comparison Report' (Report.exe) program.
+The count limit for 'MANIFEST LIST' has been upped from 10 to 20.
+The count limit for 'DOWNLOAD LIST' has been upped from 10 to 15.
+In some ways these limits are somewhat arbitrary, except waiting time is increased while building a downloads list, before files are shown in the list on the 'Game Files Selector' window. Though in the case of the manifest list, it doesn't have that issue, so I may increase that limit again in another update ... depends on my usage desires or requirements ... probably.
