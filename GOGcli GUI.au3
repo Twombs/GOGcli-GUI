@@ -80,18 +80,19 @@ Global $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $In
 Global $Input_slug, $Input_title, $Input_ups, $Item_down_all, $Item_verify_file, $Item_verify_game, $Label_bed, $Label_cat
 Global $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $7zip, $a, $addlist, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum, $checkval
-Global $cnt, $compare, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest, $details, $DLC, $done, $downfiles, $downlist, $download, $downloads
-Global $drv, $entries, $entry, $erred, $exists, $f, $file, $filepth, $files, $filesize, $flag, $fold, $foldzip, $free, $game, $gamefold, $gamelist
-Global $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT
-Global $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed, $listview
-Global $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num, $numb, $OP, $OS, $OSes
-Global $overlook, $params, $part, $parts, $percent, $ping, $progress, $pth, $ratify, $read, $record, $reportexe, $res, $resultfle, $ret, $row
-Global $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state, $style, $tag, $tagfle
-Global $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $web, $which, $width
-Global $winpos, $z, $zipcheck, $zipfile, $zippath
+Global $7zip, $a, $addlist, $alert, $alerts, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum
+Global $checkval, $cnt, $compare, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest, $details, $DLC, $done, $downfiles, $downlist
+Global $download, $downloads, $drv, $entries, $entry, $erred, $exists, $f, $file, $fileinfo, $filepth, $files, $filesize, $flag, $fold, $foldzip
+Global $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $hash, $head, $height, $i
+Global $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line
+Global $lines, $link, $list, $listed, $listview, $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist, $md5check, $minimize, $model
+Global $n, $name, $num, $numb, $OP, $OS, $OSes, $overlook, $params, $part, $parts, $percent, $ping, $progress, $pth, $ratify, $read, $record
+Global $reportexe, $res, $resultfle, $ret, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash
+Global $split, $splits, $state, $style, $tag, $tagfle, $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL
+Global $user, $validate, $verify, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
 
 $addlist = @ScriptDir & "\Added.txt"
+$alerts = @ScriptDir & "\Alerts.txt"
 $bigpic = @ScriptDir & "\Big.jpg"
 $blackjpg = @ScriptDir & "\Black.jpg"
 $compare = @ScriptDir & "\Comparisons.txt"
@@ -100,6 +101,7 @@ $covers = @ScriptDir & "\Covers"
 $details = @ScriptDir & "\Detail.txt"
 $downfiles = @ScriptDir & "\Downfiles.ini"
 $downlist = @ScriptDir & "\Downloads.txt"
+$fileinfo = @ScriptDir & "\Fileinfo.txt"
 $foldzip = @ScriptDir & "\7-Zip"
 $gamelist = @ScriptDir & "\Games.txt"
 $gamesini = @ScriptDir & "\Games.ini"
@@ -129,10 +131,11 @@ Exit
 
 
 Func MainGUI()
-	Local $Checkbox_quit, $Checkbox_stop, $Menu_down, $Menu_get, $Menu_list, $Menu_man, $Menu_compare_opts
-	Local $Item_clear_down, $Item_clear_man, $Item_compare_all, $Item_compare_aqua, $Item_compare_declare, $Item_compare_ignore
-	Local $Item_compare_one, $Item_compare_orange, $Item_compare_overlook, $Item_compare_red, $Item_compare_rep, $Item_compare_report
-	Local $Item_compare_view, $Item_compare_wipe, $Item_compare_yellow, $Item_view_down, $Item_view_man
+	Local $Checkbox_quit, $Checkbox_stop, $Menu_alert_opts, $Menu_down, $Menu_get, $Menu_list, $Menu_man, $Menu_compare_opts
+	Local $Item_alerts_clear, $Item_alerts_view, $Item_clear_down, $Item_clear_man, $Item_compare_all, $Item_compare_aqua
+	Local $Item_compare_declare, $Item_compare_ignore, $Item_compare_one, $Item_compare_orange, $Item_compare_overlook
+	Local $Item_compare_red, $Item_compare_rep, $Item_compare_report, $Item_compare_view, $Item_compare_wipe
+	Local $Item_compare_yellow, $Item_view_down, $Item_view_man
 	;
 	Local $accept, $alias, $aqua, $buttxt, $c, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display, $dll
 	Local $e, $exist, $existing, $fext, $filelist, $find, $flename, $foldpth, $IDD, $ids, $ind, $l, $language, $languages
@@ -321,6 +324,12 @@ Func MainGUI()
 	;
 	; CONTEXT MENU
 	$Menu_list = GUICtrlCreateContextMenu($Listview_games)
+	$Menu_alert_opts = GUICtrlCreateMenu("Alerts", $Menu_list)
+	$Item_alerts_view = GUICtrlCreateMenuItem("View Alerts", $Menu_alert_opts)
+	GUICtrlCreateMenuItem("", $Menu_alert_opts)
+	$Item_alerts_clear = GUICtrlCreateMenuItem("Clear Alerts", $Menu_alert_opts)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
 	$Item_clear_down = GUICtrlCreateMenuItem("Clear Downloads List", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Item_view_down = GUICtrlCreateMenuItem("View Downloads List", $Menu_list)
@@ -629,7 +638,17 @@ Func MainGUI()
 	$DLC = ""
 	$updates = ""
 	;
+	; Testing only
 	;GUICtrlSetData($Label_top, "123456789012345....")
+	;
+	If FileExists($alerts) Then
+		$cnt = _FileCountLines($alerts)
+		If $cnt > 0 Then
+			GUICtrlSetData($Label_top, "Changed Filename(s)")
+			GUICtrlSetData($Label_mid, "Check the 'Alerts.txt' File")
+			GUICtrlSetData($Label_bed, $cnt & " file(s) changed")
+		EndIf
+	EndIf
 	;
 	If FileExists($splash) Then SplashOff()
 
@@ -1398,6 +1417,7 @@ Func MainGUI()
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_down
 			; Download the selected game
+			$alert = 0
 			$buttxt = GUICtrlRead($Button_down)
 			If $title = "" And ($buttxt = "DOWNLOAD" Or $buttxt = "VALIDATE" & @LF & "GAME" Or $buttxt = "VALIDATE" & @LF & "FILE") Then
 				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
@@ -1647,7 +1667,9 @@ Func MainGUI()
 					EndIf
 					SetStateOfControls($GUI_ENABLE, "all")
 					GUICtrlSetData($Label_mid, "")
-					If $ind > -1 Then _GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+					If $alert = 0 Then
+						If $ind > -1 Then _GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+					EndIf
 				Else
 					; Downloads from just one game.
 					SetStateOfControls($GUI_DISABLE, "all")
@@ -2101,8 +2123,16 @@ Func MainGUI()
 					EndIf
 					SetStateOfControls($GUI_ENABLE, "all")
 					GUICtrlSetData($Label_mid, "")
-					If $ind > -1 Then _GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+					If $alert = 0 Then
+						If $ind > -1 Then _GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+					EndIf
 				EndIf
+			EndIf
+			If $alert > 0 Then
+				GUICtrlSetData($Label_top, "Changed Filename(s)")
+				GUICtrlSetData($Label_mid, "Check the 'Alerts.txt' File")
+				GUICtrlSetData($Label_bed, $alert & " file(s) changed")
+				$alert = 0
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 			;_GUICtrlListView_SetItemSelected($Listview_games, $ind, True, True)
@@ -2333,6 +2363,12 @@ Func MainGUI()
 				_FileCreate($downlist)
 				$downloads = ""
 			EndIf
+		Case $msg = $Item_alerts_view
+			; View Alerts
+			If FileExists($alerts) Then ShellExecute($alerts)
+		Case $msg = $Item_alerts_clear
+			; Clear Alerts
+			If FileExists($alerts) Then _FileCreate($alerts)
 		Case $msg = $Label_slug
 			; Click to
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
@@ -2347,6 +2383,9 @@ Func MainGUI()
 			GUICtrlSetData($Input_title, $title)
 			$slug = IniRead($gamesini, $ID, "slug", "")
 			GUICtrlSetData($Input_slug, $slug)
+			GUICtrlSetData($Label_top, "")
+			GUICtrlSetData($Label_mid, "")
+			GUICtrlSetData($Label_bed, "")
 			$image = IniRead($gamesini, $ID, "image", "")
 			If $display = 1 Then
 				ShowCorrectImage()
@@ -2944,6 +2983,7 @@ Func FileSelectorGUI()
 							$flag = @SW_SHOW
 						EndIf
 						GUICtrlSetStyle($Progress_bar, $PBS_SMOOTH)
+						$alert = 0
 						$md5check = ""
 						$zipcheck = ""
 						FileChangeDir(@ScriptDir)
@@ -3000,6 +3040,36 @@ Func FileSelectorGUI()
 										If $test = 1 Then
 											Sleep(5000)
 										Else
+											If $getlatest = 4 Then
+												_FileWriteLog($logfle, "CHECKING FILENAME - " & $file, -1)
+												$params = '-c Cookie.txt gog-api url-path-info -p=' & $URL & ' >"' & $fileinfo & '"'
+												$pid = RunWait(@ComSpec & ' /c echo CHECKING FILENAME ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+												Sleep(500)
+												_FileReadToArray($fileinfo, $array)
+												If @error = 0 Then
+													If $array[0] = 3 Then
+														$val = StringReplace($array[1], "File Name: ", "")
+														If $val = $file Then
+															_FileWriteLog($logfle, "Checked Okay.", -1)
+														Else
+															$sect = $file
+															$file = $val
+															IniWrite($downfiles, $sect, "file", $file)
+															$checksum = StringReplace($array[2], "Checksum: ", "")
+															IniWrite($downfiles, $sect, "checksum", $checksum)
+															$filesize = StringReplace($array[3], "Size: ", "")
+															IniWrite($downfiles, $sect, "bytes", $filesize)
+															_FileWriteLog($logfle, "Changed - " & $file, -1)
+															_FileWriteLog($alerts, $sect & " changed to " & $file, -1)
+															$alert = $alert + 1
+														EndIf
+													Else
+														_FileWriteLog($logfle, "Checking Erred (2).", -1)
+													EndIf
+												Else
+													_FileWriteLog($logfle, "Checking Erred (1).", -1)
+												EndIf
+											EndIf
 											_FileWriteLog($logfle, "DOWNLOADING - " & $file, -1)
 											GUICtrlSetData($Progress_bar, 0)
 											GUICtrlSetData($Label_percent, "0%")
