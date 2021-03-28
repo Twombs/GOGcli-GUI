@@ -12,9 +12,9 @@
 
 ; FUNCTIONS
 ; MainGUI(), SetupGUI(), FileSelectorGUI()
-; ClearFieldValues(), CompareFilesToManifest($numb), FillTheGamesList(), FixTitle($text), GetFileDownloadDetails($listview)
-; GetGameFolderNameAndPath($titleF, $slugF), GetManifestForTitle(), GetTheSize(), ParseTheGamelist(), RetrieveDataFromGOG($listed, $list)
-; SetStateOfControls($state, $which), ShowCorrectImage()
+; BackupManifestEtc(), ClearFieldValues(), CompareFilesToManifest($numb), FillTheGamesList(), FixTitle($text)
+; GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF), GetManifestForTitle(), GetTheSize()
+; ParseTheGamelist(), RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which), ShowCorrectImage()
 ;
 ; , SetTheColumnWidths() UNUSED
 ;
@@ -46,7 +46,7 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $version
 
-$version = "v1.5"
+$version = "v1.6"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -80,19 +80,21 @@ Global $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $In
 Global $Input_slug, $Input_title, $Input_ups, $Item_down_all, $Item_verify_file, $Item_verify_game, $Label_bed, $Label_cat
 Global $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $7zip, $a, $addlist, $alert, $alerts, $alf, $alpha, $ans, $array, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category, $checksum
-Global $checkval, $cnt, $compare, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest, $details, $DLC, $done, $downfiles, $downlist
-Global $download, $downloads, $drv, $entries, $entry, $erred, $exists, $f, $file, $fileinfo, $filepth, $files, $filesize, $flag, $fold, $foldzip
-Global $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $hash, $head, $height, $i
-Global $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line
-Global $lines, $link, $list, $listed, $listview, $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist, $md5check, $minimize, $model
-Global $n, $name, $num, $numb, $OP, $OS, $OSes, $overlook, $params, $part, $parts, $percent, $ping, $progress, $pth, $ratify, $read, $record
-Global $reportexe, $res, $resultfle, $ret, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash
-Global $split, $splits, $state, $style, $tag, $tagfle, $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL
-Global $user, $validate, $verify, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
+Global $7zip, $a, $addlist, $alert, $alerts, $alf, $alpha, $ans, $array, $backups, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category
+Global $checksum, $checkval, $cnt, $compare, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest, $details, $DLC, $done, $downfiles
+Global $downlist, $download, $downloads, $drv, $entries, $entry, $erred, $exists, $f, $file, $fileinfo, $filepth, $files, $filesize, $flag
+Global $fold, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $hash, $head
+Global $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json, $keep, $lang
+Global $left, $line, $lines, $link, $list, $listed, $listview, $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist, $md5check
+Global $minimize, $model, $n, $name, $num, $numb, $OP, $OS, $OSes, $overlook, $params, $part, $parts, $percent, $ping, $progress, $pth
+Global $ratify, $read, $record, $reportexe, $res, $ret, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld
+Global $space, $splash, $split, $splits, $state, $style, $tag, $tagfle, $tail, $text, $title, $titleF, $titlist, $top, $type, $types
+Global $updated, $updates, $URL, $user, $validate, $verify, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
+;, $foldzip, $resultfle
 
 $addlist = @ScriptDir & "\Added.txt"
 $alerts = @ScriptDir & "\Alerts.txt"
+$backups = @ScriptDir & "\Backups"
 $bigpic = @ScriptDir & "\Big.jpg"
 $blackjpg = @ScriptDir & "\Black.jpg"
 $compare = @ScriptDir & "\Comparisons.txt"
@@ -102,7 +104,7 @@ $details = @ScriptDir & "\Detail.txt"
 $downfiles = @ScriptDir & "\Downfiles.ini"
 $downlist = @ScriptDir & "\Downloads.txt"
 $fileinfo = @ScriptDir & "\Fileinfo.txt"
-$foldzip = @ScriptDir & "\7-Zip"
+;$foldzip = @ScriptDir & "\7-Zip"
 $gamelist = @ScriptDir & "\Games.txt"
 $gamesini = @ScriptDir & "\Games.ini"
 $gogcli = @ScriptDir & "\gogcli.exe"
@@ -113,7 +115,7 @@ $logfle = @ScriptDir & "\Log.txt"
 $manifest = @ScriptDir & "\Manifest.txt"
 $manlist = @ScriptDir & "\Manifests.txt"
 $reportexe = @ScriptDir & "\Report.exe"
-$resultfle = @ScriptDir & "\Results.txt"
+;$resultfle = @ScriptDir & "\Results.txt"
 $splash = @ScriptDir & "\Splash.jpg"
 $tagfle = @ScriptDir & "\Tags.ini"
 $titlist = @ScriptDir & "\Titles.txt"
@@ -135,11 +137,11 @@ Func MainGUI()
 	Local $Item_alerts_clear, $Item_alerts_view, $Item_clear_down, $Item_clear_man, $Item_compare_all, $Item_compare_aqua
 	Local $Item_compare_declare, $Item_compare_ignore, $Item_compare_one, $Item_compare_orange, $Item_compare_overlook
 	Local $Item_compare_red, $Item_compare_rep, $Item_compare_report, $Item_compare_view, $Item_compare_wipe
-	Local $Item_compare_yellow, $Item_view_down, $Item_view_man
+	Local $Item_compare_yellow, $Item_manifest_fix, $Item_view_down, $Item_view_man
 	;
 	Local $accept, $alias, $aqua, $buttxt, $c, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display, $dll
 	Local $e, $exist, $existing, $fext, $filelist, $find, $flename, $foldpth, $IDD, $ids, $ind, $l, $language, $languages
-	Local $last, $latest, $loop, $mans, $mpos, $OPS, $orange, $pos, $prior, $red, $result, $retrieve, $slugD, $tagtxt
+	Local $last, $latest, $loop, $mans, $mpos, $OPS, $orange, $p, $pos, $prior, $red, $result, $retrieve, $slugD, $tagtxt
 	Local $tested, $titleD, $valfold, $xpos, $yellow, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
@@ -357,6 +359,9 @@ Func MainGUI()
 	$Item_compare_aqua = GUICtrlCreateMenuItem("No Manifest Entry (AQUA)", $Menu_compare_opts, -1, 0)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Item_compare_wipe = GUICtrlCreateMenuItem("Wipe Comparison File", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Item_manifest_fix = GUICtrlCreateMenuItem("Check && Fix The Manifest", $Menu_list)
 	;
 	$Menu_get = GUICtrlCreateContextMenu($Button_get)
 	$Item_compare_one = GUICtrlCreateMenuItem("Compare One Game", $Menu_get, -1, 0)
@@ -414,6 +419,8 @@ Func MainGUI()
 		$manifests = ""
 	EndIf
 	$manall = 4
+	;
+	BackupManifestEtc()
 	;
 	$ignore = IniRead($inifle, "Compare Options", "ignore", "")
 	If $ignore = "" Then
@@ -2215,6 +2222,41 @@ Func MainGUI()
 				GUICtrlSetData($Button_down, "DOWNLOAD")
 			EndIf
 			GUICtrlSetState($Item_verify_file, $ratify)
+		Case $msg = $Item_manifest_fix
+			; Check & Fix The Manifest
+			If FileExists($manifest) Then
+				$read = FileRead($manifest)
+				If $read <> "" Then
+					$result = ""
+					$sects = 0
+					$parts = StringSplit($read, '"Games":', 1)
+					For $p = 1 To $parts[0]
+						$part = $parts[$p]
+						$ids = StringSplit($part, '"Id":', 1)
+						If $ids[0] > 2 Then
+							$part = ""
+							$sects = $sects + 1
+							If $result = "" Then
+								$result = $sects
+							Else
+								$result = $result & @LF & $sects
+							EndIf
+							For $s = 1 To $ids[0]
+								$sect = $ids[$s]
+								If StringInStr($sect, '"Title":') > 0 Then
+									$part = StringSplit($sect, '",', 1)
+									$part = $part[1]
+									$part = StringReplace($part, '"Title": "', ' - ')
+									$part = StringReplace($part, "," & @LF, "")
+									$part = StringStripWS($part, 7)
+									$result = $result & @LF & $part
+								EndIf
+							Next
+						EndIf
+					Next
+					If $sects > 0 Then MsgBox(262208, "Results", $sects & " corrupted manifest entries." & @LF & @LF & $result)
+				EndIf
+			EndIf
 		Case $msg = $Item_down_all
 			; Download ALL Manifests
 			If $manall = 4 Then
@@ -4022,6 +4064,279 @@ Func FileSelectorGUI()
 	WEnd
 EndFunc ;=> FileSelectorGUI
 
+
+Func BackupManifestEtc()
+	Local $addbak, $bdate, $compbak, $cookbak, $endadd, $endbak, $endcomp, $endcook, $endgam, $endlog, $endman, $endset
+	Local $endtag, $endtit, $endupd, $gambak, $logbak, $manbak, $ndate, $nmb, $oldbak, $setbak, $tagbak, $titbak, $updbak
+	;
+	If FileExists($manifest) Then
+		If Not FileExists($backups) Then
+			; Create Backup folder and backup Manifest file etc for the first time.
+			DirCreate($backups)
+			FileCopy($addlist, $backups & "\Added.txt_1.bak")
+			FileCopy($compare, $backups & "\Comparisons.txt_1.bak")
+			FileCopy($cookies, $backups & "\Cookie.txt_1.bak")
+			FileCopy($gamelist, $backups & "\Games.txt_1.bak")
+			FileCopy($gamesini, $backups & "\Games.ini_1.bak")
+			FileCopy($inifle, $backups & "\Settings.ini_1.bak")
+			FileCopy($logfle, $backups & "\Log.txt_1.bak")
+			FileCopy($manifest, $backups & "\Manifest.txt_1.bak")
+			FileCopy($tagfle, $backups & "\Tags.ini_1.bak")
+			FileCopy($titlist, $backups & "\Titles.txt_1.bak")
+			FileCopy($updated, $backups & "\Updated.txt_1.bak")
+		Else
+			; Shuffle backups along as needed and replace oldest. NOTE - Oldest backup is always "_1.bak"
+			; Backup the game titles files. GROUP BACKUP.
+			$ndate = FileGetTime($gamelist, 0, 1)
+			$endbak = $backups & "\Games.txt_5.bak"
+			If FileExists($endbak) Then
+				$bdate = FileGetTime($endbak, 0, 1)
+				If $bdate <> $ndate Then
+					; Add current game titles files as newest backups.
+					$oldbak = $backups & "\Games.txt"
+					$titbak = $backups & "\Titles.txt"
+					$endtit = $titbak & "_5.bak"
+					$gambak = $backups & "\Games.ini"
+					$endgam = $gambak & "_5.bak"
+					$addbak = $backups & "\Added.txt"
+					$endadd = $addbak & "_5.bak"
+					$updbak = $backups & "\Updated.txt"
+					$endupd = $addbak & "_5.bak"
+					For $nmb = 1 To 4
+						FileMove($oldbak & "_" & ($nmb + 1) & ".bak", $oldbak & "_" & $nmb & ".bak", 1)
+						FileMove($titbak & "_" & ($nmb + 1) & ".bak", $titbak & "_" & $nmb & ".bak", 1)
+						FileMove($gambak & "_" & ($nmb + 1) & ".bak", $gambak & "_" & $nmb & ".bak", 1)
+						FileMove($addbak & "_" & ($nmb + 1) & ".bak", $addbak & "_" & $nmb & ".bak", 1)
+						FileMove($updbak & "_" & ($nmb + 1) & ".bak", $updbak & "_" & $nmb & ".bak", 1)
+					Next
+					FileCopy($gamelist, $endbak, 1)
+					FileCopy($titlist, $endtit, 1)
+					FileCopy($gamesini, $endgam, 1)
+					FileCopy($addlist, $endadd, 1)
+					FileCopy($updated, $endupd, 1)
+				EndIf
+			Else
+				; Add current game titles files as newest backups in an empty slot.
+				For $nmb = 1 To 5
+					$oldbak = $backups & "\Games.txt_" & $nmb & ".bak"
+					$titbak = $backups & "\Titles.txt_" & $nmb & ".bak"
+					$gambak = $backups & "\Games.ini_" & $nmb & ".bak"
+					$addbak = $backups & "\Added.txt_" & $nmb & ".bak"
+					$updbak = $backups & "\Updated.txt_" & $nmb & ".bak"
+					If Not FileExists($oldbak) Then
+						If $nmb = 1 Then
+							FileCopy($gamelist, $oldbak)
+							FileCopy($titlist, $titbak, 1)
+							FileCopy($gamesini, $gambak, 1)
+							FileCopy($addlist, $addbak, 1)
+							FileCopy($updated, $updbak, 1)
+						Else
+							$bdate = FileGetTime($endbak, 0, 1)
+							If $bdate <> $ndate Then
+								FileCopy($gamelist, $oldbak)
+								FileCopy($titlist, $titbak, 1)
+								FileCopy($gamesini, $gambak, 1)
+								FileCopy($addlist, $addbak, 1)
+								FileCopy($updated, $updbak, 1)
+							EndIf
+						EndIf
+						ExitLoop
+					EndIf
+					$endbak = $oldbak
+				Next
+			EndIf
+			; Backup the Manifest file etc. INDEPEDENT BACKUP.
+			$ndate = FileGetTime($manifest, 0, 1)
+			$endman = $backups & "\Manifest.txt_5.bak"
+			If FileExists($endman) Then
+				$bdate = FileGetTime($endman, 0, 1)
+				If $bdate <> $ndate Then
+					; Add current Manifest file as newest backup.
+					$manbak = $backups & "\Manifest.txt"
+					For $nmb = 1 To 4
+						FileMove($manbak & "_" & ($nmb + 1) & ".bak", $manbak & "_" & $nmb & ".bak", 1)
+					Next
+					FileCopy($manifest, $endman, 1)
+				EndIf
+			Else
+				; Add current Manifest file as newest backup in an empty slot.
+				For $nmb = 1 To 5
+					$manbak = $backups & "\Manifest.txt_" & $nmb & ".bak"
+					If Not FileExists($manbak) Then
+						If $nmb = 1 Then
+							FileCopy($manifest, $manbak)
+						Else
+							$bdate = FileGetTime($endman, 0, 1)
+							If $bdate <> $ndate Then
+								FileCopy($manifest, $manbak)
+							EndIf
+						EndIf
+						ExitLoop
+					EndIf
+					$endman = $manbak
+				Next
+			EndIf
+			; Backup the Tags file etc. INDEPEDENT BACKUP.
+			$ndate = FileGetTime($tagfle, 0, 1)
+			$endtag = $backups & "\Tags.ini_5.bak"
+			If FileExists($endtag) Then
+				$bdate = FileGetTime($endtag, 0, 1)
+				If $bdate <> $ndate Then
+					; Add current Tags file as newest backup.
+					$tagbak = $backups & "\Tags.ini"
+					For $nmb = 1 To 4
+						FileMove($tagbak & "_" & ($nmb + 1) & ".bak", $tagbak & "_" & $nmb & ".bak", 1)
+					Next
+					FileCopy($tagfle, $endtag, 1)
+				EndIf
+			Else
+				; Add current Tags file as newest backup in an empty slot.
+				For $nmb = 1 To 5
+					$tagbak = $backups & "\Tags.ini_" & $nmb & ".bak"
+					If Not FileExists($tagbak) Then
+						If $nmb = 1 Then
+							FileCopy($tagfle, $tagbak)
+						Else
+							$bdate = FileGetTime($endtag, 0, 1)
+							If $bdate <> $ndate Then
+								FileCopy($tagfle, $tagbak)
+							EndIf
+						EndIf
+						ExitLoop
+					EndIf
+					$endtag = $tagbak
+				Next
+			EndIf
+			; Backup the Log file etc. INDEPEDENT BACKUP.
+			$ndate = FileGetTime($logfle, 0, 1)
+			$endlog = $backups & "\Log.txt_5.bak"
+			If FileExists($endlog) Then
+				$bdate = FileGetTime($endlog, 0, 1)
+				If $bdate <> $ndate Then
+					; Add current Log file as newest backup.
+					$logbak = $backups & "\Log.txt"
+					For $nmb = 1 To 4
+						FileMove($logbak & "_" & ($nmb + 1) & ".bak", $logbak & "_" & $nmb & ".bak", 1)
+					Next
+					FileCopy($logfle, $endlog, 1)
+				EndIf
+			Else
+				; Add current Log file as newest backup in an empty slot.
+				For $nmb = 1 To 5
+					$logbak = $backups & "\Log.txt_" & $nmb & ".bak"
+					If Not FileExists($logbak) Then
+						If $nmb = 1 Then
+							FileCopy($logfle, $logbak)
+						Else
+							$bdate = FileGetTime($endlog, 0, 1)
+							If $bdate <> $ndate Then
+								FileCopy($logfle, $logbak)
+							EndIf
+						EndIf
+						ExitLoop
+					EndIf
+					$endlog = $logbak
+				Next
+			EndIf
+			; Backup the Compare file etc. INDEPEDENT BACKUP.
+			$ndate = FileGetTime($compare, 0, 1)
+			$endcomp = $backups & "\Comparisons.txt_5.bak"
+			If FileExists($endcomp) Then
+				$bdate = FileGetTime($endcomp, 0, 1)
+				If $bdate <> $ndate Then
+					; Add current Compare file as newest backup.
+					$compbak = $backups & "\Comparisons.txt"
+					For $nmb = 1 To 4
+						FileMove($compbak & "_" & ($nmb + 1) & ".bak", $compbak & "_" & $nmb & ".bak", 1)
+					Next
+					FileCopy($compare, $endcomp, 1)
+				EndIf
+			Else
+				; Add current Compare file as newest backup in an empty slot.
+				For $nmb = 1 To 5
+					$compbak = $backups & "\Comparisons.txt_" & $nmb & ".bak"
+					If Not FileExists($compbak) Then
+						If $nmb = 1 Then
+							FileCopy($compare, $compbak)
+						Else
+							$bdate = FileGetTime($endcomp, 0, 1)
+							If $bdate <> $ndate Then
+								FileCopy($compare, $compbak)
+							EndIf
+						EndIf
+						ExitLoop
+					EndIf
+					$endcomp = $compbak
+				Next
+			EndIf
+			; Backup the Settings file etc. INDEPEDENT BACKUP.
+			$ndate = FileGetTime($inifle, 0, 1)
+			$endset = $backups & "\Settings.ini_5.bak"
+			If FileExists($endset) Then
+				$bdate = FileGetTime($endset, 0, 1)
+				If $bdate <> $ndate Then
+					; Add current Settings file as newest backup.
+					$setbak = $backups & "\Settings.ini"
+					For $nmb = 1 To 4
+						FileMove($setbak & "_" & ($nmb + 1) & ".bak", $setbak & "_" & $nmb & ".bak", 1)
+					Next
+					FileCopy($inifle, $endset, 1)
+				EndIf
+			Else
+				; Add current Settings file as newest backup in an empty slot.
+				$read = FileRead($inifle)
+				For $nmb = 1 To 5
+					$setbak = $backups & "\Settings.ini_" & $nmb & ".bak"
+					If Not FileExists($setbak) Then
+						If $nmb = 1 Then
+							FileCopy($inifle, $setbak)
+						Else
+							If $read <> FileRead($endset) Then
+								$bdate = FileGetTime($endset, 0, 1)
+								If $bdate <> $ndate Then
+									FileCopy($inifle, $setbak)
+								EndIf
+							EndIf
+						EndIf
+						ExitLoop
+					EndIf
+					$endset = $setbak
+				Next
+			EndIf
+			; Backup the Cookie file etc. INDEPEDENT BACKUP.
+			$ndate = FileGetTime($cookies, 0, 1)
+			$endcook = $backups & "\Cookie.txt_5.bak"
+			If FileExists($endcook) Then
+				$bdate = FileGetTime($endcook, 0, 1)
+				If $bdate <> $ndate Then
+					; Add current Cookie file as newest backup.
+					$cookbak = $backups & "\Cookie.txt"
+					For $nmb = 1 To 4
+						FileMove($cookbak & "_" & ($nmb + 1) & ".bak", $cookbak & "_" & $nmb & ".bak", 1)
+					Next
+					FileCopy($cookies, $endcook, 1)
+				EndIf
+			Else
+				; Add current Cookie file as newest backup in an empty slot.
+				For $nmb = 1 To 5
+					$cookbak = $backups & "\Cookie.txt_" & $nmb & ".bak"
+					If Not FileExists($cookbak) Then
+						If $nmb = 1 Then
+							FileCopy($cookies, $cookbak)
+						Else
+							$bdate = FileGetTime($endcook, 0, 1)
+							If $bdate <> $ndate Then
+								FileCopy($cookies, $cookbak)
+							EndIf
+						EndIf
+						ExitLoop
+					EndIf
+					$endcook = $cookbak
+				Next
+			EndIf
+		EndIf
+	EndIf
+EndFunc ;=> BackupManifestEtc
 
 Func ClearFieldValues()
 	$ID = ""

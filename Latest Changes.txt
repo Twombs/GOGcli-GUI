@@ -1,13 +1,6 @@
-Bugfix for download speed (forgot to reset the timer after a download completes).
+A backup regime has been implemented. Specific files are checked at program start, and if changed a numbered backup is created in a sub-folder called 'Backups'. Up to five backups are kept per file and cycled, with the oldest being replaced.
 
-The progress bar on the 'Game Files Selector' window, has had some improvements.
-Bar is GREEN when downloading.
-Bar is RED after MD5 checking.
-Bar is YELLOW after zip checking.
-Bar remains an incremental percentage when downloading, but changes to a green continuous scrolling marquee when MD5 or zip checking. It remains GREEN until each checking process has completed, then shows 100% and changes to either RED or YELLOW momentarily.
+Added a 'Check & Fix The Manifest' right-click 'Games' list menu option. This checks the manifest for corruption and reports instances found.
 
-The count limit for 'MANIFEST LIST' has been upped from 10 to 20.
-The count limit for 'DOWNLOAD LIST' has been upped from 10 to 15.
-In some ways these limits are somewhat arbitrary, except waiting time is increased while building a downloads list, before files are shown in the list on the 'Game Files Selector' window. Though in the case of the manifest list, it doesn't have that issue, so I may increase that limit again in another update ... depends on my usage desires or requirements ... probably.
-
-Discovered and fixed an issue with a possible file name change by GOG, that effects download reporting and checking. The program now checks for this, if the 'Download the latest game file information' option on the SETUP window is not enabled, and deals with it, and reports on it if found, which can be checked in the new 'Alerts.txt' file (also accessible via a 'Games' list right-click menu 'Alerts' option). NOTE - Any alert is shown in the 'Cover or Status' field, until a game title is selected, and persists on program restart, until cleared via that right-click 'Alerts' menu option. This means you still get advised even after using a SHUTDOWN option. IMPORTANT - You only ever get alerted. The 'Manifest.txt' file is not updated with the correct (changed) values. So it is recommended you do an 'ADD TO MANIFEST' for the game(s) affected, with the 'Download the latest game file information' option enabled, to replace existing.
+Tutor_41.png
+gogcli_results.png
