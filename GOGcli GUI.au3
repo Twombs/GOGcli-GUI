@@ -139,10 +139,10 @@ Func MainGUI()
 	Local $Item_compare_red, $Item_compare_rep, $Item_compare_report, $Item_compare_view, $Item_compare_wipe
 	Local $Item_compare_yellow, $Item_manifest_fix, $Item_view_down, $Item_view_man
 	;
-	Local $accept, $alias, $aqua, $buttxt, $c, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display, $dll
-	Local $e, $exist, $existing, $fext, $filelist, $find, $flename, $foldpth, $IDD, $ids, $ind, $l, $language, $languages
-	Local $last, $latest, $loop, $mans, $mpos, $OPS, $orange, $p, $pos, $prior, $red, $result, $retrieve, $slugD, $tagtxt
-	Local $tested, $titleD, $valfold, $xpos, $yellow, $ypos
+	Local $accept, $alias, $aqua, $buttxt, $c, $chunk, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display
+	Local $dll, $e, $exist, $existing, $fext, $filelist, $find, $fixed, $flename, $foldpth, $IDD, $ids, $ind, $l, $language
+	Local $languages, $last, $latest, $loop, $mans, $mpos, $OPS, $orange, $p, $pos, $prior, $red, $result, $retrieve, $slugD
+	Local $tagtxt, $tested, $titleD, $valfold, $xpos, $yellow, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -2225,22 +2225,29 @@ Func MainGUI()
 		Case $msg = $Item_manifest_fix
 			; Check & Fix The Manifest
 			If FileExists($manifest) Then
+				SetStateOfControls($GUI_DISABLE, "all")
+				GUICtrlSetImage($Pic_cover, $blackjpg)
+				GUICtrlSetData($Label_mid, "Checking The Manifest")
 				$read = FileRead($manifest)
 				If $read <> "" Then
+					_FileWriteLog($logfle, "Checking for corrupted manifest entries.", -1)
+					$chunk = ""
+					$fixed = 0
 					$result = ""
 					$sects = 0
 					$parts = StringSplit($read, '"Games":', 1)
 					For $p = 1 To $parts[0]
-						$part = $parts[$p]
-						$ids = StringSplit($part, '"Id":', 1)
+						$chunk = $parts[$p]
+						$ids = StringSplit($chunk, '"Id":', 1)
 						If $ids[0] > 2 Then
 							$part = ""
 							$sects = $sects + 1
 							If $result = "" Then
-								$result = $sects
+								$result = "(" & $sects & ")"
 							Else
-								$result = $result & @LF & $sects
+								$result = $result & @LF & "(" & $sects & ")"
 							EndIf
+							_FileWriteLog($logfle, "Corrupted manifest entry contains the following.", -1)
 							For $s = 1 To $ids[0]
 								$sect = $ids[$s]
 								If StringInStr($sect, '"Title":') > 0 Then
@@ -2250,13 +2257,56 @@ Func MainGUI()
 									$part = StringReplace($part, "," & @LF, "")
 									$part = StringStripWS($part, 7)
 									$result = $result & @LF & $part
+									_FileWriteLog($logfle, $part, -1)
 								EndIf
 							Next
+							$chunk = '{' & @LF & '  "Games":' & $chunk
+							$chunk = StringStripWS($chunk, 2)
+							If StringRight($chunk, 1) = '{' Then
+								$chunk = StringTrimRight($chunk, 1)
+							Else
+								$chunk = @LF & StringStripWS($chunk, 2)
+							EndIf
+							; Testing
+							;$chunk = StringRight($chunk, 300)
+							;MsgBox(262208, "Results", '"' & $chunk & '"')
+							;$pos = StringInStr($manifest, $chunk)
+							;MsgBox(262208, "$pos", $pos)
+							;$remove = 1
+							;If $remove = 1 Then
+								$rep = _ReplaceStringInFile($manifest, $chunk, "")
+								If $rep = 0 Then
+									;MsgBox(262208, "$rep", $rep)
+									$chunk =StringStripWS($chunk, 1)
+									$rep = _ReplaceStringInFile($manifest, $chunk, "")
+								EndIf
+								If $rep = 1 Then
+									$fixed = $fixed + 1
+									_FileWriteLog($logfle, "Fixed (removed).", -1)
+								EndIf
+								;MsgBox(262208, "$rep", $rep)
+							;EndIf
+							;ExitLoop
 						EndIf
 					Next
-					If $sects > 0 Then MsgBox(262208, "Results", $sects & " corrupted manifest entries." & @LF & @LF & $result)
+					If $sects > 0 Then
+						MsgBox(262208, "Results", $sects & " corrupted manifest entry(s)." & @LF _
+							& $fixed & " corrupted entry(s) fixed (removed)."& @LF _
+							& "See the 'Log' file for details."& @LF _
+							& "You will need to add at least one entry back for each.", 0, $GOGcliGUI)
+							;& "You will need to add at least one entry back for each." & @LF & @LF _
+							;& $result, 0, $GOGcliGUI)
+					Else
+						_FileWriteLog($logfle, "No corrupted manifest entries found.", -1)
+						MsgBox(262208, "Results", "No corrupted manifest entries found.", 0, $GOGcliGUI)
+					EndIf
+					FileWriteLine($logfle, "")
 				EndIf
+				SetStateOfControls($GUI_ENABLE, "all")
+				GUICtrlSetData($Label_mid, "")
 			EndIf
+			;_GUICtrlListView_SetItemSelected($Listview_games, $ind, True, True)
+			;GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Item_down_all
 			; Download ALL Manifests
 			If $manall = 4 Then
