@@ -2,7 +2,7 @@
 
 ![gogcli_main_5](https://github.com/Twombs/GOGcli-GUI/blob/main/Screenshots/gogcli_main_10.png?raw=true)
 
-Frontend program for gogcli.exe by Magnitus.
+Frontend program for gogcli.exe by Magnitus. BIG THANKS to him.
 
 https://github.com/Magnitus-/gogcli
 
