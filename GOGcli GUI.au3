@@ -46,7 +46,7 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $version
 
-$version = "v1.6"
+$version = "v1.7"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -76,18 +76,18 @@ EndIf
 
 Global $Button_dest, $Button_dir, $Button_down, $Button_exit, $Button_find, $Button_fold, $Button_game, $Button_get, $Button_info
 Global $Button_last, $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_sub, $Button_tag, $Button_web, $Checkbox_alpha
-Global $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_OS
-Global $Input_slug, $Input_title, $Input_ups, $Item_down_all, $Item_verify_file, $Item_verify_game, $Label_bed, $Label_cat
-Global $Label_dlc, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
+Global $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_key
+Global $Input_OS, $Input_slug, $Input_title, $Input_ups, $Item_down_all, $Item_verify_file, $Item_verify_game, $Label_bed
+Global $Label_cat, $Label_dlc, $Label_key, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
 Global $7zip, $a, $addlist, $alert, $alerts, $alf, $alpha, $ans, $array, $backups, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category
-Global $checksum, $checkval, $cnt, $compare, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest, $details, $DLC, $done, $downfiles
-Global $downlist, $download, $downloads, $drv, $entries, $entry, $erred, $exists, $f, $file, $fileinfo, $filepth, $files, $filesize, $flag
-Global $fold, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $hash, $head
-Global $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json, $keep, $lang
-Global $left, $line, $lines, $link, $list, $listed, $listview, $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist, $md5check
-Global $minimize, $model, $n, $name, $num, $numb, $OP, $OS, $OSes, $overlook, $params, $part, $parts, $percent, $ping, $progress, $pth
-Global $ratify, $read, $record, $reportexe, $res, $ret, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld
+Global $cdkey, $cdkeys, $checksum, $checkval, $cnt, $compare, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest, $details, $DLC
+Global $done, $downfiles, $downlist, $download, $downloads, $drv, $entries, $entry, $erred, $exists, $f, $file, $fileinfo, $filepth, $files
+Global $filesize, $flag, $fold, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI
+Global $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json
+Global $keep, $lang, $left, $line, $lines, $link, $list, $listed, $listview, $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist
+Global $md5check, $minimize, $model, $n, $name, $num, $numb, $OP, $OS, $OSes, $overlook, $params, $part, $parts, $percent, $ping, $progress
+Global $pth, $ratify, $read, $record, $reportexe, $res, $ret, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld
 Global $space, $splash, $split, $splits, $state, $style, $tag, $tagfle, $tail, $text, $title, $titleF, $titlist, $top, $type, $types
 Global $updated, $updates, $URL, $user, $validate, $verify, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
 ;, $foldzip, $resultfle
@@ -97,6 +97,7 @@ $alerts = @ScriptDir & "\Alerts.txt"
 $backups = @ScriptDir & "\Backups"
 $bigpic = @ScriptDir & "\Big.jpg"
 $blackjpg = @ScriptDir & "\Black.jpg"
+$cdkeys = @ScriptDir & "\CDkeys.ini"
 $compare = @ScriptDir & "\Comparisons.txt"
 $cookies = @ScriptDir & "\Cookie.txt"
 $covers = @ScriptDir & "\Covers"
@@ -286,7 +287,17 @@ Func MainGUI()
 	GUICtrlSetFont($Input_ups, 8, 400)
 	GUICtrlSetTip($Input_ups, "Game updates!")
 	;
-	$Button_game = GuiCtrlCreateButton("GAME DETAILS", 470, 271, 110, 21)
+	$Label_key = GuiCtrlCreateLabel("KEY", 465, 272, 31, 19, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_key, $COLOR_BLUE)
+	GUICtrlSetColor($Label_key, $COLOR_WHITE)
+	GUICtrlSetFont($Label_key, 8, 400)
+	$Input_key = GUICtrlCreateInput("", 496, 272, 15, 19, $ES_READONLY)
+	GUICtrlSetBkColor($Input_key, 0xBBFFBB)
+	GUICtrlSetFont($Input_key, 8, 400)
+	GUICtrlSetTip($Input_key, "Game Key or Code etc!")
+	;
+	;$Button_game = GuiCtrlCreateButton("GAME DETAILS", 470, 271, 110, 21)
+	$Button_game = GuiCtrlCreateButton("DETAILS", 516, 271, 64, 21)
 	GUICtrlSetFont($Button_game, 7, 600, 0, "Small Fonts")
 	GUICtrlSetTip($Button_game, "View details of selected game!")
 	;
@@ -994,6 +1005,12 @@ Func MainGUI()
 																GUICtrlSetData($Input_dlc, $DLC)
 																$updates = IniRead($gamesini, $ID, "updates", "")
 																GUICtrlSetData($Input_ups, $updates)
+																$cdkey = IniRead($cdkeys, $ID, "keycode", "")
+																If $cdkey = "" Then
+																	GUICtrlSetData($Input_key, 0)
+																Else
+																	GUICtrlSetData($Input_key, 1)
+																EndIf
 																GetManifestForTitle()
 																If $erred > 0 Then ExitLoop
 																If GUICtrlRead($Checkbox_stop) = $GUI_CHECKED Then
@@ -1109,6 +1126,7 @@ Func MainGUI()
 					"guarantee the results (or my read) of any 3rd party programs." & @LF & _
 					"This is Freeware that I have voluntarily given many hours to." & @LF & @LF & _
 					"BIG THANKS to Magnitus for 'gogcli.exe'.   (Model = " & $model & ")" & @LF & @LF & _
+					"BIG THANKS to TerriblePurpose for encouragment support." & @LF & @LF & _
 					"BIG thanks to j0kky (AutoIt Forum) for download size help," & @LF & _
 					"and to torels_ & smashley (AutoIt Forum) for zip functions." & @LF & _
 					"Praise & BIG thanks as always, to Jon & team for free AutoIt." & @LF & @LF & _
@@ -1290,6 +1308,12 @@ Func MainGUI()
 												GUICtrlSetData($Input_dlc, $DLC)
 												$updates = IniRead($gamesini, $ID, "updates", "")
 												GUICtrlSetData($Input_ups, $updates)
+												$cdkey = IniRead($cdkeys, $ID, "keycode", "")
+												If $cdkey = "" Then
+													GUICtrlSetData($Input_key, 0)
+												Else
+													GUICtrlSetData($Input_key, 1)
+												EndIf
 												CompareFilesToManifest("all")
 												If $erred > 2 Or ($erred = 1 And $ignore = 4) Or ($erred = 2 And $overlook = 4) Then ExitLoop
 												If GUICtrlRead($Checkbox_quit) = $GUI_CHECKED Then
@@ -1329,51 +1353,77 @@ Func MainGUI()
 			If $ID = "" Then
 				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
 			Else
-				If FileExists($cookies) Then
-					$res = _FileReadToArray($cookies, $array)
-					If $res = 1 Then
-						For $a = 1 To $array[0]
-							$line = $array[$a]
-							If $line <> "" Then
-								If StringLeft($line, 7) = "gog-al=" Then
-									SetStateOfControls($GUI_DISABLE, "all")
-									$ping = Ping("gog.com", 4000)
-									If $ping > 0 Then
-										GUICtrlSetImage($Pic_cover, $blackjpg)
-										GUICtrlSetData($Label_mid, "Retrieving Game Detail")
-										If $minimize = 1 Then
-											$flag = @SW_MINIMIZE
-										Else
-											$flag = @SW_SHOW
-										EndIf
-										FileChangeDir(@ScriptDir)
-										$params = "-c Cookie.txt gog-api game-details -i " & $ID
-										$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params & ' >"' & $details & '"', @ScriptDir, $flag)
-										Sleep(1000)
-										If FileExists($details) Then
-											_ReplaceStringInFile($details, @LF, @CRLF)
-											_FileWriteLog($logfle, "GET DETAILS - " & $title, -1)
-											FileWriteLine($logfle, "")
-											Sleep(500)
-											ShellExecute($details)
-										EndIf
-										GUICtrlSetData($Label_mid, "")
-									Else
-										MsgBox(262192, "Web Error", "No connection detected!", 0, $GOGcliGUI)
-									EndIf
-									SetStateOfControls($GUI_ENABLE, "all")
-									GUICtrlSetState($Listview_games, $GUI_FOCUS)
-									_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
-									ContinueLoop 2
-								EndIf
-							EndIf
-						Next
-						MsgBox(262192, "Cookie Error", "The 'Cookie.txt' file doesn't contain a line starting with 'gog-al='.", 0, $GOGcliGUI)
-					Else
-						MsgBox(262192, "Content Error", "The 'Cookie.txt' file appears to be empty!", 0, $GOGcliGUI)
+				If $cdkey <> "" Then
+					$cdkey = StringReplace($cdkey, "\u003c/span\u003e\u003cspan\u003e", @CRLF)
+					$cdkey = StringReplace($cdkey, "\t\u003cbr\u003e", @CRLF)
+					$cdkey = StringReplace($cdkey, "\u003cspan\u003e", "")
+					$cdkey = StringReplace($cdkey, "\u003c/span\u003e", "")
+					$cdkey = StringReplace($cdkey, "\u003cbr\u003e\t", " ")
+					$cdkey = StringReplace($cdkey, "\u003cbr\u003e", " ")
+					$cdkey = StringReplace($cdkey, "\u0000", "")
+					;$cdkey = "XXXXX-XXXXX-XXXXX-XXXXX"
+					$ans = MsgBox(262179 + 256, "Game Key, Code or Redeem Link", _
+						$cdkey & @LF & @LF & _
+						"Continuing getting 'Game Details' from GOG?" & @LF & @LF & _
+						"YES = Continue (no copying)." & @LF & _
+						"NO = Copy to clipboard & close." & @LF & _
+						"CANCEL = Just close.", 0, $GOGcliGUI)
+					If $ans = 2 Then
+						ContinueLoop
+					ElseIf $ans = 7 Then
+						ClipPut($cdkey)
+						ContinueLoop
 					EndIf
 				Else
-					MsgBox(262192, "File Error", "The 'Cookie.txt' file is missing!", 0, $GOGcliGUI)
+					$ans = 6
+				EndIf
+				If $ans = 6 Then
+					If FileExists($cookies) Then
+						$res = _FileReadToArray($cookies, $array)
+						If $res = 1 Then
+							For $a = 1 To $array[0]
+								$line = $array[$a]
+								If $line <> "" Then
+									If StringLeft($line, 7) = "gog-al=" Then
+										SetStateOfControls($GUI_DISABLE, "all")
+										$ping = Ping("gog.com", 4000)
+										If $ping > 0 Then
+											GUICtrlSetImage($Pic_cover, $blackjpg)
+											GUICtrlSetData($Label_mid, "Retrieving Game Detail")
+											If $minimize = 1 Then
+												$flag = @SW_MINIMIZE
+											Else
+												$flag = @SW_SHOW
+											EndIf
+											FileChangeDir(@ScriptDir)
+											$params = "-c Cookie.txt gog-api game-details -i " & $ID
+											$pid = RunWait(@ComSpec & ' /c gogcli.exe ' & $params & ' >"' & $details & '"', @ScriptDir, $flag)
+											Sleep(1000)
+											If FileExists($details) Then
+												_ReplaceStringInFile($details, @LF, @CRLF)
+												_FileWriteLog($logfle, "GET DETAILS - " & $title, -1)
+												FileWriteLine($logfle, "")
+												Sleep(500)
+												ShellExecute($details)
+											EndIf
+											GUICtrlSetData($Label_mid, "")
+										Else
+											MsgBox(262192, "Web Error", "No connection detected!", 0, $GOGcliGUI)
+										EndIf
+										SetStateOfControls($GUI_ENABLE, "all")
+										GUICtrlSetState($Listview_games, $GUI_FOCUS)
+										_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+										ContinueLoop 2
+									EndIf
+								EndIf
+							Next
+							MsgBox(262192, "Cookie Error", "The 'Cookie.txt' file doesn't contain a line starting with 'gog-al='.", 0, $GOGcliGUI)
+						Else
+							MsgBox(262192, "Content Error", "The 'Cookie.txt' file appears to be empty!", 0, $GOGcliGUI)
+						EndIf
+					Else
+						MsgBox(262192, "File Error", "The 'Cookie.txt' file is missing!", 0, $GOGcliGUI)
+					EndIf
 				EndIf
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
@@ -1833,6 +1883,20 @@ Func MainGUI()
 																	FileWrite($manifest, $game)
 																EndIf
 																_FileWriteLog($logfle, "ADD to manifest", -1)
+															EndIf
+															; Check for CDKey
+															$cdkey = StringSplit($game, '"CdKey":', 1)
+															If $cdkey[0] = 2 Then
+																$cdkey = $cdkey[2]
+																$cdkey = StringSplit($cdkey, '",', 1)
+																$cdkey = $cdkey[1]
+																$cdkey = StringReplace($cdkey, '"', '')
+																$cdkey = StringStripWS($cdkey, 3)
+																If $cdkey <> "" Then
+																	IniWrite($cdkeys, $ID, "title", $title)
+																	IniWrite($cdkeys, $ID, "keycode", $cdkey)
+																	_FileWriteLog($logfle, "CDKey found.", -1)
+																EndIf
 															EndIf
 															FileWriteLine($logfle, "")
 														Else
@@ -2300,6 +2364,57 @@ Func MainGUI()
 						_FileWriteLog($logfle, "No corrupted manifest entries found.", -1)
 						MsgBox(262208, "Results", "No corrupted manifest entries found.", 0, $GOGcliGUI)
 					EndIf
+					Local $keycheck = IniRead($inifle, "Manifest Check", "cdkeys", "")
+					If $keycheck = "" Then
+						; Once Off Check for CDKey.
+						$read = FileRead($manifest)
+						If $read <> "" Then
+							Local $k, $keys = 0
+							FileWriteLine($logfle, "")
+							_FileWriteLog($logfle, "Checking for CDKeys (Once Off).", -1)
+							IniWrite($inifle, "Manifest Check", "cdkeys", "1")
+							GUICtrlSetData($Label_mid, "Checking For CDKeys")
+							$chunk = ""
+							$parts = StringSplit($read, '"Games":', 1)
+							For $k = 1 To $parts[0]
+								$chunk = $parts[$k]
+								$IDD = StringSplit($chunk, '"Id":', 1)
+								If $IDD[0] = 2 Then
+									$IDD = $IDD[2]
+									$IDD = StringSplit($IDD, ',', 1)
+									$IDD = $IDD[1]
+									$IDD = StringStripWS($IDD, 3)
+									$titleD = StringSplit($chunk, '"Title": "', 1)
+									If $titleD[0] > 1 Then
+										$titleD = $titleD[2]
+										$titleD = StringSplit($titleD, '",', 1)
+										$titleD = $titleD[1]
+										$titleD = StringStripWS($titleD, 3)
+										;$titleD = FixTitle($titleD)
+										$titleD = StringReplace($titleD, "\u0026", "&")
+										; Check for CDKey
+										$cdkey = StringSplit($chunk, '"CdKey":', 1)
+										If $cdkey[0] = 2 Then
+											$cdkey = $cdkey[2]
+											$cdkey = StringSplit($cdkey, '",', 1)
+											$cdkey = $cdkey[1]
+											$cdkey = StringReplace($cdkey, '"', '')
+											$cdkey = StringStripWS($cdkey, 3)
+											If $cdkey <> "" Then
+												$keys = $keys + 1
+												IniWrite($cdkeys, $IDD, "title", $titleD)
+												IniWrite($cdkeys, $IDD, "keycode", $cdkey)
+												_FileWriteLog($logfle, $titleD, -1)
+												_FileWriteLog($logfle, "CDKey found.", -1)
+											EndIf
+										EndIf
+									EndIf
+								EndIf
+							Next
+							_FileWriteLog($logfle, $keys & " CDKey entries found.", -1)
+							MsgBox(262208, "Results", $keys & " CDKey entries found.", 0, $GOGcliGUI)
+						EndIf
+					EndIf
 					FileWriteLine($logfle, "")
 				EndIf
 				SetStateOfControls($GUI_ENABLE, "all")
@@ -2491,6 +2606,12 @@ Func MainGUI()
 			GUICtrlSetData($Input_dlc, $DLC)
 			$updates = IniRead($gamesini, $ID, "updates", "")
 			GUICtrlSetData($Input_ups, $updates)
+			$cdkey = IniRead($cdkeys, $ID, "keycode", "")
+			If $cdkey = "" Then
+				GUICtrlSetData($Input_key, 0)
+			Else
+				GUICtrlSetData($Input_key, 1)
+			EndIf
 			$tagtxt = IniRead($tagfle, $ID, "comment", "")
 			If $tagtxt <> "" Then
 				MsgBox(262208, "Tag Comment", $tagtxt, 0, $GOGcliGUI)
@@ -4404,6 +4525,8 @@ Func ClearFieldValues()
 	GUICtrlSetData($Input_dlc, $DLC)
 	$updates = ""
 	GUICtrlSetData($Input_ups, $updates)
+	$cdkey = ""
+	GUICtrlSetData($Input_key, $cdkey)
 EndFunc ;=> ClearFieldValues
 
 Func CompareFilesToManifest($numb)
@@ -4885,6 +5008,20 @@ Func GetManifestForTitle()
 					EndIf
 					_FileWriteLog($logfle, "ADD to manifest.", -1)
 				EndIf
+				; Check for CDKey
+				$cdkey = StringSplit($game, '"CdKey":', 1)
+				If $cdkey[0] = 2 Then
+					$cdkey = $cdkey[2]
+					$cdkey = StringSplit($cdkey, '",', 1)
+					$cdkey = $cdkey[1]
+					$cdkey = StringReplace($cdkey, '"', '')
+					$cdkey = StringStripWS($cdkey, 3)
+					If $cdkey <> "" Then
+						IniWrite($cdkeys, $ID, "title", $title)
+						IniWrite($cdkeys, $ID, "keycode", $cdkey)
+						_FileWriteLog($logfle, "CDKey found.", -1)
+					EndIf
+				EndIf
 				FileWriteLine($logfle, "")
 			Else
 				; Game ID not found in return.
@@ -5168,6 +5305,20 @@ Func RetrieveDataFromGOG($listed, $list)
 														FileWrite($manifest, $game)
 													EndIf
 													_FileWriteLog($logfle, "ADD to manifest", -1)
+												EndIf
+												; Check for CDKey
+												$cdkey = StringSplit($game, '"CdKey":', 1)
+												If $cdkey[0] = 2 Then
+													$cdkey = $cdkey[2]
+													$cdkey = StringSplit($cdkey, '",', 1)
+													$cdkey = $cdkey[1]
+													$cdkey = StringReplace($cdkey, '"', '')
+													$cdkey = StringStripWS($cdkey, 3)
+													If $cdkey <> "" Then
+														IniWrite($cdkeys, $IDD, "title", $titleD)
+														IniWrite($cdkeys, $IDD, "keycode", $cdkey)
+														_FileWriteLog($logfle, "CDKey found.", -1)
+													EndIf
 												EndIf
 												FileWriteLine($logfle, "")
 												If $list = "manifest" Then _ReplaceStringInFile($manlist, $line, "")

@@ -1,10 +1,14 @@
-A backup regime has been implemented. Specific files are checked at program start, and if changed a numbered backup is created in a sub-folder called 'Backups'. Up to five backups are kept per file and cycled, with the oldest being replaced.
+Added a once off CDKey check to the 'Check & Fix The Manifest' right-click 'Games' list menu option process. This checks for CDKeys in you manifest, for entries you have added, prior to using this version (v1.7) of GOGcli GUI. You can only use the CDKey check once, without then needing to modify a value in the 'Settings.ini' file.
 
-Added a 'Check & Fix The Manifest' right-click 'Games' list menu option. This checks the manifest for corruption, fixes any found and reports those instances. NOTE - No instances should be found with the current GOGcli GUI version, unless a much older version had been used (v1.0 or less).
+From v1.7 onward, CDKeys are detected during the adding or replacement of manifest entries, and stored in a 'CDkeys.ini' file.
 
-Tutor_41.png
-gogcli_results.png
-gogcli_results_2.png
+The main GUI has had the 'GAME DETAILS' button shrunk to just 'DETAILS', and to its left is a new 'KEY' label and field.
 
-Tutor_42.png
-Tutor_43.png
+If a game is noted as having a CDKey entry, the 'KEY' input field will show '1'.
+
+To see the CDKey value, click the 'DETAILS' button. This shows you the key and allows copying it to the clipboard, or just continuing on with the previous 'Get Game Details from GOG' process.
+
+gogcli_main_11.png
+
+Tutor_44.png
+Tutor_45.png
