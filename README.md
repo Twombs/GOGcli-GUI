@@ -6,7 +6,7 @@ Frontend program for gogcli.exe by Magnitus.
 
 https://github.com/Magnitus-/gogcli
 
-In development still, but version 1.1 of GOGcli GUI has been completed.
+Version 1.6 of GOGcli GUI is now available.
 
 Downloading from the 'Game Files Selector' window now supported.
 
@@ -32,4 +32,4 @@ Compare options added and 'Manifest Comparison Report' GUI.
 
 See the Wiki link above, for more information and a tutorial.
 
-See the First Full Release!
+BIG BIG THANKS to TerriblePurpose for their support and encouragement.
