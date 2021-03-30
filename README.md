@@ -1,12 +1,12 @@
 # GOGcli-GUI
 
-![gogcli_main_5](https://github.com/Twombs/GOGcli-GUI/blob/main/Screenshots/gogcli_main_11.png?raw=true)
+![gogcli_main_5](https://github.com/Twombs/GOGcli-GUI/blob/main/Screenshots/gogcli_main_12.png?raw=true)
 
 Frontend program for gogcli.exe by Magnitus. BIG THANKS to him.
 
 https://github.com/Magnitus-/gogcli
 
-Version 1.7 of GOGcli GUI is now available.
+Version 1.8 of GOGcli GUI is now available.
 
 Downloading from the 'Game Files Selector' window now supported.
 
@@ -29,6 +29,8 @@ Multiple games (up to 10), can now be downloaded via the 'Game Files Selector' w
 Game title entry tagging (with comments) now implemented.
 
 Compare options added and 'Manifest Comparison Report' GUI.
+
+CDKeys and DLCs are now detected and recorded for checking.
 
 See the Wiki link above, for more information and a tutorial.
 
