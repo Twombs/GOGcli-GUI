@@ -46,7 +46,7 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $version
 
-$version = "v1.7"
+$version = "v1.8"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -82,7 +82,7 @@ Global $Label_cat, $Label_dlc, $Label_key, $Label_mid, $Label_OS, $Label_slug, $
 
 Global $7zip, $a, $addlist, $alert, $alerts, $alf, $alpha, $ans, $array, $backups, $bigcover, $bigpic, $blackjpg, $bytes, $caption, $category
 Global $cdkey, $cdkeys, $checksum, $checkval, $cnt, $compare, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest, $details, $DLC
-Global $done, $downfiles, $downlist, $download, $downloads, $drv, $entries, $entry, $erred, $exists, $f, $file, $fileinfo, $filepth, $files
+Global $dlcfile, $done, $downfiles, $downlist, $download, $downloads, $drv, $entries, $entry, $erred, $exists, $f, $file, $fileinfo, $filepth, $files
 Global $filesize, $flag, $fold, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI
 Global $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json
 Global $keep, $lang, $left, $line, $lines, $link, $list, $listed, $listview, $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist
@@ -102,6 +102,7 @@ $compare = @ScriptDir & "\Comparisons.txt"
 $cookies = @ScriptDir & "\Cookie.txt"
 $covers = @ScriptDir & "\Covers"
 $details = @ScriptDir & "\Detail.txt"
+$dlcfile = @ScriptDir & "\DLCs.ini"
 $downfiles = @ScriptDir & "\Downfiles.ini"
 $downlist = @ScriptDir & "\Downloads.txt"
 $fileinfo = @ScriptDir & "\Fileinfo.txt"
@@ -269,14 +270,14 @@ Func MainGUI()
 	GUICtrlSetFont($Input_OS, 8, 400)
 	GUICtrlSetTip($Input_OS, "Game OSes!")
 	;
-	$Label_dlc = GuiCtrlCreateLabel("DLC", 534, 248, 31, 19, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
-	GUICtrlSetBkColor($Label_dlc, $COLOR_BLUE)
-	GUICtrlSetColor($Label_dlc, $COLOR_WHITE)
-	GUICtrlSetFont($Label_dlc, 8, 400)
-	$Input_dlc = GUICtrlCreateInput("", 565, 248, 15, 19, $ES_READONLY)
-	GUICtrlSetBkColor($Input_dlc, 0xBBFFBB)
-	GUICtrlSetFont($Input_dlc, 8, 400)
-	GUICtrlSetTip($Input_dlc, "Game DLC!")
+	$Label_key = GuiCtrlCreateLabel("KEY", 534, 248, 31, 19, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_key, $COLOR_BLUE)
+	GUICtrlSetColor($Label_key, $COLOR_WHITE)
+	GUICtrlSetFont($Label_key, 8, 400)
+	$Input_key = GUICtrlCreateInput("", 565, 248, 15, 19, $ES_READONLY)
+	GUICtrlSetBkColor($Input_key, 0xBBFFBB)
+	GUICtrlSetFont($Input_key, 8, 400)
+	GUICtrlSetTip($Input_key, "Game Key or Code etc!")
 	;
 	$Label_ups = GuiCtrlCreateLabel("Updates", 390, 272, 52, 19, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetBkColor($Label_ups, $COLOR_BLUE)
@@ -287,18 +288,17 @@ Func MainGUI()
 	GUICtrlSetFont($Input_ups, 8, 400)
 	GUICtrlSetTip($Input_ups, "Game updates!")
 	;
-	$Label_key = GuiCtrlCreateLabel("KEY", 465, 272, 31, 19, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
-	GUICtrlSetBkColor($Label_key, $COLOR_BLUE)
-	GUICtrlSetColor($Label_key, $COLOR_WHITE)
-	GUICtrlSetFont($Label_key, 8, 400)
-	$Input_key = GUICtrlCreateInput("", 496, 272, 15, 19, $ES_READONLY)
-	GUICtrlSetBkColor($Input_key, 0xBBFFBB)
-	GUICtrlSetFont($Input_key, 8, 400)
-	GUICtrlSetTip($Input_key, "Game Key or Code etc!")
+	$Label_dlc = GuiCtrlCreateLabel("DLC", 465, 272, 31, 19, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_dlc, $COLOR_BLUE)
+	GUICtrlSetColor($Label_dlc, $COLOR_WHITE)
+	GUICtrlSetFont($Label_dlc, 8, 400)
+	$Input_dlc = GUICtrlCreateInput("", 496, 272, 21, 19, $ES_READONLY)
+	GUICtrlSetBkColor($Input_dlc, 0xBBFFBB)
+	GUICtrlSetFont($Input_dlc, 8, 400)
+	GUICtrlSetTip($Input_dlc, "Game DLC!")
 	;
-	;$Button_game = GuiCtrlCreateButton("GAME DETAILS", 470, 271, 110, 21)
-	$Button_game = GuiCtrlCreateButton("DETAILS", 516, 271, 64, 21)
-	GUICtrlSetFont($Button_game, 7, 600, 0, "Small Fonts")
+	$Button_game = GuiCtrlCreateButton("DETAILS", 522, 271, 58, 21)
+	GUICtrlSetFont($Button_game, 6, 600, 0, "Small Fonts")
 	GUICtrlSetTip($Button_game, "View details of selected game!")
 	;
 	$Checkbox_stop = GUICtrlCreateCheckbox("STOP", 410, 319, 50, 18)
@@ -1002,6 +1002,7 @@ Func MainGUI()
 																$OSes = IniRead($gamesini, $ID, "OSes", "")
 																GUICtrlSetData($Input_OS, $OSes)
 																$DLC = IniRead($gamesini, $ID, "DLC", "")
+																If $DLC = 0 Then $DLC = IniRead($dlcfile, $ID, "dlc", "0")
 																GUICtrlSetData($Input_dlc, $DLC)
 																$updates = IniRead($gamesini, $ID, "updates", "")
 																GUICtrlSetData($Input_ups, $updates)
@@ -1305,6 +1306,7 @@ Func MainGUI()
 												$OSes = IniRead($gamesini, $ID, "OSes", "")
 												GUICtrlSetData($Input_OS, $OSes)
 												$DLC = IniRead($gamesini, $ID, "DLC", "")
+												If $DLC = 0 Then $DLC = IniRead($dlcfile, $ID, "dlc", "0")
 												GUICtrlSetData($Input_dlc, $DLC)
 												$updates = IniRead($gamesini, $ID, "updates", "")
 												GUICtrlSetData($Input_ups, $updates)
@@ -1898,6 +1900,16 @@ Func MainGUI()
 																	_FileWriteLog($logfle, "CDKey found.", -1)
 																EndIf
 															EndIf
+															; Check for DLC
+															$DLC = StringSplit($game, '"DLC"', 1)
+															If $DLC[0] > 1 Then
+																$DLC = $DLC[0] - 1
+																If $DLC > 0 Then
+																	IniWrite($dlcfile, $ID, "title", $title)
+																	IniWrite($dlcfile, $ID, "dlc", $DLC)
+																	_FileWriteLog($logfle, "DLC(s) found.", -1)
+																EndIf
+															EndIf
 															FileWriteLine($logfle, "")
 														Else
 															; Game ID not found in return.
@@ -2415,6 +2427,53 @@ Func MainGUI()
 							MsgBox(262208, "Results", $keys & " CDKey entries found.", 0, $GOGcliGUI)
 						EndIf
 					EndIf
+					Local $dlccheck = IniRead($inifle, "Manifest Check", "dlc", "")
+					If $dlccheck = "" Then
+						; Once Off Check for DLCs.
+						$read = FileRead($manifest)
+						If $read <> "" Then
+							Local $d, $dlcs = 0
+							FileWriteLine($logfle, "")
+							_FileWriteLog($logfle, "Checking for DLCs (Once Off).", -1)
+							IniWrite($inifle, "Manifest Check", "dlc", "1")
+							GUICtrlSetData($Label_mid, "Checking For DLCs")
+							$chunk = ""
+							$parts = StringSplit($read, '"Games":', 1)
+							For $d = 1 To $parts[0]
+								$chunk = $parts[$d]
+								$IDD = StringSplit($chunk, '"Id":', 1)
+								If $IDD[0] = 2 Then
+									$IDD = $IDD[2]
+									$IDD = StringSplit($IDD, ',', 1)
+									$IDD = $IDD[1]
+									$IDD = StringStripWS($IDD, 3)
+									$titleD = StringSplit($chunk, '"Title": "', 1)
+									If $titleD[0] > 1 Then
+										$titleD = $titleD[2]
+										$titleD = StringSplit($titleD, '",', 1)
+										$titleD = $titleD[1]
+										$titleD = StringStripWS($titleD, 3)
+										;$titleD = FixTitle($titleD)
+										$titleD = StringReplace($titleD, "\u0026", "&")
+										; Check for DLC
+										$DLC = StringSplit($chunk, '"DLC"', 1)
+										If $DLC[0] > 1 Then
+											$DLC = $DLC[0] - 1
+											If $DLC > 0 Then
+												$dlcs = $dlcs + 1
+												IniWrite($dlcfile, $IDD, "title", $titleD)
+												IniWrite($dlcfile, $IDD, "dlc", $DLC)
+												_FileWriteLog($logfle, $titleD, -1)
+												_FileWriteLog($logfle, "DLC(s) found.", -1)
+											EndIf
+										EndIf
+									EndIf
+								EndIf
+							Next
+							_FileWriteLog($logfle, $dlcs & " DLC entries found.", -1)
+							MsgBox(262208, "Results", $dlcs & " DLC entries found.", 0, $GOGcliGUI)
+						EndIf
+					EndIf
 					FileWriteLine($logfle, "")
 				EndIf
 				SetStateOfControls($GUI_ENABLE, "all")
@@ -2603,6 +2662,7 @@ Func MainGUI()
 			$OSes = IniRead($gamesini, $ID, "OSes", "")
 			GUICtrlSetData($Input_OS, $OSes)
 			$DLC = IniRead($gamesini, $ID, "DLC", "")
+			If $DLC = 0 Then $DLC = IniRead($dlcfile, $ID, "dlc", "0")
 			GUICtrlSetData($Input_dlc, $DLC)
 			$updates = IniRead($gamesini, $ID, "updates", "")
 			GUICtrlSetData($Input_ups, $updates)
@@ -4237,16 +4297,19 @@ EndFunc ;=> FileSelectorGUI
 
 
 Func BackupManifestEtc()
-	Local $addbak, $bdate, $compbak, $cookbak, $endadd, $endbak, $endcomp, $endcook, $endgam, $endlog, $endman, $endset
-	Local $endtag, $endtit, $endupd, $gambak, $logbak, $manbak, $ndate, $nmb, $oldbak, $setbak, $tagbak, $titbak, $updbak
+	Local $addbak, $bdate, $compbak, $cookbak, $dlcbak, $endadd, $endbak, $endcomp, $endcook, $enddlc, $endgam, $endkey
+	Local $endlog, $endman, $endset, $endtag, $endtit, $endupd, $gambak, $keybak, $logbak, $manbak, $ndate, $nmb, $oldbak
+	Local $setbak, $tagbak, $titbak, $updbak
 	;
 	If FileExists($manifest) Then
 		If Not FileExists($backups) Then
 			; Create Backup folder and backup Manifest file etc for the first time.
 			DirCreate($backups)
 			FileCopy($addlist, $backups & "\Added.txt_1.bak")
+			FileCopy($cdkeys, $backups & "\CDkeys.ini_1.bak")
 			FileCopy($compare, $backups & "\Comparisons.txt_1.bak")
 			FileCopy($cookies, $backups & "\Cookie.txt_1.bak")
+			FileCopy($dlcfile, $backups & "\DLCs.ini_1.bak")
 			FileCopy($gamelist, $backups & "\Games.txt_1.bak")
 			FileCopy($gamesini, $backups & "\Games.ini_1.bak")
 			FileCopy($inifle, $backups & "\Settings.ini_1.bak")
@@ -4316,30 +4379,44 @@ Func BackupManifestEtc()
 					$endbak = $oldbak
 				Next
 			EndIf
-			; Backup the Manifest file etc. INDEPEDENT BACKUP.
+			; Backup the Manifest file etc. GROUP BACKUP.
 			$ndate = FileGetTime($manifest, 0, 1)
 			$endman = $backups & "\Manifest.txt_5.bak"
 			If FileExists($endman) Then
 				$bdate = FileGetTime($endman, 0, 1)
 				If $bdate <> $ndate Then
-					; Add current Manifest file as newest backup.
+					; Add current Manifest file & related as newest backups.
 					$manbak = $backups & "\Manifest.txt"
+					$keybak = $backups & "\CDkeys.ini"
+					$endkey = $keybak & "_5.bak"
+					$dlcbak = $backups & "\DLCs.ini"
+					$enddlc = $dlcbak & "_5.bak"
 					For $nmb = 1 To 4
 						FileMove($manbak & "_" & ($nmb + 1) & ".bak", $manbak & "_" & $nmb & ".bak", 1)
+						FileMove($keybak & "_" & ($nmb + 1) & ".bak", $keybak & "_" & $nmb & ".bak", 1)
+						FileMove($dlcbak & "_" & ($nmb + 1) & ".bak", $dlcbak & "_" & $nmb & ".bak", 1)
 					Next
 					FileCopy($manifest, $endman, 1)
+					FileCopy($cdkeys, $endkey, 1)
+					FileCopy($dlcfile, $enddlc, 1)
 				EndIf
 			Else
-				; Add current Manifest file as newest backup in an empty slot.
+				; Add current Manifest file & related as newest backups in an empty slot.
 				For $nmb = 1 To 5
 					$manbak = $backups & "\Manifest.txt_" & $nmb & ".bak"
+					$keybak = $backups & "\CDkeys.ini_" & $nmb & ".bak"
+					$dlcbak = $backups & "\DLCs.ini_" & $nmb & ".bak"
 					If Not FileExists($manbak) Then
 						If $nmb = 1 Then
 							FileCopy($manifest, $manbak)
+							FileCopy($cdkeys, $keybak, 1)
+							FileCopy($dlcfile, $dlcbak, 1)
 						Else
 							$bdate = FileGetTime($endman, 0, 1)
 							If $bdate <> $ndate Then
 								FileCopy($manifest, $manbak)
+								FileCopy($cdkeys, $keybak, 1)
+								FileCopy($dlcfile, $dlcbak, 1)
 							EndIf
 						EndIf
 						ExitLoop
@@ -5022,6 +5099,16 @@ Func GetManifestForTitle()
 						_FileWriteLog($logfle, "CDKey found.", -1)
 					EndIf
 				EndIf
+				; Check for DLC
+				$DLC = StringSplit($game, '"DLC"', 1)
+				If $DLC[0] > 1 Then
+					$DLC = $DLC[0] - 1
+					If $DLC > 0 Then
+						IniWrite($dlcfile, $ID, "title", $title)
+						IniWrite($dlcfile, $ID, "dlc", $DLC)
+						_FileWriteLog($logfle, "DLC(s) found.", -1)
+					EndIf
+				EndIf
 				FileWriteLine($logfle, "")
 			Else
 				; Game ID not found in return.
@@ -5318,6 +5405,16 @@ Func RetrieveDataFromGOG($listed, $list)
 														IniWrite($cdkeys, $IDD, "title", $titleD)
 														IniWrite($cdkeys, $IDD, "keycode", $cdkey)
 														_FileWriteLog($logfle, "CDKey found.", -1)
+													EndIf
+												EndIf
+												; Check for DLC
+												$DLC = StringSplit($game, '"DLC"', 1)
+												If $DLC[0] > 1 Then
+													$DLC = $DLC[0] - 1
+													If $DLC > 0 Then
+														IniWrite($dlcfile, $IDD, "title", $titleD)
+														IniWrite($dlcfile, $IDD, "dlc", $DLC)
+														_FileWriteLog($logfle, "DLC(s) found.", -1)
 													EndIf
 												EndIf
 												FileWriteLine($logfle, "")

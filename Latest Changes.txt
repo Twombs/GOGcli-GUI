@@ -1,14 +1,17 @@
-Added a once off CDKey check to the 'Check & Fix The Manifest' right-click 'Games' list menu option process. This checks for CDKeys in you manifest, for entries you have added, prior to using this version (v1.7) of GOGcli GUI. You can only use the CDKey check once, without then needing to modify a value in the 'Settings.ini' file.
+Another spontaneous update happened.
 
-From v1.7 onward, CDKeys are detected during the adding or replacement of manifest entries, and stored in a 'CDkeys.ini' file.
+Added a once off DLC check to the 'Check & Fix The Manifest' right-click 'Games' list menu option process. This checks for DLCs in your manifest, for entries you have added, prior to using this version (v1.8) of GOGcli GUI. You can only use the DLC check once, without then needing to modify a value in the 'Settings.ini' file.
 
-The main GUI has had the 'GAME DETAILS' button shrunk to just 'DETAILS', and to its left is a new 'KEY' label and field.
+From v1.8 onward, DLCs are detected during the adding or replacement of manifest entries, and stored in a 'DLCs.ini' file.
 
-If a game is noted as having a CDKey entry, the 'KEY' input field will show '1'.
+The main GUI has had the 'GAME DETAILS' button shrunk again and 'DETAILS' text is a smaller font size, to accomodate the 'KEY' field being swapped with the 'DLC' field. The 'DLC' field is wider now to show 2 digits if that is the case.
 
-To see the CDKey value, click the 'DETAILS' button. This shows you the key and allows copying it to the clipboard, or just continuing on with the previous 'Get Game Details from GOG' process.
+If a game is noted as having a DLC entry, the 'DLC' input field will show the count. NOTE - You may need to divide that count by the count of OS for the game, to get the true number of DLCs.
 
-gogcli_main_11.png
+To see the DLCs, click the 'DETAILS' button. If shown a key, then just click YES to continue and 'Get Game Details from GOG'. Either that or investigate the manifest or download list window.
 
-Tutor_44.png
-Tutor_45.png
+The 'CDkeys.ini' and 'DLCs.ini' files have been added to the backup regime, pairing with the manifest backup ... when that occurs, they occur.
+
+gogcli_main_12.png
+
+Tutor_46.png
