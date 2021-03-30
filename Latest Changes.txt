@@ -4,7 +4,7 @@ Added a once off DLC check to the 'Check & Fix The Manifest' right-click 'Games'
 
 From v1.8 onward, DLCs are detected during the adding or replacement of manifest entries, and stored in a 'DLCs.ini' file.
 
-The main GUI has had the 'GAME DETAILS' button shrunk again and 'DETAILS' text is a smaller font size, to accomodate the 'KEY' field being swapped with the 'DLC' field. The 'DLC' field is wider now to show 2 digits if that is the case.
+The main GUI has had the 'GAME DETAILS' button shrunk again and 'DETAILS' text is a smaller font size, to accommodate the 'KEY' field being swapped with the 'DLC' field. The 'DLC' field is wider now to show 2 digits if that is the case.
 
 If a game is noted as having a DLC entry, the 'DLC' input field will show the count. NOTE - You may need to divide that count by the count of OS for the game, to get the true number of DLCs.
 
