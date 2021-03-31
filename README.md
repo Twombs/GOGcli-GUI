@@ -1,6 +1,6 @@
 # GOGcli-GUI
 
-![gogcli_main_5](https://github.com/Twombs/GOGcli-GUI/blob/main/Screenshots/gogcli_main_12.png?raw=true)
+![gogcli_main_12](https://github.com/Twombs/GOGcli-GUI/blob/main/Screenshots/gogcli_main_12.png?raw=true)
 
 Frontend program for gogcli.exe by Magnitus. BIG THANKS to him.
 
