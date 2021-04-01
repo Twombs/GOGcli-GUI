@@ -46,7 +46,7 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $version
 
-$version = "v1.8"
+$version = "v1.9"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -135,16 +135,18 @@ Exit
 
 
 Func MainGUI()
-	Local $Checkbox_quit, $Checkbox_stop, $Menu_alert_opts, $Menu_down, $Menu_get, $Menu_list, $Menu_man, $Menu_compare_opts
+	Local $Checkbox_quit, $Checkbox_stop, $Menu_down, $Menu_get, $Menu_list, $Menu_man, $Menu_compare_opts
 	Local $Item_alerts_clear, $Item_alerts_view, $Item_clear_down, $Item_clear_man, $Item_compare_all, $Item_compare_aqua
 	Local $Item_compare_declare, $Item_compare_ignore, $Item_compare_one, $Item_compare_orange, $Item_compare_overlook
 	Local $Item_compare_red, $Item_compare_rep, $Item_compare_report, $Item_compare_view, $Item_compare_wipe
-	Local $Item_compare_yellow, $Item_manifest_fix, $Item_view_down, $Item_view_man
+	Local $Item_compare_yellow, $Item_lists_dlcs, $Item_lists_keys, $Item_lists_latest, $Item_lists_tags, $Item_lists_updated
+	Local $Item_manifest_fix, $Item_view_down, $Item_view_man
+	Local $Sub_menu_alerts, $Sub_menu_comparisons, $Sub_menu_downloads, $Sub_menu_lists, $Sub_menu_manifests
 	;
 	Local $accept, $alias, $aqua, $buttxt, $c, $chunk, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir, $display
 	Local $dll, $e, $exist, $existing, $fext, $filelist, $find, $fixed, $flename, $foldpth, $IDD, $ids, $ind, $l, $language
-	Local $languages, $last, $latest, $loop, $mans, $mpos, $OPS, $orange, $p, $pos, $prior, $red, $result, $retrieve, $slugD
-	Local $tagtxt, $tested, $titleD, $valfold, $xpos, $yellow, $ypos
+	Local $languages, $last, $latest, $loop, $mans, $mpos, $OPS, $orange, $p, $patchfld, $pos, $prior, $red, $result, $retrieve
+	Local $slugD, $tagtxt, $tested, $titleD, $valfold, $xpos, $yellow, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -200,7 +202,7 @@ Func MainGUI()
 	GUICtrlSetTip($Input_slug, "Game Slug!")
 	$Button_sub = GuiCtrlCreateButton("SUB", 288, 300, 40, 22)
 	GUICtrlSetFont($Button_sub, 7, 600, 0, "Small Fonts")
-	GUICtrlSetTip($Button_sub, "Create a Slug named sub-folder in selected game folder!")
+	GUICtrlSetTip($Button_sub, "Create a Slug (etc) named sub-folder in selected game folder!")
 	$Button_last = GuiCtrlCreateButton("Last", 330, 300, 40, 22)
 	GUICtrlSetFont($Button_last, 7, 600, 0, "Small Fonts")
 	GUICtrlSetTip($Button_last, "Find the latest added game(s)!")
@@ -337,25 +339,16 @@ Func MainGUI()
 	;
 	; CONTEXT MENU
 	$Menu_list = GUICtrlCreateContextMenu($Listview_games)
-	$Menu_alert_opts = GUICtrlCreateMenu("Alerts", $Menu_list)
-	$Item_alerts_view = GUICtrlCreateMenuItem("View Alerts", $Menu_alert_opts)
-	GUICtrlCreateMenuItem("", $Menu_alert_opts)
-	$Item_alerts_clear = GUICtrlCreateMenuItem("Clear Alerts", $Menu_alert_opts)
+	$Sub_menu_alerts = GUICtrlCreateMenu("Alerts", $Menu_list)
+	$Item_alerts_view = GUICtrlCreateMenuItem("View Alerts", $Sub_menu_alerts)
+	GUICtrlCreateMenuItem("", $Sub_menu_alerts)
+	$Item_alerts_clear = GUICtrlCreateMenuItem("Clear Alerts", $Sub_menu_alerts)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
-	$Item_clear_down = GUICtrlCreateMenuItem("Clear Downloads List", $Menu_list)
-	GUICtrlCreateMenuItem("", $Menu_list)
-	$Item_view_down = GUICtrlCreateMenuItem("View Downloads List", $Menu_list)
-	GUICtrlCreateMenuItem("", $Menu_list)
-	GUICtrlCreateMenuItem("", $Menu_list)
-	$Item_clear_man = GUICtrlCreateMenuItem("Clear Manifests List", $Menu_list)
-	GUICtrlCreateMenuItem("", $Menu_list)
-	$Item_view_man = GUICtrlCreateMenuItem("View Manifests List", $Menu_list)
-	GUICtrlCreateMenuItem("", $Menu_list)
-	GUICtrlCreateMenuItem("", $Menu_list)
-	$Item_compare_rep = GUICtrlCreateMenuItem("Comparison Report", $Menu_list)
-	GUICtrlCreateMenuItem("", $Menu_list)
-	$Item_compare_view = GUICtrlCreateMenuItem("View Comparison File", $Menu_list)
+	$Sub_menu_comparisons = GUICtrlCreateMenu("Comparisons", $Menu_list)
+	$Item_compare_rep = GUICtrlCreateMenuItem("Comparison Report", $Sub_menu_comparisons)
+	GUICtrlCreateMenuItem("", $Sub_menu_comparisons)
+	$Item_compare_view = GUICtrlCreateMenuItem("View Comparison File", $Sub_menu_comparisons)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Menu_compare_opts = GUICtrlCreateMenu("Comparison Settings", $Menu_list)
 	$Item_compare_ignore = GUICtrlCreateMenuItem("Ignore Missing Folders", $Menu_compare_opts, -1, 0)
@@ -368,8 +361,32 @@ Func MainGUI()
 	$Item_compare_orange = GUICtrlCreateMenuItem("Wrong Size (ORANGE)", $Menu_compare_opts, -1, 0)
 	$Item_compare_yellow = GUICtrlCreateMenuItem("No Size (YELLOW)", $Menu_compare_opts, -1, 0)
 	$Item_compare_aqua = GUICtrlCreateMenuItem("No Manifest Entry (AQUA)", $Menu_compare_opts, -1, 0)
+	GUICtrlCreateMenuItem("", $Sub_menu_comparisons)
+	$Item_compare_wipe = GUICtrlCreateMenuItem("Wipe Comparison File", $Sub_menu_comparisons)
 	GUICtrlCreateMenuItem("", $Menu_list)
-	$Item_compare_wipe = GUICtrlCreateMenuItem("Wipe Comparison File", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Sub_menu_downloads = GUICtrlCreateMenu("Downloads", $Menu_list)
+	$Item_clear_down = GUICtrlCreateMenuItem("Clear Downloads List", $Sub_menu_downloads)
+	GUICtrlCreateMenuItem("", $Sub_menu_downloads)
+	$Item_view_down = GUICtrlCreateMenuItem("View Downloads List", $Sub_menu_downloads)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Sub_menu_lists = GUICtrlCreateMenu("Lists", $Menu_list)
+	$Item_lists_latest = GUICtrlCreateMenuItem("Latest Additions", $Sub_menu_lists)
+	GUICtrlCreateMenuItem("", $Sub_menu_lists)
+	$Item_lists_updated = GUICtrlCreateMenuItem("Games Updated", $Sub_menu_lists)
+	GUICtrlCreateMenuItem("", $Sub_menu_lists)
+	$Item_lists_keys = GUICtrlCreateMenuItem("CDKeys", $Sub_menu_lists)
+	GUICtrlCreateMenuItem("", $Sub_menu_lists)
+	$Item_lists_dlcs = GUICtrlCreateMenuItem("DLCs", $Sub_menu_lists)
+	GUICtrlCreateMenuItem("", $Sub_menu_lists)
+	$Item_lists_tags = GUICtrlCreateMenuItem("Tags", $Sub_menu_lists)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Sub_menu_manifests = GUICtrlCreateMenu("Manifests", $Menu_list)
+	$Item_clear_man = GUICtrlCreateMenuItem("Clear Manifests List", $Sub_menu_manifests)
+	GUICtrlCreateMenuItem("", $Sub_menu_manifests)
+	$Item_view_man = GUICtrlCreateMenuItem("View Manifests List", $Sub_menu_manifests)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Item_manifest_fix = GUICtrlCreateMenuItem("Check && Fix The Manifest", $Menu_list)
@@ -739,9 +756,9 @@ Func MainGUI()
 								$row = $lowid + $ind + 1
 								If $updates = 0 Then
 									If StringIsDigit($row / 2) Then
-										GUICtrlSetBkColor($row, 0xBBFFBB)
-									Else
 										GUICtrlSetBkColor($row, 0xF0D0F0)
+									Else
+										GUICtrlSetBkColor($row, 0xBBFFBB)
 									EndIf
 								Else
 									GUICtrlSetBkColor($row, $COLOR_RED)
@@ -762,19 +779,20 @@ Func MainGUI()
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_sub
-			; Create a Slug named sub-folder in the selected game folder
+			; Create a Slug (etc) named sub-folder in the selected game folder
 			If FileExists($gamesfold) Then
-				$ans = MsgBox(262177 + 256, "Create & Relocate Query", _
-					"This option creates a sub-folder in the destination folder" & @LF & _
-					"of the selected game title, using the 'Slug' title as name." & @LF & @LF & _
-					"The process also copies any 'Folder.jpg' file to that new" & @LF & _
-					"sub-folder, along with moving (relocating) any Linux or" & @LF & _
-					"Mac files to it as well." & @LF & @LF & _
-					"Click OK to continue ... or CANCEL to abort.", 0, $GOGcliGUI)
-				If $ans = 1 Then
-					If $title <> "" Then
-						GetGameFolderNameAndPath($title, $slug)
-						If FileExists($gamefold) Then
+				If $title <> "" Then
+					GetGameFolderNameAndPath($title, $slug)
+					If FileExists($gamefold) Then
+						$ans = MsgBox(262177 + 256, "Create & Relocate Query - OS", _
+							"This option creates a sub-folder in the destination folder" & @LF & _
+							"of the selected game title, using the 'Slug' title as name." & @LF & @LF & _
+							"The process also copies any 'Folder.jpg' file to that new" & @LF & _
+							"sub-folder, along with moving (relocating) any Linux or" & @LF & _
+							"Mac files to it as well." & @LF & @LF & _
+							"Click OK to continue ... or CANCEL to skip to next." & @LF & @LF & _
+							"NOTE - Create a Patches sub-folder query comes next.", 0, $GOGcliGUI)
+						If $ans = 1 Then
 							$slugfld = $gamefold & "\" & $slug
 							If Not FileExists($slugfld) Then DirCreate($slugfld)
 							If FileExists($slugfld) Then
@@ -783,12 +801,29 @@ Func MainGUI()
 								FileMove($gamefold & "\*.dmg", $slugfld & "\")
 								FileMove($gamefold & "\*.pkg", $slugfld & "\")
 							EndIf
-						Else
-							MsgBox(262192, "Path Error", "Game folder does not exist!", 0, $GOGcliGUI)
+						EndIf
+						$ans = MsgBox(262177 + 256, "Create & Relocate Query - Patches", _
+							"This option creates a sub-folder in the destination folder of" & @LF & _
+							"the selected game title, using the text '_Patches' as name." & @LF & @LF & _
+							"The process also copies any 'patch' named files to that new" & @LF & _
+							"sub-folder." & @LF & @LF & _
+							"Click OK to continue ... or CANCEL to abort.", 0, $GOGcliGUI)
+						If $ans = 1 Then
+							$patchfld = $gamefold & "\_Patches"
+							If Not FileExists($patchfld) Then DirCreate($patchfld)
+							If FileExists($patchfld) Then
+								FileMove($gamefold & "\patch*.exe", $patchfld & "\")
+								FileMove($gamefold & "\patch*.bin", $patchfld & "\")
+								FileMove($gamefold & "\patch*.sh", $patchfld & "\")
+								FileMove($gamefold & "\patch*.dmg", $patchfld & "\")
+								FileMove($gamefold & "\patch*.pkg", $patchfld & "\")
+							EndIf
 						EndIf
 					Else
-						MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+						MsgBox(262192, "Path Error", "Game folder does not exist!", 0, $GOGcliGUI)
 					EndIf
+				Else
+					MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
 				EndIf
 			Else
 				MsgBox(262192, "Path Error", "Games folder does not exist!" & @LF & @LF & "( i.e. Drive is disconnected )", 0, $GOGcliGUI)
@@ -2481,6 +2516,26 @@ Func MainGUI()
 			EndIf
 			;_GUICtrlListView_SetItemSelected($Listview_games, $ind, True, True)
 			;GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Item_lists_updated
+			; Lists - Games Updated
+			If FileExists($updated) Then ShellExecute($updated)
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Item_lists_tags
+			; Lists - Tags
+			If FileExists($tagfle) Then ShellExecute($tagfle)
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Item_lists_latest
+			; Lists - Latest Additions
+			If FileExists($addlist) Then ShellExecute($addlist)
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Item_lists_dlcs
+			; Lists - DLCs
+			If FileExists($dlcfile) Then ShellExecute($dlcfile)
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Item_lists_keys
+			; Lists - CDKeys
+			If FileExists($cdkeys) Then ShellExecute($cdkeys)
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Item_down_all
 			; Download ALL Manifests
 			If $manall = 4 Then
