@@ -14,7 +14,7 @@ Checksum (MD5) checking is now supported.
 
 ZIP file checking is now supported.
 
-Multiple manifest retrieval (batch of 10 or less) is now supported.
+Multiple manifest retrieval (batch of 20 or less) is now supported.
 
 Full (all) games manifest retrieval now added.
 
@@ -24,7 +24,7 @@ Individual file and game validation now supported.
 
 Shutdown options now supported.
 
-Multiple games (up to 10), can now be downloaded via the 'Game Files Selector' window.
+Multiple games (up to 15), can now be downloaded via the 'Game Files Selector' window.
 
 Game title entry tagging (with comments) now implemented.
 
