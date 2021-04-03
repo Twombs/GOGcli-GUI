@@ -84,13 +84,14 @@ Global $Pic_cover
 Global $7zip, $a, $addlist, $alert, $alerts, $alf, $alpha, $ans, $array, $backups, $bigcover, $bigpic, $blackjpg, $bytes, $caption
 Global $category, $cdkey, $cdkeys, $checksum, $checkval, $cnt, $compare, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest
 Global $details, $DLC, $dlcfile, $done, $downfiles, $downlist, $download, $downloads, $drv, $entries, $entry, $erred, $existDB, $exists
-Global $f, $file, $fileinfo, $filepth, $files, $filesize, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI
-Global $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json
-Global $keep, $lang, $left, $line, $lines, $link, $list, $listed, $listview, $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist
-Global $md5check, $minimize, $model, $n, $name, $num, $numb, $OP, $OS, $OSes, $overlook, $params, $part, $parts, $percent, $ping, $progress
-Global $pth, $ratify, $read, $record, $reportexe, $res, $ret, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld
-Global $space, $splash, $split, $splits, $state, $style, $tag, $tagfle, $tail, $text, $title, $titleF, $titlist, $top, $type, $types
-Global $updated, $updates, $URL, $user, $validate, $verify, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
+Global $f, $file, $fileinfo, $filepth, $files, $filesize, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games
+Global $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW
+Global $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed
+Global $listview, $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num, $numb
+Global $OP, $OS, $OSes, $overlook, $params, $part, $parts, $percent, $ping, $progress, $pth, $ratify, $read, $record, $reportexe, $res
+Global $ret, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state
+Global $style, $tag, $tagfle, $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate
+Global $verify, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
 ;, $foldzip, $resultfle
 
 $addlist = @ScriptDir & "\Added.txt"
@@ -147,8 +148,9 @@ Func MainGUI()
 	;
 	Local $accept, $addto, $alias, $aqua, $buttxt, $c, $chunk, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir
 	Local $display, $dll, $e, $exist, $existing, $fext, $filelist, $find, $fixed, $flename, $foldpth, $IDD, $ids, $ind, $l
-	Local $language, $languages, $last, $latest, $loop, $mans, $mpos, $OPS, $orange, $p, $patchfld, $pos, $prior, $query
-	Local $red, $result, $retrieve, $slugD, $tagtxt, $tested, $titleD, $valfold, $xpos, $yellow, $ypos
+	Local $language, $languages, $last, $latest, $loop, $mans, $mpos, $OPS, $orange, $p, $patchfld, $pos, $prior, $proceed
+	Local $query, $red, $rep, $result, $retrieve, $sect, $sects, $slugD, $tagtxt, $tested, $titleD, $valfold, $values, $xpos
+	Local $yellow, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -460,6 +462,7 @@ Func MainGUI()
 		IniWrite($inifle, "Exists Database", "use", $exists)
 	EndIf
 	$addto = 4
+	$foldpth = ""
 	$query = ""
 	;
 	BackupManifestEtc()
@@ -1010,17 +1013,84 @@ Func MainGUI()
 									& "Any mismatches, you will need to process individually." & @LF _
 									& "See the Log for successes and or failures.", 0, $GOGcliGUI)
 							EndIf
-							MsgBox(262192, "ADD Error", "This feature is not yet supported!", 2, $GOGcliGUI)
-							GUICtrlSetState($Listview_games, $GUI_FOCUS)
-							_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
-							ContinueLoop
 							If $ans <> 2 Then
+								If $ans = 7 Then
+									MsgBox(262192, "ADD Error", "This feature is not yet supported!", 2, $GOGcliGUI)
+									GUICtrlSetState($Listview_games, $GUI_FOCUS)
+									_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+									ContinueLoop
+								EndIf
 								SetStateOfControls($GUI_DISABLE, "all")
 								GUICtrlSetImage($Pic_cover, $blackjpg)
 								GUICtrlSetData($Label_mid, "Adding To Database")
 								If $ans = 6 Then
 									$query = "no"
+									GUICtrlSetData($Label_top, "ADDING ONE")
 									;AddToDatabase()
+									If $slug <> "" Then
+										Local $md5 = ""
+										$ans = MsgBox(262193 + 256, "Checksum Query", "Do you want to include MD5 values?" & @LF & @LF _
+											& "NOTE - Obtaining MD5 (checksum) values is not" & @LF _
+											& "recommended, unless you have downloaded this" & @LF _
+											& "game recently, and not updated its manifest entry" & @LF _
+											& "since then. If in doubt, you should exclude.", 0, $GOGcliGUI)
+										If $ans = 1 Then
+											$read = FileRead($manifest)
+											If $read = "" Then
+												MsgBox(262192, "Data Error", "Manifest is empty!" & @LF & @LF & "Populate the manifest first.", 0, $GOGcliGUI)
+											Else
+												$identry = '"Id": ' & $ID & ','
+												If StringInStr($read, $identry) > 0 Then
+													$game = StringSplit($read, $identry, 1)
+													$game = $game[2]
+													$game = StringSplit($game, '"Id":', 1)
+													$game = $game[1]
+													If $game <> "" Then
+														$md5 = 1
+													EndIf
+												EndIf
+											EndIf
+										EndIf
+										If $foldpth = "" Then $foldpth = $gamesfold
+										$pth = FileSelectFolder("Browse to select the game folder.", $foldpth, 7, "", $GOGcliGUI)
+										If Not @error And StringMid($pth, 2, 2) = ":\" Then
+											_FileWriteLog($logfle, "ADDING GAME to Database.", -1)
+											_FileWriteLog($logfle, $title, -1)
+											$foldpth = $pth
+											$filelist = _FileListToArrayRec($foldpth, "*.*", 1, 1, 0, 1)
+											If @error Then $filelist = ""
+											If IsArray($filelist) Then
+												For $f = 1 To $filelist[0]
+													$file = $filelist[$f]
+													$filepth = $foldpth & "\" & $file
+													_PathSplit($filepth, $drv, $dir, $flename, $fext)
+													If $fext = ".exe" Or $fext = ".bin" Or $fext = ".dmg" Or $fext = ".pkg" Or $fext = ".sh" Or $fext = ".zip" Then
+														$filesize = FileGetSize($filepth)
+														If StringInStr($file, "\") > 0 Then $file = $flename & $fext
+														_FileWriteLog($logfle, $file, -1)
+														$checksum = ""
+														If $md5 = 1 Then
+															$sect = '"' & $file & '"'
+															If StringInStr($game, $sect) > 0 Then
+																$checksum = StringSplit($game, $sect, 1)
+																$checksum = $checksum[2]
+																$checksum = StringSplit($checksum, '"Checksum": "', 1)
+																$checksum = $checksum[2]
+																$checksum = StringSplit($checksum, '"', 1)
+																$checksum = $checksum[1]
+																$checksum = StringStripWS($checksum, 8)
+																If $checksum <> "" Then _FileWriteLog($logfle, "MD5 (checksum) added.", -1)
+															EndIf
+														EndIf
+														IniWrite($existDB, $file, $slug, $filesize & "|" & $checksum)
+													EndIf
+												Next
+											EndIf
+											FileWriteLine($logfle, "")
+										EndIf
+										GUICtrlSetData($Label_top, "")
+										GUICtrlSetData($Label_bed, "")
+									EndIf
 								Else
 									$query = "yes"
 									$cnt = _GUICtrlListView_GetItemCount($Listview_games)
@@ -1810,21 +1880,45 @@ Func MainGUI()
 												$line = StringSplit($line, '"', 1)
 												$checksum = $line[1]
 												;
-												; Check to skip duplicates.
-												If IniRead($downfiles, $col4, "file", "") <> $col4 Then
-													IniWrite($downfiles, $col4, "game", $titleD)
-													IniWrite($downfiles, $col4, "slug", $slugD)
-													IniWrite($downfiles, $col4, "ID", $IDD)
-													IniWrite($downfiles, $col4, "file", $col4)
-													IniWrite($downfiles, $col4, "language", $language)
-													IniWrite($downfiles, $col4, "languages", $languages)
-													IniWrite($downfiles, $col4, "OS", $OPS)
-													IniWrite($downfiles, $col4, "URL", $URL)
-													IniWrite($downfiles, $col4, "title", $alias)
-													IniWrite($downfiles, $col4, "bytes", $filesize)
-													IniWrite($downfiles, $col4, "size", $col3)
-													IniWrite($downfiles, $col4, "checksum", $checksum)
-													IniWrite($downfiles, $col4, "type", $col2)
+												$proceed = 1
+												If $exists = 1 Then
+													; Check to skip existing in Database.
+													$values = IniRead($existDB, $col4, $slugD, "")
+													If $values <> "" Then
+														$values = StringSplit($values, "|")
+														;If $values[1] = $filesize And $values[2] = $checksum Then $proceed = ""
+														If $values[1] = $filesize Then
+															; File Size Match
+															If $values[2] = $checksum Then
+																; Checksum Match
+																$fext = StringRight($col4, 4)
+																If $values[2] = "" And $fext <> ".zip" Then
+																	; Don't exclude just based on size, unless a zip.
+																Else
+																	; Perfect Match, so exclude.
+																	$proceed = ""
+																EndIf
+															EndIf
+														EndIf
+													EndIf
+												EndIf
+												If $proceed = 1 Then
+													; Check to skip duplicates.
+													If IniRead($downfiles, $col4, "file", "") <> $col4 Then
+														IniWrite($downfiles, $col4, "game", $titleD)
+														IniWrite($downfiles, $col4, "slug", $slugD)
+														IniWrite($downfiles, $col4, "ID", $IDD)
+														IniWrite($downfiles, $col4, "file", $col4)
+														IniWrite($downfiles, $col4, "language", $language)
+														IniWrite($downfiles, $col4, "languages", $languages)
+														IniWrite($downfiles, $col4, "OS", $OPS)
+														IniWrite($downfiles, $col4, "URL", $URL)
+														IniWrite($downfiles, $col4, "title", $alias)
+														IniWrite($downfiles, $col4, "bytes", $filesize)
+														IniWrite($downfiles, $col4, "size", $col3)
+														IniWrite($downfiles, $col4, "checksum", $checksum)
+														IniWrite($downfiles, $col4, "type", $col2)
+													EndIf
 												EndIf
 												$alias = ""
 												$checksum = ""
@@ -3180,11 +3274,12 @@ Func FileSelectorGUI()
 	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Checkbox_skip, $Combo_OSfle, $Combo_shutdown, $Group_exist, $Group_files
 	Local $Group_OS, $Group_select, $Label_done, $Label_percent, $Label_shut, $Label_speed, $Label_warn, $ListView_files, $Progress_bar, $Radio_selall
 	Local $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
-	Local $amount, $begin, $cancel, $checked, $code, $col1, $col2, $col3, $col4, $color, $dllcall, $downloading, $edge, $ents, $exist, $fext, $gotten, $IDD, $idx
-	Local $imageD, $osfle, $prior, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $sum, $taken, $theme, $titleD, $tmpman, $val, $wide
+	Local $amount, $begin, $cancel, $checked, $code, $col1, $col2, $col3, $col4, $color, $dllcall, $downloading, $edge, $ents, $exist, $fext, $gotten
+	Local $IDD, $idx, $imageD, $osfle, $prior, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $styles, $sum, $taken, $theme
+	Local $titleD, $tmpman, $val, $wide
 	;
-	;$style = $WS_CAPTION + $WS_MINIMIZEBOX + $WS_POPUP ; + $WS_VISIBLE + $WS_OVERLAPPED + $WS_CLIPSIBLINGS + $WS_SYSMENU
-	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $style + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
+	$styles = $WS_OVERLAPPED + $WS_CAPTION + $WS_MINIMIZEBOX ; + $WS_POPUP
+	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $styles + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
 	GUISetBkColor(0xBBFFBB, $SelectorGUI)
 	; CONTROLS
 	$Group_files = GuiCtrlCreateGroup("Files To Download", 10, 10, $width - 25, 302)
@@ -3467,6 +3562,7 @@ Func FileSelectorGUI()
 						$alert = 0
 						$md5check = ""
 						$zipcheck = ""
+						;$nmb = 0
 						FileChangeDir(@ScriptDir)
 						$files = StringSplit($downloading, "|", 1)
 						For $f = 1 To $files[0]
@@ -3475,8 +3571,10 @@ Func FileSelectorGUI()
 							$slugD = IniRead($downfiles, $file, "slug", "")
 							$URL = IniRead($downfiles, $file, "URL", "")
 							If $URL <> "" Then
+								; This may have been set prior or during
 								If GUICtrlRead($Checkbox_skip) = $GUI_CHECKED Then
 									If $skip = 4 Then
+										; Changed during, record the change
 										$skip = 1
 										IniWrite($inifle, "Existing Files", "skip", $skip)
 									EndIf
@@ -3620,6 +3718,7 @@ Func FileSelectorGUI()
 												If FileExists($download) Then
 													$bytes = FileGetSize($download)
 													If $bytes = $filesize Then
+														; Size compare passed
 														GUICtrlSetData($Progress_bar, 100)
 														GUICtrlSetData($Label_percent, "100%")
 														If $checksum <> "" Then
@@ -3630,7 +3729,12 @@ Func FileSelectorGUI()
 															_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
 														EndIf
 														_FileWriteLog($logfle, "Passed the File Size check.", -1)
+														;$nmb = $nmb + 1
+														;IniWrite($existDB, $slugD, "file_" & $nmb, $filesize)
+														;IniWrite($existDB, $sect, "bytes", $filesize)
+														IniWrite($existDB, $file, $slugD, $filesize & "|" & $checksum)
 													Else
+														; Size compare failed
 														GUICtrlSetBkColor($row, $COLOR_RED)
 														_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
 														_FileWriteLog($logfle, "File Size check failed.", -1)
@@ -3681,7 +3785,7 @@ Func FileSelectorGUI()
 													EndIf
 													If $validate = 1 Then
 														If $filepth <> "" Then
-															$checkval = $filepth & "|" & $checksum & "|" & $i
+															$checkval = $filepth & "|" & $checksum & "|" & $i & "|" & $slugD
 															If $md5check = "" Then
 																$md5check = $checkval
 															Else
@@ -3689,7 +3793,7 @@ Func FileSelectorGUI()
 															EndIf
 														EndIf
 														If $zippath <> "" Then
-															$checkval = $zippath & "|" & $i
+															$checkval = $zippath & "|" & $i & "|" & $slugD
 															If $zipcheck = "" Then
 																$zipcheck = $checkval
 															Else
@@ -3768,6 +3872,7 @@ Func FileSelectorGUI()
 									$filepth = $checkval[1]
 									$checksum = $checkval[2]
 									$i = $checkval[3]
+									$slugD = $checkval[4]
 									$i = Number($i)
 									_GUICtrlListView_SetItemSelected($ListView_files, $i, True, True)
 									_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
@@ -3810,16 +3915,20 @@ Func FileSelectorGUI()
 										Sleep(2000)
 										$hash = StringTrimLeft($hash, 2)
 										If $hash = $checksum Then
+											; Checksum Passed.
 											GUICtrlSetBkColor($row, $COLOR_LIME)
 											_GUICtrlListView_SetItemText($ListView_files, $i, "MD5okay..." & $file, 3)
 											_FileWriteLog($logfle, $file, -1)
 											_FileWriteLog($logfle, "MD5 Check passed.", -1)
 										Else
+											; Checksum Failed.
 											GUICtrlSetBkColor($row, $COLOR_RED)
 											_GUICtrlListView_SetItemText($ListView_files, $i, "MD5bad..." & $file, 3)
 											_FileWriteLog($logfle, $file, -1)
 											_FileWriteLog($logfle, "MD5 Check failed.", -1)
 											;MsgBox(262192, "Checksum Failure", "MD5 = " & $checksum & @LF & "Hash = " & $hash, 0, $SelectorGUI)
+											; Delete database entry due to incomplete pass.
+											IniDelete($existDB, $file, $slugD)
 										EndIf
 										;$foldpth = StringTrimRight($filepth, StringLen($file) + 1)
 										If $dllcall = "" Then
@@ -3837,6 +3946,7 @@ Func FileSelectorGUI()
 									$checkval = StringSplit($checkval, "|", 1)
 									$zippath = $checkval[1]
 									$i = $checkval[2]
+									$slugD = $checkval[3]
 									$i = Number($i)
 									_GUICtrlListView_SetItemSelected($ListView_files, $i, True, True)
 									_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
@@ -3856,15 +3966,19 @@ Func FileSelectorGUI()
 										$ret = _Zip_List($zippath)
 										$ret = $ret[0]
 										If $ret > 0 Then
+											; Zip Passed.
 											GUICtrlSetBkColor($row, $COLOR_AQUA)
 											_GUICtrlListView_SetItemText($ListView_files, $i, "ZIPokay..." & $file, 3)
 											_FileWriteLog($logfle, $file, -1)
 											_FileWriteLog($logfle, "ZIP Check passed.", -1)
 										Else
+											; Zip Failed.
 											GUICtrlSetBkColor($row, $COLOR_RED)
 											_GUICtrlListView_SetItemText($ListView_files, $i, "ZIPbad..." & $file, 3)
 											_FileWriteLog($logfle, $file, -1)
 											_FileWriteLog($logfle, "ZIP Check failed.", -1)
+											; Delete database entry due to incomplete pass.
+											IniDelete($existDB, $file, $slugD)
 										EndIf
 										Sleep(1000)
 										GUICtrlSendMsg($Progress_bar, $PBM_SETMARQUEE, 0, 50)
@@ -5069,7 +5183,7 @@ Func FixTitle($text)
 EndFunc ;=> FixTitle
 
 Func GetFileDownloadDetails($listview = "")
-	Local $alias, $col1, $col2, $col3, $col4, $l, $language, $languages, $loop, $OPS
+	Local $alias, $col1, $col2, $col3, $col4, $fext, $l, $language, $languages, $loop, $OPS, $proceed, $values
 	;$caption
 	_FileCreate($downfiles)
 	Sleep(500)
@@ -5149,29 +5263,52 @@ Func GetFileDownloadDetails($listview = "")
 			$line = StringSplit($line, '"', 1)
 			$checksum = $line[1]
 			;
-			; Check to skip duplicates.
-			If IniRead($downfiles, $col4, "file", "") <> $col4 Then
-				IniWrite($downfiles, $col4, "game", $title)
-				IniWrite($downfiles, $col4, "slug", $slug)
-				IniWrite($downfiles, $col4, "ID", $ID)
-				IniWrite($downfiles, $col4, "file", $col4)
-				IniWrite($downfiles, $col4, "language", $language)
-				IniWrite($downfiles, $col4, "languages", $languages)
-				IniWrite($downfiles, $col4, "OS", $OPS)
-				IniWrite($downfiles, $col4, "URL", $URL)
-				IniWrite($downfiles, $col4, "title", $alias)
-				IniWrite($downfiles, $col4, "bytes", $filesize)
-				IniWrite($downfiles, $col4, "size", $col3)
-				IniWrite($downfiles, $col4, "checksum", $checksum)
-				IniWrite($downfiles, $col4, "type", $col2)
-				;
-				If $listview <> "" Then
-					;If $col3 <> "" And $col4 <> "" Then
-					If $col4 <> "" Then
-						$col1 = $col1 + 1
-						$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
-						;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
-						GUICtrlCreateListViewItem($entry, $listview)
+			$proceed = 1
+			If $exists = 1 Then
+				; Check to skip existing in Database.
+				$values = IniRead($existDB, $col4, $slug, "")
+				If $values <> "" Then
+					$values = StringSplit($values, "|")
+					If $values[1] = $filesize Then
+						; File Size Match
+						If $values[2] = $checksum Then
+							; Checksum Match
+							$fext = StringRight($col4, 4)
+							If $values[2] = "" And $fext <> ".zip" Then
+								; Don't exclude just based on size, unless a zip.
+							Else
+								; Perfect Match, so exclude.
+								$proceed = ""
+							EndIf
+						EndIf
+					EndIf
+				EndIf
+			EndIf
+			If $proceed = 1 Then
+				; Check to skip duplicates.
+				If IniRead($downfiles, $col4, "file", "") <> $col4 Then
+					IniWrite($downfiles, $col4, "game", $title)
+					IniWrite($downfiles, $col4, "slug", $slug)
+					IniWrite($downfiles, $col4, "ID", $ID)
+					IniWrite($downfiles, $col4, "file", $col4)
+					IniWrite($downfiles, $col4, "language", $language)
+					IniWrite($downfiles, $col4, "languages", $languages)
+					IniWrite($downfiles, $col4, "OS", $OPS)
+					IniWrite($downfiles, $col4, "URL", $URL)
+					IniWrite($downfiles, $col4, "title", $alias)
+					IniWrite($downfiles, $col4, "bytes", $filesize)
+					IniWrite($downfiles, $col4, "size", $col3)
+					IniWrite($downfiles, $col4, "checksum", $checksum)
+					IniWrite($downfiles, $col4, "type", $col2)
+					;
+					If $listview <> "" Then
+						;If $col3 <> "" And $col4 <> "" Then
+						If $col4 <> "" Then
+							$col1 = $col1 + 1
+							$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
+							;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
+							GUICtrlCreateListViewItem($entry, $listview)
+						EndIf
 					EndIf
 				EndIf
 			EndIf

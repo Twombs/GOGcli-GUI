@@ -1,11 +1,12 @@
 Ambitious new feature update.
 
-Started work on an "Exists' database.
+Started work on an "Exists' database. WORK IN PROGRESS
 
 This involves an enabling option on the SETUP window.
 And another right-click menu option on the ADD TO MANIFEST button.
 One or more game titles can be processed ... individual or full list (from specified starting point). You browse to an individual game folder (with files) or select the main game folder of game title sub-folders.
 
+gogcli_setup_5.png
 Tutor_50.png
 Tutor_51.png
 Tutor_52.png
