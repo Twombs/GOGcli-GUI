@@ -13,8 +13,8 @@
 ; FUNCTIONS
 ; MainGUI(), SetupGUI(), FileSelectorGUI()
 ; BackupManifestEtc(), ClearFieldValues(), CompareFilesToManifest($numb), FillTheGamesList(), FixTitle($text)
-; GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF), GetManifestForTitle(), GetTheSize()
-; ParseTheGamelist(), RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which), ShowCorrectImage()
+; GetChecksumQuery($rat), GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF), GetManifestForTitle()
+; GetTheSize(), ParseTheGamelist(), RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which), ShowCorrectImage()
 ;
 ; , SetTheColumnWidths() UNUSED
 ;
@@ -77,9 +77,9 @@ EndIf
 Global $Button_dest, $Button_dir, $Button_down, $Button_exit, $Button_find, $Button_fold, $Button_game, $Button_get, $Button_info
 Global $Button_last, $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_sub, $Button_tag, $Button_web, $Checkbox_alpha
 Global $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_key
-Global $Input_OS, $Input_slug, $Input_title, $Input_ups, $Item_database_add, $Item_down_all, $Item_verify_file, $Item_verify_game
-Global $Label_bed, $Label_cat, $Label_dlc, $Label_key, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games
-Global $Pic_cover
+Global $Input_OS, $Input_slug, $Input_title, $Input_ups, $Item_database_add, $Item_database_relax, $Item_down_all, $Item_verify_file
+Global $Item_verify_game, $Label_bed, $Label_cat, $Label_dlc, $Label_key, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups
+Global $Listview_games, $Pic_cover
 
 Global $7zip, $a, $addlist, $alert, $alerts, $alf, $alpha, $ans, $array, $backups, $bigcover, $bigpic, $blackjpg, $bytes, $caption
 Global $category, $cdkey, $cdkeys, $checksum, $checkval, $cnt, $compare, $cookie, $cookies, $cover, $covers, $covimg, $declare, $dest
@@ -88,10 +88,10 @@ Global $f, $file, $fileinfo, $filepth, $files, $filesize, $flag, $fold, $found, 
 Global $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW
 Global $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed
 Global $listview, $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num, $numb
-Global $OP, $OS, $OSes, $overlook, $params, $part, $parts, $percent, $ping, $progress, $pth, $ratify, $read, $record, $reportexe, $res
-Global $ret, $row, $s, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state
-Global $style, $tag, $tagfle, $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate
-Global $verify, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
+Global $OP, $OS, $OSes, $overlook, $params, $part, $parts, $percent, $ping, $progress, $pth, $rat, $ratify, $read, $record, $relax
+Global $reportexe, $res, $ret, $row, $s, $same, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash
+Global $split, $splits, $state, $style, $tag, $tagfle, $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates
+Global $URL, $user, $validate, $verify, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
 ;, $foldzip, $resultfle
 
 $addlist = @ScriptDir & "\Added.txt"
@@ -142,9 +142,9 @@ Func MainGUI()
 	Local $Item_alerts_clear, $Item_alerts_view, $Item_clear_down, $Item_clear_man, $Item_compare_all, $Item_compare_aqua
 	Local $Item_compare_declare, $Item_compare_ignore, $Item_compare_one, $Item_compare_orange, $Item_compare_overlook
 	Local $Item_compare_red, $Item_compare_rep, $Item_compare_report, $Item_compare_view, $Item_compare_wipe
-	Local $Item_compare_yellow, $Item_lists_dlcs, $Item_lists_keys, $Item_lists_latest, $Item_lists_tags
-	Local $Item_lists_updated, $Item_manifest_fix, $Item_view_down, $Item_view_man
-	Local $Sub_menu_alerts, $Sub_menu_comparisons, $Sub_menu_downloads, $Sub_menu_lists, $Sub_menu_manifests
+	Local $Item_compare_yellow, $Item_database_view, $Item_lists_dlcs, $Item_lists_keys, $Item_lists_latest
+	Local $Item_lists_tags, $Item_lists_updated, $Item_manifest_fix, $Item_view_down, $Item_view_man
+	Local $Sub_menu_alerts, $Sub_menu_comparisons, $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_lists, $Sub_menu_manifests
 	;
 	Local $accept, $addto, $alias, $aqua, $buttxt, $c, $chunk, $col1, $col2, $col3, $col4, $compall, $compone, $ctrl, $dir
 	Local $display, $dll, $e, $exist, $existing, $fext, $filelist, $find, $fixed, $flename, $foldpth, $IDD, $ids, $ind, $l
@@ -369,6 +369,12 @@ Func MainGUI()
 	$Item_compare_wipe = GUICtrlCreateMenuItem("Wipe Comparison File", $Sub_menu_comparisons)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
+	$Sub_menu_database = GUICtrlCreateMenu("Database", $Menu_list)
+	$Item_database_relax = GUICtrlCreateMenuItem("Relax The Rules", $Sub_menu_database, -1, 0)
+	GUICtrlCreateMenuItem("", $Sub_menu_downloads)
+	$Item_database_view = GUICtrlCreateMenuItem("View The Database", $Sub_menu_database)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
 	$Sub_menu_downloads = GUICtrlCreateMenu("Downloads", $Menu_list)
 	$Item_clear_down = GUICtrlCreateMenuItem("Clear Downloads List", $Sub_menu_downloads)
 	GUICtrlCreateMenuItem("", $Sub_menu_downloads)
@@ -461,6 +467,12 @@ Func MainGUI()
 		$exists = 1
 		IniWrite($inifle, "Exists Database", "use", $exists)
 	EndIf
+	$relax = IniRead($inifle, "Exists Database", "relax", "")
+	If $relax = "" Then
+		$relax = 4
+		IniWrite($inifle, "Exists Database", "relax", $relax)
+	EndIf
+	GUICtrlSetState($Item_database_relax, $relax)
 	$addto = 4
 	$foldpth = ""
 	$query = ""
@@ -1678,6 +1690,7 @@ Func MainGUI()
 				;$cnt = _GUICtrlListView_GetItemCount($Listview_games)
 				If $find = "" Then
 					$find = $text
+					IniWrite($inifle, "Titles Search", "text", $find)
 					If StringIsDigit($find) Then
 						MsgBox(262192, "Find Advice", "Because the list has a hidden ID column, it is not recommended" _
 							& @LF & "to search with just a number, unless that number has a leading" _
@@ -1694,7 +1707,12 @@ Func MainGUI()
 					ContinueLoop
 				EndIf
 			Else
-				MsgBox(262192, "Find Error", "No text specified!", 0, $GOGcliGUI)
+				$find = IniRead($inifle, "Titles Search", "text", "")
+				If $find = "" Then
+					MsgBox(262192, "Find Error", "No text specified!", 0, $GOGcliGUI)
+				Else
+					GUICtrlSetData($Input_title, $find)
+				EndIf
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_down
@@ -1889,20 +1907,23 @@ Func MainGUI()
 														;If $values[1] = $filesize And $values[2] = $checksum Then $proceed = ""
 														If $values[1] = $filesize Then
 															; File Size Match
-															If $values[2] = $checksum Then
-																; Checksum Match
-																$fext = StringRight($col4, 4)
-																If $values[2] = "" And $fext <> ".zip" Then
-																	; Don't exclude just based on size, unless a zip.
-																Else
+															$fext = StringRight($col4, 4)
+															If $fext = ".zip" Then
+																$proceed = 0
+															Else
+																If $relax = 1 And $values[2] = "" Then
+																	; Relaxed Match.
+																	$proceed = 2
+																ElseIf $values[2] = $checksum Then
+																	; Checksum Match
 																	; Perfect Match, so exclude.
-																	$proceed = ""
+																	$proceed = 0
 																EndIf
 															EndIf
 														EndIf
 													EndIf
 												EndIf
-												If $proceed = 1 Then
+												If $proceed > 0 Then
 													; Check to skip duplicates.
 													If IniRead($downfiles, $col4, "file", "") <> $col4 Then
 														IniWrite($downfiles, $col4, "game", $titleD)
@@ -1918,6 +1939,7 @@ Func MainGUI()
 														IniWrite($downfiles, $col4, "size", $col3)
 														IniWrite($downfiles, $col4, "checksum", $checksum)
 														IniWrite($downfiles, $col4, "type", $col2)
+														If $proceed = 2 Then IniWrite($downfiles, $col4, "missing", "checksum")
 													EndIf
 												EndIf
 												$alias = ""
@@ -2207,19 +2229,24 @@ Func MainGUI()
 							;MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 							If FileExists($gamesfold) Then
 								If $title <> "" Then
-									GetGameFolderNameAndPath($title, $slug)
-									If FileExists($gamefold) Then
-										$valfold = $gamefold
-									Else
-										$valfold = $gamesfold
+									_FileWriteLog($logfle, $title, -1)
+									If $valfold = "" Or Not FileExists($valfold) Then
+										GetGameFolderNameAndPath($title, $slug)
+										If FileExists($gamefold) Then
+											$valfold = $gamefold
+										Else
+											$valfold = $gamesfold
+										EndIf
 									EndIf
 								Else
 									$valfold = $gamesfold
 								EndIf
 								_FileWriteLog($logfle, $valfold, -1)
-								$pth = FileSelectFolder("Browse to select a game folder.", "", 7, $valfold, $GOGcliGUI)
+								$pth = FileSelectFolder("Browse to select a game folder.", $valfold, 7, "", $GOGcliGUI)
 								If Not @error And StringMid($pth, 2, 2) = ":\" Then
 									$foldpth = $pth
+									$valfold = $pth
+									_FileWriteLog($logfle, $valfold, -1)
 									$ans = MsgBox(262209 + 256, "Validate Query", "Do you want to include sub-folder content?", 0, $GOGcliGUI)
 									If $ans = 1 Then
 										$filelist = _FileListToArrayRec($foldpth, "*.*", 1, 1, 0, 1)
@@ -2286,10 +2313,11 @@ Func MainGUI()
 												$result = $result & ", " & $zip & " ZIP files"
 											EndIf
 										EndIf
-										_FileWriteLog($logfle, $cnt & " files listed in the manifest.", -1)
+										_FileWriteLog($logfle, $cnt & " files listed in the manifest (for the game).", -1)
+										$same = ""
 										$result = $result & ")"
 										_FileWriteLog($logfle, $result, -1)
-										$result = $cnt & " files listed in the manifest." & @LF & $result & @LF
+										$result = $cnt & " files listed in the manifest (for the game)." & @LF & $result & @LF
 										_Crypt_Startup()
 										For $f = 1 To $filelist[0]
 											$file = $filelist[$f]
@@ -2304,12 +2332,13 @@ Func MainGUI()
 												GUICtrlSetData($Label_top, $flename)
 												GUICtrlSetData($Label_bed, StringUpper(StringTrimLeft($fext, 1)))
 												$result = $result & @LF & "Validating = " & $file
+												$bytes = FileGetSize($filepth)
 												$filesize = IniRead($downfiles, $file, "bytes", 0)
 												If $filesize = 0 Then
 													$result = $result & @LF & "File Size is missing."
 													_FileWriteLog($logfle, "File Size is missing.", -1)
 												Else
-													$bytes = FileGetSize($filepth)
+													;$bytes = FileGetSize($filepth)
 													If $bytes = $filesize Then
 														$result = $result & @LF & "File Size passed."
 														_FileWriteLog($logfle, "File Size passed.", -1)
@@ -2318,19 +2347,34 @@ Func MainGUI()
 														_FileWriteLog($logfle, "File Size failed.", -1)
 													EndIf
 												EndIf
+												$checksum = IniRead($downfiles, $file, "checksum", "")
 												If $fext = ".exe" Or $fext = ".bin" Or $fext = ".dmg" Or $fext = ".pkg" Or $fext = ".sh" Then
-													$checksum = IniRead($downfiles, $file, "checksum", "")
+													;$checksum = IniRead($downfiles, $file, "checksum", "")
 													If $checksum = "" Then
-														$result = $result & @LF & "MD5 (checksum) is missing."
+														;$result = $result & @LF & "MD5 (checksum) is missing."
+														$result = $result & " MD5 (checksum) is missing."
 														_FileWriteLog($logfle, "MD5 (checksum) is missing.", -1)
+														If $filesize > 0 Then
+															If $bytes = $filesize Then
+																GetChecksumQuery()
+															EndIf
+														Else
+															GetChecksumQuery()
+														EndIf
 													Else
 														$hash = _Crypt_HashFile($filepth, $CALG_MD5)
 														$hash = StringTrimLeft($hash, 2)
 														If $hash = $checksum Then
-															$result = $result & @LF & "MD5 (checksum) passed."
+															;$result = $result & @LF & "MD5 (checksum) passed."
+															$result = $result & " MD5 (checksum) passed."
 															_FileWriteLog($logfle, "MD5 (checksum) passed.", -1)
+															_FileWriteLog($logfle, "ADDING FILE to Database.", -1)
+															If $bytes <> $filesize Then _FileWriteLog($logfle, "File Size Mismatch.", -1)
+															_FileWriteLog($logfle, "MD5 (checksum) added.", -1)
+															IniWrite($existDB, $file, $slug, $bytes & "|" & $checksum)
 														Else
-															$result = $result & @LF & "MD5 (checksum) failed."
+															;$result = $result & @LF & "MD5 (checksum) failed."
+															$result = $result & " MD5 (checksum) failed."
 															_FileWriteLog($logfle, "MD5 (checksum) failed.", -1)
 														EndIf
 													EndIf
@@ -2338,20 +2382,33 @@ Func MainGUI()
 													$ret = _Zip_List($filepth)
 													$ret = $ret[0]
 													If $ret > 0 Then
-														$result = $result & @LF & "ZIP check passed."
+														;$result = $result & @LF & "ZIP check passed."
+														$result = $result & " ZIP check passed."
 														_FileWriteLog($logfle, "ZIP check passed.", -1)
+														If $filesize = 0 Or $bytes = $filesize Then
+															_FileWriteLog($logfle, "ADDING FILE to Database.", -1)
+															IniWrite($existDB, $file, $slug, $bytes & "|" & $checksum)
+														EndIf
 													Else
-														$result = $result & @LF & "ZIP check failed."
+														;$result = $result & @LF & "ZIP check failed."
+														$result = $result & " ZIP check failed."
 														_FileWriteLog($logfle, "ZIP check failed.", -1)
 													EndIf
 												EndIf
 											EndIf
 										Next
-										$result = $result & @LF & @LF & $tested & " files were tested (checked)."
+										$result = $result & @LF & @LF & "The " & $tested & " files listed above, were tested (checked)."
 										_FileWriteLog($logfle, $tested & " files were tested (checked).", -1)
 										_Crypt_Shutdown()
 										FileWriteLine($logfle, "")
-										MsgBox(262208, "Validate Results", $result, 0, $GOGcliGUI)
+										;MsgBox(262208, "Validate Results", $result, 0, $GOGcliGUI)
+										MsgBox(262208, "Validate Results (Final Report)", $result & @LF & @LF _
+											& "ADVICE - If both values are missing, then likely" & @LF _
+											& "the file is also missing from the manifest. This" & @LF _
+											& "could mean it has been replaced by an update" & @LF _
+											& "if your manifest is up-to-date." & @LF & @LF _
+											& "NOTE - This is the validation result only, and is" & @LF _
+											& "not related to any database addition process.", 0, $GOGcliGUI)
 										GUICtrlSetData($Label_top, "")
 										GUICtrlSetData($Label_bed, "")
 									Else
@@ -2372,33 +2429,39 @@ Func MainGUI()
 							;MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 							If FileExists($gamesfold) Then
 								If $title <> "" Then
-									GetGameFolderNameAndPath($title, $slug)
-									If FileExists($gamefold) Then
-										$valfold = $gamefold
-									Else
-										$valfold = $gamesfold
+									_FileWriteLog($logfle, $title, -1)
+									If $valfold = "" Or Not FileExists($valfold) Then
+										GetGameFolderNameAndPath($title, $slug)
+										If FileExists($gamefold) Then
+											$valfold = $gamefold
+										Else
+											$valfold = $gamesfold
+										EndIf
 									EndIf
 								Else
 									$valfold = $gamesfold
 								EndIf
-								_FileWriteLog($logfle, $valfold, -1)
 								$pth = FileOpenDialog("Select a file to validate.", $valfold, "Game files (*.exe;*.bin;*.dmg;*.pkg;*.sh;*.zip)", 3, "", $GOGcliGUI)
 								If @error = 0 Then
 									$filepth = $pth
 									_PathSplit($filepth, $drv, $dir, $flename, $fext)
+									$valfold = StringTrimRight($drv & $dir, 1)
+									_FileWriteLog($logfle, $valfold, -1)
 									$file = $flename & $fext
 									_FileWriteLog($logfle, $file, -1)
 									$flename = StringLeft($file, 20)
 									If $flename <> $file Then $flename = $flename & "...."
 									GUICtrlSetData($Label_top, $flename)
 									GUICtrlSetData($Label_bed, StringUpper(StringTrimLeft($fext, 1)))
-									$result = "Validating = " & $file
+									;$result = "Validating = " & $file
+									$result = $file & @LF
+									$bytes = FileGetSize($filepth)
 									$filesize = IniRead($downfiles, $file, "bytes", 0)
 									If $filesize = 0 Then
 										$result = $result & @LF & "File Size is missing."
 										_FileWriteLog($logfle, "File Size is missing.", -1)
 									Else
-										$bytes = FileGetSize($filepth)
+										;$bytes = FileGetSize($filepth)
 										If $bytes = $filesize Then
 											$result = $result & @LF & "File Size passed."
 											_FileWriteLog($logfle, "File Size passed.", -1)
@@ -2407,11 +2470,20 @@ Func MainGUI()
 											_FileWriteLog($logfle, "File Size failed.", -1)
 										EndIf
 									EndIf
+									$checksum = IniRead($downfiles, $file, "checksum", "")
 									If $fext = ".exe" Or $fext = ".bin" Or $fext = ".dmg" Or $fext = ".pkg" Or $fext = ".sh" Then
-										$checksum = IniRead($downfiles, $file, "checksum", "")
+										;$checksum = IniRead($downfiles, $file, "checksum", "")
 										If $checksum = "" Then
 											$result = $result & @LF & "MD5 (checksum) is missing."
 											_FileWriteLog($logfle, "MD5 (checksum) is missing.", -1)
+											$same = ""
+											If $filesize > 0 Then
+												If $bytes = $filesize Then
+													GetChecksumQuery(1)
+												EndIf
+											Else
+												GetChecksumQuery(1)
+											EndIf
 										Else
 											_Crypt_Startup()
 											$hash = _Crypt_HashFile($filepth, $CALG_MD5)
@@ -2420,6 +2492,10 @@ Func MainGUI()
 											If $hash = $checksum Then
 												$result = $result & @LF & "MD5 (checksum) passed."
 												_FileWriteLog($logfle, "MD5 (checksum) passed.", -1)
+												_FileWriteLog($logfle, "ADDING FILE to Database.", -1)
+												If $bytes <> $filesize Then _FileWriteLog($logfle, "File Size Mismatch.", -1)
+												_FileWriteLog($logfle, "MD5 (checksum) added.", -1)
+												IniWrite($existDB, $file, $slug, $bytes & "|" & $checksum)
 											Else
 												$result = $result & @LF & "MD5 (checksum) failed."
 												_FileWriteLog($logfle, "MD5 (checksum) failed.", -1)
@@ -2431,13 +2507,23 @@ Func MainGUI()
 										If $ret > 0 Then
 											$result = $result & @LF & "ZIP check passed."
 											_FileWriteLog($logfle, "ZIP check passed.", -1)
+											If $filesize = 0 Or $bytes = $filesize Then
+												_FileWriteLog($logfle, "ADDING FILE to Database.", -1)
+												IniWrite($existDB, $file, $slug, $bytes & "|" & $checksum)
+											EndIf
 										Else
 											$result = $result & @LF & "ZIP check failed."
 											_FileWriteLog($logfle, "ZIP check failed.", -1)
 										EndIf
 									EndIf
 									FileWriteLine($logfle, "")
-									MsgBox(262208, "Validate Results", $result, 0, $GOGcliGUI)
+									MsgBox(262208, "Validate Results (Final Report)", $result & @LF & @LF _
+										& "ADVICE - If both values are missing, then likely" & @LF _
+										& "the file is also missing from the manifest. This" & @LF _
+										& "could mean it has been replaced by an update" & @LF _
+										& "if your manifest is up-to-date." & @LF & @LF _
+										& "NOTE - This is the validation result only, and is" & @LF _
+										& "not related to any database addition process.", 0, $GOGcliGUI)
 									GUICtrlSetData($Label_top, "")
 									GUICtrlSetData($Label_bed, "")
 								Else
@@ -2765,6 +2851,19 @@ Func MainGUI()
 				GUICtrlSetTip($Button_man, "Add selected game to manifest!")
 			EndIf
 			GUICtrlSetState($Item_down_all, $manall)
+		Case $msg = $Item_database_view
+			; View The Database
+			If FileExists($existDB) Then ShellExecute($existDB)
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Item_database_relax
+			; Database - Relax The Rules
+			If $relax = 4 Then
+				$relax = 1
+			Else
+				$relax = 4
+			EndIf
+			GUICtrlSetState($Item_database_relax, $relax)
+			IniWrite($inifle, "Exists Database", "relax", $relax)
 		Case $msg = $Item_database_add
 			; ADD To Database
 			If $addto = 4 Then
@@ -3020,8 +3119,8 @@ Func MainGUI()
 EndFunc ;=> MainGUI
 
 Func SetupGUI()
-	Local $Button_close, $Button_cookie, $Checkbox_dos, $Checkbox_exist, $Checkbox_image, $Checkbox_keep, $Checkbox_latest, $Checkbox_select
-	Local $Checkbox_valid, $Combo_lang, $Combo_OS, $Combo_two, $Edit_info, $Group_down, $Group_lang, $Label_OS
+	Local $Button_close, $Button_cookie, $Checkbox_dos, $Checkbox_exist, $Checkbox_image, $Checkbox_keep, $Checkbox_latest, $Checkbox_relax
+	Local $Checkbox_select, $Checkbox_valid, $Combo_lang, $Combo_OS, $Combo_two, $Edit_info, $Group_down, $Group_lang, $Label_OS
 	Local $above, $high, $info, $langs, $opsys, $side, $wide
 	;
 	$wide = 250
@@ -3033,23 +3132,25 @@ Func SetupGUI()
 	GUISetBkColor(0xFFFFB0, $SetupGUI)
 	;
 	; CONTROLS
-	$Edit_info = GUICtrlCreateEdit("", 11, 10, 228, 85, $ES_WANTRETURN + $WS_VSCROLL + $ES_AUTOVSCROLL + $ES_MULTILINE + $ES_READONLY)
+	$Edit_info = GUICtrlCreateEdit("", 11, 10, 228, 65, $ES_WANTRETURN + $WS_VSCROLL + $ES_AUTOVSCROLL + $ES_MULTILINE + $ES_READONLY)
 	;
-	$Button_cookie = GuiCtrlCreateButton("CREATE COOKIE", 10, 105, 160, 50)
+	$Button_cookie = GuiCtrlCreateButton("CREATE COOKIE", 10, 85, 160, 50)
 	GUICtrlSetFont($Button_cookie, 9, 600)
 	GUICtrlSetTip($Button_cookie, "Create the basic cookie file!")
 	;
-	$Button_close = GuiCtrlCreateButton("EXIT", 180, 105, 60, 50, $BS_ICON)
+	$Button_close = GuiCtrlCreateButton("EXIT", 180, 85, 60, 50, $BS_ICON)
 	GUICtrlSetTip($Button_close, "Exit / Close / Quit the window!")
 	;
-	$Checkbox_keep = GUICtrlCreateCheckbox("Save cover images locally when shown", 24, 162, 210, 20)
+	$Checkbox_keep = GUICtrlCreateCheckbox("Save cover images locally when shown", 24, 142, 210, 20)
 	GUICtrlSetTip($Checkbox_keep, "Save cover images locally when obtained!")
 	;
-	$Checkbox_dos = GUICtrlCreateCheckbox("Minimize DOS Console window process", 24, 182, 210, 20)
+	$Checkbox_dos = GUICtrlCreateCheckbox("Minimize DOS Console window process", 24, 162, 210, 20)
 	GUICtrlSetTip($Checkbox_dos, "Minimize a DOS Console window process when it starts!")
 	;
-	$Checkbox_exist = GUICtrlCreateCheckbox("Enable the 'Exists' database for usage", 24, 202, 210, 20)
+	$Checkbox_exist = GUICtrlCreateCheckbox("Enable the 'Exists' database for usage", 24, 182, 210, 20)
 	GUICtrlSetTip($Checkbox_exist, "Enable the 'Exists' database for use!")
+	$Checkbox_relax = GUICtrlCreateCheckbox("Relax the rules (file size only needed)", 34, 202, 200, 20)
+	GUICtrlSetTip($Checkbox_relax, "Relax the rules (file size only required) if checksum missing!")
 	;
 	$Group_lang = GuiCtrlCreateGroup("Language(s)", 10, 225, 230, 52)
 	$Combo_lang = GUICtrlCreateCombo("", 20, 245, 125, 21)
@@ -3088,6 +3189,8 @@ Func SetupGUI()
 	GUICtrlSetState($Checkbox_keep, $keep)
 	GUICtrlSetState($Checkbox_dos, $minimize)
 	GUICtrlSetState($Checkbox_exist, $exists)
+	GUICtrlSetState($Checkbox_relax, $relax)
+	If $exists = 4 Then GUICtrlSetState($Checkbox_relax, $GUI_DISABLE)
 	;
 	$langs = "||arabic|chinese_simplified|czech|danish|dutch|english|finnish|french|german|hungarian|italian|japanese|korean|polish|portuguese|portuguese_brazilian|romanian|russian|spanish|swedish|turkish|unknown"
 	GUICtrlSetData($Combo_lang, $langs, $lang)
@@ -3202,6 +3305,22 @@ Func SetupGUI()
 				$selector = 4
 			EndIf
 			IniWrite($inifle, "Download Options", "selector", $selector)
+		Case $msg = $Checkbox_relax
+			; Relax the rules (file size only required) if checksum missing
+			If GUICtrlRead($Checkbox_relax) = $GUI_CHECKED Then
+				$relax = 1
+				MsgBox(262208, "Relax The Rules", _
+					"For a file name to be excluded from the download list" & @LF & _
+					"it normally needs to match both the 'file size' and the" & @LF & _
+					"'checksum (MD5)' value. With 'Relax' enabled, it only" & @LF & _
+					"needs to match 'file size' when checksum is missing.", 0, $SetupGUI)
+			Else
+				$relax = 4
+			EndIf
+			IniWrite($inifle, "Exists Database", "relax", $relax)
+			GUISwitch($GOGcliGUI)
+			GUICtrlSetState($Item_database_relax, $relax)
+			GUISwitch($SetupGUI)
 		Case $msg = $Checkbox_latest
 			; Get latest manifest data for the game
 			If GUICtrlRead($Checkbox_latest) = $GUI_CHECKED Then
@@ -3230,8 +3349,10 @@ Func SetupGUI()
 			; Enable the 'Exists' database for usage
 			If GUICtrlRead($Checkbox_exist) = $GUI_CHECKED Then
 				$exists = 1
+				GUICtrlSetState($Checkbox_relax, $GUI_ENABLE)
 			Else
 				$exists = 4
+				GUICtrlSetState($Checkbox_relax, $GUI_DISABLE)
 			EndIf
 			IniWrite($inifle, "Exists Database", "use", $exists)
 		Case $msg = $Checkbox_dos
@@ -3271,12 +3392,12 @@ Func SetupGUI()
 EndFunc ;=> SetupGUI
 
 Func FileSelectorGUI()
-	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Checkbox_skip, $Combo_OSfle, $Combo_shutdown, $Group_exist, $Group_files
-	Local $Group_OS, $Group_select, $Label_done, $Label_percent, $Label_shut, $Label_speed, $Label_warn, $ListView_files, $Progress_bar, $Radio_selall
-	Local $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
+	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Checkbox_relax, $Checkbox_skip, $Combo_OSfle, $Combo_shutdown, $Group_exist
+	Local $Group_files, $Group_OS, $Group_select, $Label_done, $Label_percent, $Label_shut, $Label_speed, $Label_warn, $ListView_files, $Progress_bar
+	Local $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
 	Local $amount, $begin, $cancel, $checked, $code, $col1, $col2, $col3, $col4, $color, $dllcall, $downloading, $edge, $ents, $exist, $fext, $gotten
-	Local $IDD, $idx, $imageD, $osfle, $prior, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $styles, $sum, $taken, $theme
-	Local $titleD, $tmpman, $val, $wide
+	Local $IDD, $idx, $imageD, $missing, $osfle, $prior, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $styles, $sum, $taken
+	Local $theme, $titleD, $tmpman, $val, $wide
 	;
 	$styles = $WS_OVERLAPPED + $WS_CAPTION + $WS_MINIMIZEBOX ; + $WS_POPUP
 	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $styles + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
@@ -3308,17 +3429,21 @@ Func FileSelectorGUI()
 	GUICtrlSetColor($Label_done, $COLOR_WHITE)
 	GUICtrlSetTip($Label_done, "Downloaded!")
 	;
-	$Label_warn = GuiCtrlCreateLabel("", 10, 318, $width - 184, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	$Label_warn = GuiCtrlCreateLabel("", 10, 318, 340, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN) ;$width -
 	GUICtrlSetBkColor($Label_warn, $COLOR_RED)
 	GUICtrlSetColor($Label_warn, $COLOR_YELLOW)
 	GUICtrlSetFont($Label_warn, 8, 600)
 	GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
 	;GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
 	;
+	$Checkbox_relax = GUICtrlCreateCheckbox("Relax", 360, 318, 50, 20)
+	GUICtrlSetResizing($Checkbox_relax, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Checkbox_relax, "Relax the exclusion rules for download list files!")
+	;
 	;$Progress_bar = GUICtrlCreateProgress($width - 166, 317, 80, 20, $PBS_SMOOTH)
-	$Progress_bar = GUICtrlCreateProgress($width - 166, 317, 80, 20)
+	$Progress_bar = GUICtrlCreateProgress($width - 176, 317, 90, 20)
 	GUICtrlSetResizing($Progress_bar, $GUI_DOCKRIGHT + $GUI_DOCKHEIGHT + $GUI_DOCKAUTO + $GUI_DOCKAUTO)
-	$Label_percent = GUICtrlCreateLabel("0%", $width - 160, 318, 75, 20, $SS_CENTER + $SS_CENTERIMAGE)
+	$Label_percent = GUICtrlCreateLabel("0%", $width - 170, 318, 85, 20, $SS_CENTER + $SS_CENTERIMAGE)
 	GUICtrlSetBkColor($Label_percent, $GUI_BKCOLOR_TRANSPARENT)
 	GUICtrlSetColor($Label_percent, $COLOR_BLACK)
 	GUICtrlSetFont($Label_percent, 9, 600)
@@ -3416,6 +3541,12 @@ Func FileSelectorGUI()
 		For $s = 1 To $sections[0]
 			$sect = $sections[$s]
 			If $sect <> "Title" Then
+				If $exists = 1 Then
+					$missing = IniRead($downfiles, $sect, "missing", "")
+					If $missing = "checksum" Then
+						If $relax = 1 Then ContinueLoop
+					EndIf
+				EndIf
 				$col1 = $col1 + 1
 				$col2 = IniRead($downfiles, $sect, "type", "")
 				$col3 = IniRead($downfiles, $sect, "size", "")
@@ -3455,7 +3586,14 @@ Func FileSelectorGUI()
 	$ents = _GUICtrlListView_GetItemCount($ListView_files)
 	GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")")
 	;
-	GUICtrlSetData($Label_warn, "Ensure desired download settings have been set on the SETUP window.")
+	;GUICtrlSetData($Label_warn, "Ensure desired download settings have been set on the SETUP window.")
+	GUICtrlSetData($Label_warn, "Ensure wanted download options are set in SETUP window.")
+	;
+	If $exists = 4 Then
+		GUICtrlSetState($Checkbox_relax, $GUI_DISABLE)
+	Else
+		GUICtrlSetState($Checkbox_relax, $relax)
+	EndIf
 	;
 	$osfle = IniRead($inifle, "Selector", "OS", "")
 	If $osfle = "" Then
@@ -3480,6 +3618,8 @@ Func FileSelectorGUI()
 		Select
 		Case $msg = $GUI_EVENT_CLOSE Or $msg = $Button_quit
 			; Exit / Close / Quit the window
+			$exists = IniRead($inifle, "Exists Database", "use", "")
+			$relax = IniRead($inifle, "Exists Database", "relax", "")
 			GUIDelete($SelectorGUI)
 			ExitLoop
 		Case $msg = $GUI_EVENT_MINIMIZE
@@ -3520,6 +3660,7 @@ Func FileSelectorGUI()
 				If $ping > 0 Or $test = 1 Then
 					GUICtrlSetState($Button_download, $GUI_DISABLE)
 					GUICtrlSetState($ListView_files, $GUI_DISABLE)
+					If $exists = 1 Then GUICtrlSetState($Checkbox_relax, $GUI_DISABLE)
 					GUICtrlSetState($Radio_selall, $GUI_DISABLE)
 					GUICtrlSetState($Radio_selgame, $GUI_DISABLE)
 					GUICtrlSetState($Radio_selext, $GUI_DISABLE)
@@ -4037,6 +4178,7 @@ Func FileSelectorGUI()
 					EndIf
 					GUICtrlSetState($Button_download, $GUI_ENABLE)
 					GUICtrlSetState($ListView_files, $GUI_ENABLE)
+					If $exists = 1 Then GUICtrlSetState($Checkbox_relax, $GUI_ENABLE)
 					GUICtrlSetState($Radio_selall, $GUI_ENABLE)
 					GUICtrlSetState($Radio_selgame, $GUI_ENABLE)
 					GUICtrlSetState($Radio_selext, $GUI_ENABLE)
@@ -4058,6 +4200,73 @@ Func FileSelectorGUI()
 				$skip = 4
 			EndIf
 			IniWrite($inifle, "Existing Files", "skip", $skip)
+		Case $msg = $Checkbox_relax
+			; Relax the rules for download list files
+			$ans = MsgBox(262177 + 256, "Relax Query & Advice", _
+				"This option change is temporary and does not" & @LF & _
+				"make a permanent change to existing settings." & @LF & @LF & _
+				"This option change also reloads the file list." & @LF & @LF & _
+				"Do you want to continue?", 0, $GOGcliGUI)
+			If $ans = 1 Then
+				;If $exists = 4 Then $exists = 1
+				If GUICtrlRead($Checkbox_relax) = $GUI_CHECKED Then
+					$relax = 1
+				Else
+					$relax = 4
+				EndIf
+				_GUICtrlListView_DeleteAllItems($ListView_files)
+				If $caption = "Downloads List" Then
+					$col1 = 0
+					$prior = ""
+					$sections = IniReadSectionNames($downfiles)
+					For $s = 1 To $sections[0]
+						$sect = $sections[$s]
+						If $sect <> "Title" Then
+							$missing = IniRead($downfiles, $sect, "missing", "")
+							If $missing = "checksum" Then
+								If $relax = 1 Then ContinueLoop
+							EndIf
+							$col1 = $col1 + 1
+							$col2 = IniRead($downfiles, $sect, "type", "")
+							$col3 = IniRead($downfiles, $sect, "size", "")
+							$col4 = IniRead($downfiles, $sect, "file", "")
+							$titleD = IniRead($downfiles, $sect, "game", "")
+							$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
+							;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
+							$idx = GUICtrlCreateListViewItem($entry, $ListView_files)
+							If $prior = "" Then
+								$prior = $titleD
+								$color = 0xB9FFFF
+							ElseIf $prior <> $titleD Then
+								$prior = $titleD
+								If $color = 0xB9FFFF Then
+									$color = 0xFFFFB0
+								Else
+									$color = 0xB9FFFF
+								EndIf
+							EndIf
+							GUICtrlSetBkColor($idx, $color)
+						EndIf
+					Next
+				Else
+					GetFileDownloadDetails($ListView_files)
+				EndIf
+				;
+				_GUICtrlListView_JustifyColumn($ListView_files, 0, 0)
+				_GUICtrlListView_JustifyColumn($ListView_files, 1, 2)
+				_GUICtrlListView_JustifyColumn($ListView_files, 2, 2)
+				_GUICtrlListView_JustifyColumn($ListView_files, 3, 0)
+				_GUICtrlListView_SetColumnWidth($ListView_files, 0, 45)
+				_GUICtrlListView_SetColumnWidth($ListView_files, 1, 55)
+				_GUICtrlListView_SetColumnWidth($ListView_files, 2, 70)
+				_GUICtrlListView_SetColumnWidth($ListView_files, 3, $LVSCW_AUTOSIZE_USEHEADER)
+				;_GUICtrlListView_SetColumnWidth($ListView_files, 3, $LVSCW_AUTOSIZE)
+				;
+				$ents = _GUICtrlListView_GetItemCount($ListView_files)
+				GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")")
+			Else
+				GUICtrlSetState($Checkbox_relax, $relax)
+			EndIf
 		Case $msg = $Combo_OSfle
 			; OS for files
 			$osfle = GUICtrlRead($Combo_OSfle)
@@ -5182,6 +5391,38 @@ Func FixTitle($text)
 	Return $text
 EndFunc ;=> FixTitle
 
+Func GetChecksumQuery($rat = "")
+	If $same <> "" Then
+		$ans = $same
+	Else
+		$ans = MsgBox(262179 + 256, "Initial Report & Database Add Query", "Checksum value is missing from the manifest. So cannot compare." & @LF & @LF & _
+			$file & @LF & @LF & _
+			"Get checksum of existing file for the 'Exists' database?" & @LF & @LF & _
+			"YES = Get checksum & add file values to database." & @LF & _
+			"NO = Just add file values to database." & @LF & _
+			"CANCEL = Don't add file values to database.", 0, $GOGcliGUI)
+		If $rat = "" Then
+			$res = MsgBox(262177 + 256, "Further Queries", "Do you want to use the same response for" & @LF & "any further queries, to avoid delays?", 0, $GOGcliGUI)
+			If $res = 1 Then
+				$same = $ans
+			EndIf
+		EndIf
+	EndIf
+	If $ans = 6 Then
+		_Crypt_Startup()
+		$hash = _Crypt_HashFile($filepth, $CALG_MD5)
+		_Crypt_Shutdown()
+		$checksum = StringTrimLeft($hash, 2)
+	EndIf
+	If $ans <> 2 Then
+		_FileWriteLog($logfle, "ADDING FILE to Database.", -1)
+		If $checksum <> "" Then
+			_FileWriteLog($logfle, "MD5 (checksum) obtained & added.", -1)
+		EndIf
+		IniWrite($existDB, $file, $slug, $bytes & "|" & $checksum)
+	EndIf
+EndFunc ;=> GetChecksumQuery
+
 Func GetFileDownloadDetails($listview = "")
 	Local $alias, $col1, $col2, $col3, $col4, $fext, $l, $language, $languages, $loop, $OPS, $proceed, $values
 	;$caption
@@ -5271,7 +5512,10 @@ Func GetFileDownloadDetails($listview = "")
 					$values = StringSplit($values, "|")
 					If $values[1] = $filesize Then
 						; File Size Match
-						If $values[2] = $checksum Then
+						If $relax = 1 And $values[2] = "" Then
+							; Relaxed Match.
+							$proceed = ""
+						ElseIf $values[2] = $checksum Then
 							; Checksum Match
 							$fext = StringRight($col4, 4)
 							If $values[2] = "" And $fext <> ".zip" Then
