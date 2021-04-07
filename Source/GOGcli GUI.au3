@@ -88,10 +88,10 @@ Global $f, $file, $fileinfo, $filepth, $files, $filesize, $flag, $fold, $found, 
 Global $gamesfold, $gamesini, $getlatest, $gogcli, $GOGcliGUI, $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW
 Global $icoX, $ID, $identry, $ignore, $image, $imgfle, $inifle, $json, $keep, $lang, $left, $line, $lines, $link, $list, $listed
 Global $listview, $logfle, $lowid, $m, $manall, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num, $numb
-Global $OP, $OS, $OSes, $overlook, $params, $part, $parts, $percent, $ping, $progress, $pth, $rat, $ratify, $read, $record, $relax
-Global $reportexe, $res, $ret, $row, $s, $same, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash
-Global $split, $splits, $state, $style, $tag, $tagfle, $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates
-Global $URL, $user, $validate, $verify, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
+Global $OP, $OS, $OSes, $overlook, $params, $part, $parts, $percent, $ping, $pinged, $progress, $pth, $rat, $ratify, $read, $record
+Global $relax, $reportexe, $res, $ret, $row, $s, $same, $second, $selector, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space
+Global $splash, $split, $splits, $state, $style, $tag, $tagfle, $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated
+Global $updates, $URL, $user, $validate, $verify, $web, $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
 ;, $foldzip, $resultfle
 
 $addlist = @ScriptDir & "\Added.txt"
@@ -1025,7 +1025,7 @@ Func MainGUI()
 									& "Any mismatches, you will need to process individually." & @LF _
 									& "See the Log for successes and or failures.", 0, $GOGcliGUI)
 							EndIf
-							If $ans <> 2 Then
+							If $ans <> 2 And $slug <> "" Then
 								If $ans = 7 Then
 									MsgBox(262192, "ADD Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 									GUICtrlSetState($Listview_games, $GUI_FOCUS)
@@ -1097,6 +1097,35 @@ Func MainGUI()
 														IniWrite($existDB, $file, $slug, $filesize & "|" & $checksum)
 													EndIf
 												Next
+												$pos = StringInStr($slug, "chapter")
+												$pos = $pos + StringInStr($slug, "episode")
+												$pos = $pos + StringInStr($slug, "part")
+												$pos = $pos + StringInStr($slug, "volume")
+												If $pos > 0 Then
+													MsgBox(262192, "Warning Alert & Advice", "Possible multiple game titles in a game folder detected." & @LF & @LF _
+														& "If the content of the currently selected main game folder" & @LF _
+														& "contains multiple game title content as deemed by GOG, " & @LF _
+														& "and some are in sub-folders, then you must additionally" & @LF _
+														& "process each of those sub-folders, or files will incorrectly" & @LF _
+														& "exist in the database, paired to the wrong game title." & @LF & @LF _
+														& "An example of this, is a game purchased from GOG that" & @LF _
+														& "does not have its own title listing in your library, but has" & @LF _
+														& "two or more chapter (or episode etc) title listings." & @LF & @LF _
+														& "'Wallace & Gromit's Grand Adventures', is a recent game" & @LF _
+														& "purchase I made at GOG, but there is no such game title" & @LF _
+														& "in my GOG library, instead four chapter titles are listed as" & @LF _
+														& "separate games." & @LF & @LF _
+														& "The ADD TO DATABASE process requires linking a game" & @LF _
+														& "title with a game folder, a problem when you have more" & @LF _
+														& "than one candidate on your 'Games' list of titles, none of" & @LF _
+														& "them being totally correct, but you have to choose one." & @LF & @LF _
+														& "You can get around this issue, by having a sub-folder for" & @LF _
+														& "each chapter title, and then adding them all individually" & @LF _
+														& "to the database (after processing the main game folder" & @LF _
+														& "first). Though you can skip the main folder if it doesn't" & @LF _
+														& "contain (at root) any files (i.e. game extras) of its own." & @LF & @LF _
+														& "Keywords for an alert - chapter, episode, part, volume.", 0, $GOGcliGUI)
+												EndIf
 											EndIf
 											FileWriteLine($logfle, "")
 										EndIf
@@ -2548,6 +2577,11 @@ Func MainGUI()
 				GUICtrlSetData($Label_top, "Changed Filename(s)")
 				GUICtrlSetData($Label_mid, "Check the 'Alerts.txt' File")
 				GUICtrlSetData($Label_bed, $alert & " file(s) changed")
+				MsgBox(262192, "Name Change Alert", $alert & " file name(s) detected as changed." & @LF & @LF _
+					& "This means the manifest needs to be updated (entries replaced)" & @LF _
+					& "for the game or games (one or more) that was just downloaded" & @LF _
+					& "or checked etc. Other new game files might also be available to" & @LF _
+					& "download for the game(s) in question, so check after updating.", 0, $GOGcliGUI)
 				$alert = 0
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
@@ -3534,13 +3568,86 @@ Func FileSelectorGUI()
 	;
 	GUICtrlSetData($Combo_shutdown, "none|Hibernate|Logoff|Powerdown|Reboot|Shutdown|Standby", "none")
 	;
+	$pinged = ""
 	If $caption = "Downloads List" Then
+		If $getlatest = 4 And $exists = 1 Then
+			$ping = Ping("gog.com", 4000)
+			If $ping = 0 Then
+				MsgBox(262192, "Warning", "File names could not be checked, no web connection!" & @LF & @LF _
+					& "IMPORTANT - This could mean that latest file versions" & @LF _
+					& "may not be shown. Reload (toggle Relax) to try again.", 0, $SelectorGUI)
+			Else
+				SplashTextOn("", "Please Wait!" & @LF & @LF & "(Checking File Names)" & @LF & "(Loading List)", 200, 140, Default, Default, 33)
+			EndIf
+		Else
+			$ping = 0
+		EndIf
+		If $ping = 0 Then SplashTextOn("", "Please Wait!" & @LF & @LF & "(Loading List)", 180, 130, Default, Default, 33)
 		$col1 = 0
 		$prior = ""
 		$sections = IniReadSectionNames($downfiles)
 		For $s = 1 To $sections[0]
 			$sect = $sections[$s]
 			If $sect <> "Title" Then
+				$col4 = IniRead($downfiles, $sect, "file", "")
+				If $ping > 0 Then
+					$pinged = 1
+					GUICtrlSetState($Button_download, $GUI_DISABLE)
+					GUICtrlSetState($ListView_files, $GUI_DISABLE)
+					If $exists = 1 Then GUICtrlSetState($Checkbox_relax, $GUI_DISABLE)
+					GUICtrlSetState($Radio_selall, $GUI_DISABLE)
+					GUICtrlSetState($Radio_selgame, $GUI_DISABLE)
+					GUICtrlSetState($Radio_selext, $GUI_DISABLE)
+					GUICtrlSetState($Radio_selset, $GUI_DISABLE)
+					GUICtrlSetState($Radio_selpat, $GUI_DISABLE)
+					GUICtrlSetState($Combo_OSfle, $GUI_DISABLE)
+					GUICtrlSetState($Button_uncheck, $GUI_DISABLE)
+					GUICtrlSetState($Button_quit, $GUI_DISABLE)
+					$file = $col4
+					_FileWriteLog($logfle, "CHECKING FILENAME - " & $file, -1)
+					$URL = IniRead($downfiles, $file, "URL", "")
+					If $URL <> "" Then
+						$params = '-c Cookie.txt gog-api url-path-info -p=' & $URL & ' >"' & $fileinfo & '"'
+						$pid = RunWait(@ComSpec & ' /c echo CHECKING FILENAME ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+						Sleep(500)
+						_FileReadToArray($fileinfo, $array)
+						If @error = 0 Then
+							If $array[0] = 3 Then
+								$val = StringReplace($array[1], "File Name: ", "")
+								If $val = $file Then
+									_FileWriteLog($logfle, "Checked Okay.", -1)
+								Else
+									$sect = $file
+									$file = $val
+									$col4 = $file
+									IniWrite($downfiles, $sect, "file", $file)
+									$checksum = StringReplace($array[2], "Checksum: ", "")
+									IniWrite($downfiles, $sect, "checksum", $checksum)
+									$filesize = StringReplace($array[3], "Size: ", "")
+									IniWrite($downfiles, $sect, "bytes", $filesize)
+									_FileWriteLog($logfle, "Changed - " & $file, -1)
+									_FileWriteLog($alerts, $sect & " changed to " & $file, -1)
+									$alert = $alert + 1
+								EndIf
+							Else
+								_FileWriteLog($logfle, "Checking Erred (2).", -1)
+							EndIf
+						Else
+							_FileWriteLog($logfle, "Checking Erred (1).", -1)
+						EndIf
+					EndIf
+					GUICtrlSetState($Button_download, $GUI_ENABLE)
+					GUICtrlSetState($ListView_files, $GUI_ENABLE)
+					If $exists = 1 Then GUICtrlSetState($Checkbox_relax, $GUI_ENABLE)
+					GUICtrlSetState($Radio_selall, $GUI_ENABLE)
+					GUICtrlSetState($Radio_selgame, $GUI_ENABLE)
+					GUICtrlSetState($Radio_selext, $GUI_ENABLE)
+					GUICtrlSetState($Radio_selset, $GUI_ENABLE)
+					GUICtrlSetState($Radio_selpat, $GUI_ENABLE)
+					GUICtrlSetState($Combo_OSfle, $GUI_ENABLE)
+					GUICtrlSetState($Button_uncheck, $GUI_ENABLE)
+					GUICtrlSetState($Button_quit, $GUI_ENABLE)
+				EndIf
 				If $exists = 1 Then
 					$missing = IniRead($downfiles, $sect, "missing", "")
 					If $missing = "checksum" Then
@@ -3550,7 +3657,6 @@ Func FileSelectorGUI()
 				$col1 = $col1 + 1
 				$col2 = IniRead($downfiles, $sect, "type", "")
 				$col3 = IniRead($downfiles, $sect, "size", "")
-				$col4 = IniRead($downfiles, $sect, "file", "")
 				$titleD = IniRead($downfiles, $sect, "game", "")
 				$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
 				;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
@@ -3567,8 +3673,11 @@ Func FileSelectorGUI()
 					EndIf
 				EndIf
 				GUICtrlSetBkColor($idx, $color)
+				If $missing = "checksum" Then GUICtrlSetColor($idx, $COLOR_WHITE)
 			EndIf
 		Next
+		;Sleep(5000)
+		SplashOff()
 	Else
 		GetFileDownloadDetails($ListView_files)
 	EndIf
@@ -3700,7 +3809,7 @@ Func FileSelectorGUI()
 							$flag = @SW_SHOW
 						EndIf
 						GUICtrlSetStyle($Progress_bar, $PBS_SMOOTH)
-						$alert = 0
+						If $pinged = "" Then $alert = 0
 						$md5check = ""
 						$zipcheck = ""
 						;$nmb = 0
@@ -3714,6 +3823,7 @@ Func FileSelectorGUI()
 							If $URL <> "" Then
 								; This may have been set prior or during
 								If GUICtrlRead($Checkbox_skip) = $GUI_CHECKED Then
+									; Skip Existing Files
 									If $skip = 4 Then
 										; Changed during, record the change
 										$skip = 1
@@ -3760,7 +3870,8 @@ Func FileSelectorGUI()
 										If $test = 1 Then
 											Sleep(5000)
 										Else
-											If $getlatest = 4 Then
+											If $getlatest = 4 And $pinged = "" Then
+												; Check for correct file name
 												_FileWriteLog($logfle, "CHECKING FILENAME - " & $file, -1)
 												$params = '-c Cookie.txt gog-api url-path-info -p=' & $URL & ' >"' & $fileinfo & '"'
 												$pid = RunWait(@ComSpec & ' /c echo CHECKING FILENAME ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
@@ -4216,12 +4327,85 @@ Func FileSelectorGUI()
 				EndIf
 				_GUICtrlListView_DeleteAllItems($ListView_files)
 				If $caption = "Downloads List" Then
+					If $getlatest = 4 And $exists = 1 And $pinged = "" Then
+						; Try again to check file names.
+						$ping = Ping("gog.com", 4000)
+						If $ping = 0 Then
+							MsgBox(262192, "Warning", "File names could not be checked, no web connection!" & @LF & @LF _
+								& "IMPORTANT - This could mean that latest file versions" & @LF _
+								& "may not be shown. Reload (toggle Relax) to try again.", 0, $SelectorGUI)
+						Else
+							SplashTextOn("", "Please Wait!" & @LF & @LF & "(Checking File Names)" & @LF & "(Loading List)", 200, 140, Default, Default, 33)
+						EndIf
+					Else
+						$ping = 0
+					EndIf
+					If $ping = 0 Then SplashTextOn("", "Please Wait!" & @LF & @LF & "(Loading List)", 180, 130, Default, Default, 33)
 					$col1 = 0
 					$prior = ""
 					$sections = IniReadSectionNames($downfiles)
 					For $s = 1 To $sections[0]
 						$sect = $sections[$s]
 						If $sect <> "Title" Then
+							$col4 = IniRead($downfiles, $sect, "file", "")
+							If $ping > 0 Then
+								$pinged = 1
+								GUICtrlSetState($Button_download, $GUI_DISABLE)
+								GUICtrlSetState($ListView_files, $GUI_DISABLE)
+								If $exists = 1 Then GUICtrlSetState($Checkbox_relax, $GUI_DISABLE)
+								GUICtrlSetState($Radio_selall, $GUI_DISABLE)
+								GUICtrlSetState($Radio_selgame, $GUI_DISABLE)
+								GUICtrlSetState($Radio_selext, $GUI_DISABLE)
+								GUICtrlSetState($Radio_selset, $GUI_DISABLE)
+								GUICtrlSetState($Radio_selpat, $GUI_DISABLE)
+								GUICtrlSetState($Combo_OSfle, $GUI_DISABLE)
+								GUICtrlSetState($Button_uncheck, $GUI_DISABLE)
+								GUICtrlSetState($Button_quit, $GUI_DISABLE)
+								$file = $col4
+								_FileWriteLog($logfle, "CHECKING FILENAME - " & $file, -1)
+								$URL = IniRead($downfiles, $file, "URL", "")
+								If $URL <> "" Then
+									$params = '-c Cookie.txt gog-api url-path-info -p=' & $URL & ' >"' & $fileinfo & '"'
+									$pid = RunWait(@ComSpec & ' /c echo CHECKING FILENAME ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+									Sleep(500)
+									_FileReadToArray($fileinfo, $array)
+									If @error = 0 Then
+										If $array[0] = 3 Then
+											$val = StringReplace($array[1], "File Name: ", "")
+											If $val = $file Then
+												_FileWriteLog($logfle, "Checked Okay.", -1)
+											Else
+												$sect = $file
+												$file = $val
+												$col4 = $file
+												IniWrite($downfiles, $sect, "file", $file)
+												$checksum = StringReplace($array[2], "Checksum: ", "")
+												IniWrite($downfiles, $sect, "checksum", $checksum)
+												$filesize = StringReplace($array[3], "Size: ", "")
+												IniWrite($downfiles, $sect, "bytes", $filesize)
+												_FileWriteLog($logfle, "Changed - " & $file, -1)
+												_FileWriteLog($alerts, $sect & " changed to " & $file, -1)
+												$alert = $alert + 1
+											EndIf
+										Else
+											_FileWriteLog($logfle, "Checking Erred (2).", -1)
+										EndIf
+									Else
+										_FileWriteLog($logfle, "Checking Erred (1).", -1)
+									EndIf
+								EndIf
+								GUICtrlSetState($Button_download, $GUI_ENABLE)
+								GUICtrlSetState($ListView_files, $GUI_ENABLE)
+								If $exists = 1 Then GUICtrlSetState($Checkbox_relax, $GUI_ENABLE)
+								GUICtrlSetState($Radio_selall, $GUI_ENABLE)
+								GUICtrlSetState($Radio_selgame, $GUI_ENABLE)
+								GUICtrlSetState($Radio_selext, $GUI_ENABLE)
+								GUICtrlSetState($Radio_selset, $GUI_ENABLE)
+								GUICtrlSetState($Radio_selpat, $GUI_ENABLE)
+								GUICtrlSetState($Combo_OSfle, $GUI_ENABLE)
+								GUICtrlSetState($Button_uncheck, $GUI_ENABLE)
+								GUICtrlSetState($Button_quit, $GUI_ENABLE)
+							EndIf
 							$missing = IniRead($downfiles, $sect, "missing", "")
 							If $missing = "checksum" Then
 								If $relax = 1 Then ContinueLoop
@@ -4229,7 +4413,7 @@ Func FileSelectorGUI()
 							$col1 = $col1 + 1
 							$col2 = IniRead($downfiles, $sect, "type", "")
 							$col3 = IniRead($downfiles, $sect, "size", "")
-							$col4 = IniRead($downfiles, $sect, "file", "")
+							;$col4 = IniRead($downfiles, $sect, "file", "")
 							$titleD = IniRead($downfiles, $sect, "game", "")
 							$entry = $col1 & "|" & $col2 & "|" & $col3 & "|" & $col4
 							;MsgBox(262208, "Entry Information", $entry, 0, $SelectorGUI)
@@ -4246,8 +4430,10 @@ Func FileSelectorGUI()
 								EndIf
 							EndIf
 							GUICtrlSetBkColor($idx, $color)
+							If $missing = "checksum" Then GUICtrlSetColor($idx, $COLOR_WHITE)
 						EndIf
 					Next
+					SplashOff()
 				Else
 					GetFileDownloadDetails($ListView_files)
 				EndIf
@@ -5424,11 +5610,29 @@ Func GetChecksumQuery($rat = "")
 EndFunc ;=> GetChecksumQuery
 
 Func GetFileDownloadDetails($listview = "")
-	Local $alias, $col1, $col2, $col3, $col4, $fext, $l, $language, $languages, $loop, $OPS, $proceed, $values
+	Local $alias, $col1, $col2, $col3, $col4, $fext, $l, $language, $languages, $loop, $OPS, $proceed, $sect, $val, $values
 	;$caption
 	_FileCreate($downfiles)
 	Sleep(500)
-	If $listview <> "" Then IniWrite($downfiles, "Title", "caption", $caption)
+	If $listview <> "" Then
+		IniWrite($downfiles, "Title", "caption", $caption)
+		If $getlatest = 4 And $exists = 1 And $pinged = "" Then
+			$ping = Ping("gog.com", 4000)
+			If $ping = 0 Then
+				MsgBox(262192, "Warning", "File names could not be checked, no web connection!" & @LF & @LF _
+					& "IMPORTANT - This could mean that latest file versions" & @LF _
+					& "may not be shown. Reload (toggle Relax) to try again.", 0, $GOGcliGUI)
+			Else
+				$pinged = 1
+				SplashTextOn("", "Please Wait!" & @LF & @LF & "(Checking File Names)" & @LF & "(Loading List)", 200, 140, Default, Default, 33)
+			EndIf
+		Else
+			$ping = 0
+		EndIf
+		If $ping = 0 Then SplashTextOn("", "Please Wait!" & @LF & @LF & "(Loading List)", 180, 130, Default, Default, 33)
+	Else
+		$ping = 0
+	EndIf
 	;
 	$alias = ""
 	$checksum = ""
@@ -5506,6 +5710,41 @@ Func GetFileDownloadDetails($listview = "")
 			;
 			$proceed = 1
 			If $exists = 1 Then
+				If $ping > 0 Then
+					$file = $col4
+					_FileWriteLog($logfle, "CHECKING FILENAME - " & $file, -1)
+					;$URL = IniRead($downfiles, $file, "URL", "")
+					If $URL <> "" Then
+						$params = '-c Cookie.txt gog-api url-path-info -p=' & $URL & ' >"' & $fileinfo & '"'
+						$pid = RunWait(@ComSpec & ' /c echo CHECKING FILENAME ' & $file & ' && gogcli.exe ' & $params, @ScriptDir, $flag)
+						Sleep(500)
+						_FileReadToArray($fileinfo, $array)
+						If @error = 0 Then
+							If $array[0] = 3 Then
+								$val = StringReplace($array[1], "File Name: ", "")
+								If $val = $file Then
+									_FileWriteLog($logfle, "Checked Okay.", -1)
+								Else
+									$sect = $file
+									$file = $val
+									$col4 = $file
+									;IniWrite($downfiles, $sect, "file", $file)
+									$checksum = StringReplace($array[2], "Checksum: ", "")
+									;IniWrite($downfiles, $sect, "checksum", $checksum)
+									$filesize = StringReplace($array[3], "Size: ", "")
+									;IniWrite($downfiles, $sect, "bytes", $filesize)
+									_FileWriteLog($logfle, "Changed - " & $file, -1)
+									_FileWriteLog($alerts, $sect & " changed to " & $file, -1)
+									$alert = $alert + 1
+								EndIf
+							Else
+								_FileWriteLog($logfle, "Checking Erred (2).", -1)
+							EndIf
+						Else
+							_FileWriteLog($logfle, "Checking Erred (1).", -1)
+						EndIf
+					EndIf
+				EndIf
 				; Check to skip existing in Database.
 				$values = IniRead($existDB, $col4, $slug, "")
 				If $values <> "" Then
@@ -5576,8 +5815,10 @@ Func GetFileDownloadDetails($listview = "")
 			EndIf
 		EndIf
 	Next
-	;If $cover = 1 Then
-	;EndIf
+	If $listview <> "" Then
+		;Sleep(5000)
+		SplashOff()
+	EndIf
 EndFunc ;=> GetFileDownloadDetails
 
 Func GetGameFolderNameAndPath($titleF, $slugF)

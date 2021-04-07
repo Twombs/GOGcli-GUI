@@ -3,8 +3,10 @@ Ambitious new feature update.
 Started work on an 'Exists' database. WORK IN PROGRESS
 
 This involves a new enabling option on the SETUP window, and new sub-option.
-And another right-click menu option on the ADD TO MANIFEST button.
+And another right-click menu option on the ADD TO MANIFEST button. This changes the button to ADD TO DATABASE, which enables add to database browsing etc.
 One or more game titles can be processed ... individual or full list (from specified starting point). You browse to an individual game folder (with files) (COMPLETED), or select the main game folder of game title sub-folders (INCOMPLETE).
+
+A 'Warning Alert & Advice' dialog prompt enabled for game titles added to the database, that contain a keyword (chapter, episode, part, volume) that could indicate a multi game folder title.
 
 Downloaded files that pass validation, are added to the new 'Exists' database.
 
@@ -12,11 +14,9 @@ Validating a File or Game can add to the new 'Exists' database, dependent on suc
 
 The 'Games' list has a new right-click sub-menu 'Database' with two entries (Relax and View). The 'Relax' option mirrors the SETUP window one ... change one and the other is also changed.
 
-The 'Game Files Selector' window now has a 'Relax' option, tied to that SETUp window (etc) option, but unlike them, is not a permanent change to the setting ... temporary only while the 'Selector' window remains open. This 'Relax' option if changed, reloads the files on the 'Selector' window.
+The 'Game Files Selector' window now has a 'Relax' option, tied to that SETUP window (etc) option, but unlike them, is not a permanent change to the setting ... temporary only while the 'Selector' window remains open. This 'Relax' option if changed, reloads the files on the 'Selector' window.
 
 What now shows on the 'Game Files Selector' window for downloading, is dependent on the new 'Enable' and 'Relax' options, and on what exists in the new 'Exists' database.
-
-The FIND button process on the main window, now stores the last search text. To recall that search text for usage, the Title input field needs to be empty (before clicking the FIND button). It takes a second click to then do the search using that returned text.
 
 gogcli_selector_13.png
 gogcli_setup_5.png
@@ -25,3 +25,9 @@ Tutor_51.png
 Tutor_52.png
 Tutor_53.png
 Tutor_54.png
+Tutor_55.png
+Tutor_56.png
+
+NOTE - Because file names are dynamic to the download URL, the program was doing a double check just before downloading and where necessary amending the download list values. But now due to the additional database check (if enabled), the program needs to do the file name check earlier, before loading the download list of the 'Game Files Selector' window. User will be warned of an issue, or alerted to file name changes that will require a manifest update (entries replaced).
+
+The FIND button process on the main window, now stores the last search text. To recall that search text for usage, the Title input field needs to be empty (before clicking the FIND button). It takes a second click to then do the search using that returned text.
