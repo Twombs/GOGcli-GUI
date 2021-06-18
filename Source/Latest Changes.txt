@@ -18,8 +18,19 @@ The 'Game Files Selector' window now has a 'Relax' option, tied to that SETUP wi
 
 What now shows on the 'Game Files Selector' window for downloading, is dependent on the new 'Enable' and 'Relax' options, and on what exists in the new 'Exists' database.
 
+The '(Loading List)' splash now displays 'Checking Database' instead of 'Checking FIle Names'. This hopefully makes things a bit clearer. NOTE - If the download list on the 'Game Files Selector' window, is not being populated or displays fewer items than expected, then checking the Log file should explain why. Generally though, if a file has been downloaded before for a game, and no change (update) has been detected, then the file is skipped for downloading. If you want to re-download the same file, then a setting on the SETUP window needs to be disabled to allow this (the 'Enable the exists database for usage' option).
+
+The program can now download the Changelog and Description for a game. This can occur during the game files download process, or manually via the DETAILS button options. See the SETUP window for the two new options.
+
+The DETAILS button now presents a 'Game Details' window, with some new & old (General) options. The new options allow viewing and or saving a Changelog.txt and Description.txt file, as well as viewing everything (ALL) about the selected game. The GENERAL button displays the previous DETAILS data etc.
+
+The download progress field now displays some text related to current process (cover, changelog and description file downloading).
+
+gogcli_details.png
 gogcli_selector_13.png
 gogcli_setup_5.png
+gogcli_setup_6.png
+gogcli_setup_7.png
 Tutor_50.png
 Tutor_51.png
 Tutor_52.png
