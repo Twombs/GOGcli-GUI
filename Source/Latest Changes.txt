@@ -22,11 +22,12 @@ The '(Loading List)' splash now displays 'Checking Database' instead of 'Checkin
 
 The program can now download the Changelog and Description for a game. This can occur during the game files download process, or manually via the DETAILS button options. See the SETUP window for the two new options.
 
-The DETAILS button now presents a 'Game Details' window, with some new & old (General) options. The new options allow viewing and or saving a Changelog.txt and Description.txt file, as well as viewing everything (ALL) about the selected game. The GENERAL button displays the previous DETAILS data etc.
+The DETAILS button now presents a 'Game Details' window, with some new & old (General) options. The new options allow viewing and or saving a Changelog.txt and Description.txt file, as well as viewing everything (ALL) about the selected game. The GENERAL button displays the previous DETAILS data etc. UPDATE - The 'Game Details' window, has now been further improved, with the addition of a MANIFEST button, to show the manifest entry for the selected game in a text file, plus a CDKey CHECK & FIX button, which rechecks the manifest for CDKeys for the current game, and saves the result if changed. The GENERAL button now also checks for further CDKey entries in the downloaded game data, and reports and saves if changes detected. NOTE - Unfortunately the manifest appears to only display one CDKey at most for a game, whereas included DLCs etc may also have CDKeys in reality. The GENERAL button process is the only method at present to overcome this issue, and it also offers to copy the 'Details.txt' file with its CDKey specifics, to the game folder.
 
 The download progress field now displays some text related to current process (cover, changelog and description file downloading).
 
 gogcli_details.png
+gogcli_details_2.png
 gogcli_selector_13.png
 gogcli_setup_5.png
 gogcli_setup_6.png
