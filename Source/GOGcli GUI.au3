@@ -589,6 +589,8 @@ Func MainGUI()
 			$model = 9
 		ElseIf $hash = "4e9024fafe084b48aab64dc079436e82" Or $hash = "d9caee3343f5dad898ceefff5860d8d8" Then
 			$model = 10
+		ElseIf $hash = "17798e152a4597f052c77bdda99367e5" Or $hash = "331166edd599fdbf36520fb02fde166b" Then
+			$model = 11
 		Else
 			$model = 666
 			$accept = IniRead($inifle, "gogcli.exe", "accept", "")
@@ -7202,7 +7204,7 @@ Func RetrieveDataFromGOG($listed, $list)
 												EndIf
 												; Check for CDKey
 												$allkeys = ""
-												$cdkey = StringSplit($chunk, '"CdKey":', 1)
+												$cdkey = StringSplit($game, '"CdKey":', 1)
 												If $cdkey[0] > 1 Then
 													For $cd = 2 To $cdkey[0]
 														$key = $cdkey[$cd]

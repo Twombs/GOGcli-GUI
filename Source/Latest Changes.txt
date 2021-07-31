@@ -26,6 +26,10 @@ The DETAILS button now presents a 'Game Details' window, with some new & old (Ge
 
 The download progress field now displays some text related to current process (cover, changelog and description file downloading).
 
+The program now recognizes v0.11.0 of gogcli.exe, but has had minimal testing so far.
+
+BUGFIX for recent improvements related to CDKey (a wrong variable was used in one section of code, which caused a program crash ... no doubt a copy & paste adjustment issue).
+
 gogcli_details.png
 gogcli_details_2.png
 gogcli_selector_13.png
