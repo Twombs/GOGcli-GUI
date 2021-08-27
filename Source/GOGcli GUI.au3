@@ -150,14 +150,16 @@ Func MainGUI()
 	Local $Item_compare_declare, $Item_compare_ignore, $Item_compare_one, $Item_compare_orange, $Item_compare_overlook
 	Local $Item_compare_red, $Item_compare_rep, $Item_compare_report, $Item_compare_view, $Item_compare_wipe
 	Local $Item_compare_yellow, $Item_database_view, $Item_lists_dlcs, $Item_lists_keys, $Item_lists_latest
-	Local $Item_lists_tags, $Item_lists_updated, $Item_manifest_fix, $Item_view_down, $Item_view_man
-	Local $Sub_menu_alerts, $Sub_menu_comparisons, $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_lists, $Sub_menu_manifests
+	Local $Item_lists_tags, $Item_lists_updated, $Item_manifest_fix, $Item_manifest_orphan, $Item_view_down, $Item_view_man
+	Local $Sub_menu_alerts, $Sub_menu_comparisons, $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_lists, $Sub_menu_manifest
+	Local $Sub_menu_manifests
 	;
 	Local $accept, $addto, $alias, $aqua, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4, $compall, $compone
-	Local $ctrl, $description, $destfld, $destfle, $dir, $display, $dll, $e, $everything, $exist, $existing, $fext, $filelist
-	Local $find, $fixed, $flename, $foldpth, $IDD, $idlink, $ids, $l, $language, $languages, $last, $latest, $loop, $mans
-	Local $mpos, $OPS, $orange, $outline, $p, $patchfld, $pos, $prior, $proceed, $query, $red, $rep, $result, $retrieve
-	Local $savtxt, $sect, $sects, $slugD, $tagtxt, $tested, $titleD, $valfold, $values, $xpos, $yellow, $ypos
+	Local $ctrl, $description, $destfld, $destfle, $dir, $display, $dll, $e, $error, $everything, $exist, $existing, $fext
+	Local $filelist, $find, $fixed, $flename, $foldpth, $get, $IDD, $idlink, $ids, $l, $language, $languages, $last, $latest
+	Local $loop, $mans, $method, $mpos, $OPS, $orange, $orphans, $outline, $p, $patchfld, $pos, $prior, $proceed, $query
+	Local $red, $rep, $result, $retrieve, $savtxt, $sect, $sects, $slugD, $tagtxt, $tested, $titleD, $valfold, $values, $xpos
+	Local $yellow, $ypos
 	;
 	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 	;
@@ -406,7 +408,11 @@ Func MainGUI()
 	$Item_view_man = GUICtrlCreateMenuItem("View Manifests List", $Sub_menu_manifests)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
-	$Item_manifest_fix = GUICtrlCreateMenuItem("Check && Fix The Manifest", $Menu_list)
+	$Sub_menu_manifest = GUICtrlCreateMenu("The Manifest", $Menu_list)
+	$Item_manifest_fix = GUICtrlCreateMenuItem("Check && Fix", $Sub_menu_manifest)
+	GUICtrlCreateMenuItem("", $Sub_menu_manifest)
+	$Item_manifest_orphan = GUICtrlCreateMenuItem("Check For Orphan Entries", $Sub_menu_manifest)
+	;$Item_manifest_fix = GUICtrlCreateMenuItem("Check && Fix The Manifest", $Menu_list)
 	;
 	$Menu_get = GUICtrlCreateContextMenu($Button_get)
 	$Item_compare_one = GUICtrlCreateMenuItem("Compare One Game", $Menu_get, -1, 0)
@@ -2144,16 +2150,21 @@ Func MainGUI()
 						Else
 							$flag = @SW_SHOW
 						EndIf
+						;categories,updated,
 						$idlink = "https://api.gog.com/products/" & $ID & "?expand=downloads,expanded_dlcs,description,screenshots,videos,related_products,changelog"
+						;$idlink = "https://api.gog.com/products/" & $ID & "?expand=gen_type,category_types,game_types"
+						;$idlink = "https://www.gog.com/games/ajax/filtered?category=game&search=" & $title
 						$everything = @ScriptDir & "\Everything.txt"
-						InetGet($idlink, $everything, 1, 0)
+						$get = InetGet($idlink, $everything, 1, 0)
 						$read = FileRead($everything)
 						If $read <> "" Then
+							;ShellExecuteWait($everything)
 							FileDelete($everything)
 							$read = FixText($read)
 							FileWrite($everything, $read)
 							ShellExecute($everything)
 						EndIf
+						InetClose($get)
 					Else
 						MsgBox(262192, "Web Error", "No connection detected!", 0, $GOGcliGUI)
 					EndIf
@@ -3154,6 +3165,210 @@ Func MainGUI()
 				GUICtrlSetData($Button_down, "DOWNLOAD")
 			EndIf
 			GUICtrlSetState($Item_verify_file, $ratify)
+		Case $msg = $Item_manifest_orphan
+			; Check For Orphan Entries in the Manifest
+			If FileExists($manifest) Then
+				If FileExists($titlist) Then
+					SetStateOfControls($GUI_DISABLE, "all")
+					GUICtrlSetImage($Pic_cover, $blackjpg)
+					GUICtrlSetData($Label_top, "Please Wait")
+					GUICtrlSetData($Label_mid, "Checking The Manifest")
+					GUICtrlSetData($Label_bed, "Looking For Orphans")
+					$read = FileRead($titlist)
+					If $read <> "" Then
+						$titles = $read
+						$read = FileRead($manifest)
+						If $read <> "" Then
+							_FileWriteLog($logfle, "Checking the manifest for orphan entries.", -1)
+							$read = FileRead($manifest)
+							$ids = StringSplit($read, '"Id": ', 1)
+							If $ids[0] > 2 Then
+								$orphans = ""
+								For $s = 2 To $ids[0]
+									$sect = $ids[$s]
+									If StringInStr($sect, '"Title":') > 0 Then
+										$part = StringSplit($sect, ',', 1)
+										$ID = $part[1]
+										$part = StringSplit($sect, '",', 1)
+										$part = $part[1]
+										$part = StringSplit($part, '"Title":', 1)
+										$part = $part[2]
+										$title = StringReplace($part, '"', '')
+										$title = StringReplace($title, '\u0026', '&')
+										$title = StringStripWS($title, 7)
+										$game = $title & "|" & $ID
+										If StringInStr($titles, $game) < 1 Then
+											If $orphans = "" Then
+												$orphans = $game
+											Else
+												$orphans = $orphans & @LF & $game
+											EndIf
+										EndIf
+									EndIf
+								Next
+								$ans = MsgBox(262177 + 256, "Orphan Results", _
+									$orphans & @LF & @LF & _
+									"OK = Restore a title to the list." & @LF & _
+									"CANCEL = Exit.", 0, $GOGcliGUI)
+								If $ans = 1 Then
+									$titles = StringSplit($orphans, @LF, 1)
+									For $p = 1 To $titles[0]
+										$title = $titles[$p]
+										$ans = MsgBox(262179 + 256, "Restore Orphan", _
+											$title & @LF & @LF & _
+											"YES = Restore the title to the list." & @LF & _
+											"NO = Skip to next title." & @LF & _
+											"CANCEL = Exit." & @LF & @LF & _
+											"NOTE - Restore requires a web connection.", 0, $GOGcliGUI)
+										If $ans = 6 Then
+											; NOTE - The following is incomplete, Slug etc are missing
+											; I'm not sure about making updates = 0
+											_FileWriteLog($logfle, "Restoring an orphan entry - " & $title, -1)
+											$method = IniRead($inifle, "Restore Orphan", "method", "")
+											If $method = "" Then
+												$method = 1
+												IniWrite($inifle, "Restore Orphan", "method", $method)
+											EndIf
+											$everything = @ScriptDir & "\Everything.txt"
+											$error = ""
+											FileDelete($everything)
+											$ping = Ping("gog.com", 4000)
+											If $ping > 0 Then
+												GUICtrlSetData($Label_mid, "Retrieving Game Detail")
+												GUICtrlSetData($Label_bed, "Restoring An Orphan")
+												$game = $title
+												$title = StringSplit($title, "|", 1)
+												$ID = $title[2]
+												$title = $title[1]
+												If $method = 1 Then
+													; METHOD 1 - Incomplete
+													$idlink = "https://api.gog.com/products/" & $ID & "?expand=downloads,expanded_dlcs,description,screenshots,videos,related_products,changelog"
+													; Maybe use an input for category
+													$category = ""
+												ElseIf $method = 2 Then
+													; METHOD 2 - Complete but maybe inexact based on title search
+													$idlink = "https://www.gog.com/games/ajax/filtered?category=game&search=" & $title
+													; TAKE NOTE - Category is only one item, but Genres also exist with
+													; this method (unused) and they can be up to three items.
+												EndIf
+												$get = InetGet($idlink, $everything, 1, 0)
+												If FileExists($everything) Then
+													$read = FileRead($everything)
+													If $read <> "" Then
+														If StringInStr($read, "title = " & $title) > 0 Then
+															FileWrite($titlist, @LF & $game & "|0")
+															;
+															IniWrite($gamesini, $ID, "title", $title)
+															$OSes = ""
+															$read = FixText($read)
+															$read = StringSplit($read, @CRLF, 1)
+															For $s = 1 To $read[0]
+																$line = $read[$s]
+																If StringLeft($line, 7) = "slug = " Then
+																	$slug = StringReplace($line, "slug = ", "")
+																	$slug = StringStripWS($slug, 7)
+																ElseIf $method = 1 Then
+																	If StringLeft($line, 13) = "background = " Then
+																		$image = StringReplace($line, "background = ", "")
+																		$image = StringStripWS($image, 7)
+																	ElseIf StringLeft($line, 15) = "product_card = " Then
+																		$web = StringReplace($line, "product_card = ", "")
+																		$web = StringReplace($web, "https://www.gog.com", "")
+																		$web = StringStripWS($web, 7)
+																	ElseIf StringLeft($line, 14) = "windows = true" Then
+																		$OSes = "Windows"
+																	ElseIf StringLeft($line, 14) = "osx = true" Then
+																		$OSes = $OSes & ", Mac"
+																	ElseIf StringLeft($line, 14) = "linux = true" Then
+																		$OSes = $OSes & ", Linux"
+																	EndIf
+																ElseIf $method = 2 Then
+																	If StringLeft($line, 8) = "image = " Then
+																		$image = StringReplace($line, "image = ", "")
+																		$image = StringStripWS($image, 7)
+																	ElseIf StringLeft($line, 6) = "url = " Then
+																		$web = StringReplace($line, "url = ", "")
+																		$web = StringStripWS($web, 7)
+																	ElseIf StringLeft($line, 11) = "category = " Then
+																		$category = StringReplace($line, "category = ", "")
+																		$category = StringStripWS($category, 7)
+																	ElseIf StringLeft($line, 14) = "Windows = true" Then
+																		$OSes = "Windows"
+																	ElseIf StringLeft($line, 14) = "Mac = true" Then
+																		$OSes = $OSes & ", Mac"
+																	ElseIf StringLeft($line, 14) = "Linux = true" Then
+																		$OSes = $OSes & ", Linux"
+																	EndIf
+																EndIf
+															Next
+															IniWrite($gamesini, $ID, "slug", $slug)
+															IniWrite($gamesini, $ID, "image", $image)
+															IniWrite($gamesini, $ID, "URL", $web)
+															IniWrite($gamesini, $ID, "category", $category)
+															IniWrite($gamesini, $ID, "OSes", $OSes)
+															IniWrite($gamesini, $ID, "DLC", "0")
+															IniWrite($gamesini, $ID, "updates", "0")
+															$games = IniRead($gamesini, "Games", "total", "0")
+															$games = $games + 1
+															IniWrite($gamesini, "Games", "total", $games)
+															; Need to reload the list
+															_GUICtrlListView_BeginUpdate($Listview_games)
+															_GUICtrlListView_DeleteAllItems($Listview_games)
+															_GUICtrlListView_EndUpdate($Listview_games)
+															FillTheGamesList()
+															$ID = ""
+															$title = ""
+															$slug = ""
+															$image = ""
+															$web = ""
+															$category = ""
+															$OSes = ""
+															$DLC = ""
+															$updates = ""
+															GUICtrlSetData($Input_title, $title)
+															GUICtrlSetData($Input_slug, $slug)
+															GUICtrlSetData($Input_cat, $category)
+															GUICtrlSetData($Input_OS, $OSes)
+															GUICtrlSetData($Input_dlc, $DLC)
+															GUICtrlSetData($Input_ups, $updates)
+															GUICtrlSetData($Input_key, "")
+														Else
+															$error = "Restore failed (incorrect game data)."
+															_FileWriteLog($logfle, $error, -1)
+														EndIf
+													Else
+														$error = "Restore failed (no data)."
+														_FileWriteLog($logfle, $error, -1)
+													EndIf
+												Else
+													$error = "Restore failed (no detail downloaded)."
+													_FileWriteLog($logfle, $error, -1)
+												EndIf
+												InetClose($get)
+											Else
+												$error = "Restore failed (no connection)."
+												_FileWriteLog($logfle, $error, -1)
+											EndIf
+											If $error <> "" Then
+												If $error <> "Restore failed (no connection)." Then $error = $error & @LF & @LF & "Title may no longer exist at GOG."
+												MsgBox(262192, "Restore Error", $error, 0, $GOGcliGUI)
+											EndIf
+										ElseIf $ans = 2 Then
+											ExitLoop
+										EndIf
+									Next
+								EndIf
+							EndIf
+							;
+							FileWriteLine($logfle, "")
+						EndIf
+					EndIf
+					SetStateOfControls($GUI_ENABLE, "all")
+					GUICtrlSetData($Label_top, "")
+					GUICtrlSetData($Label_mid, "")
+					GUICtrlSetData($Label_bed, "")
+				EndIf
+			EndIf
 		Case $msg = $Item_manifest_fix
 			; Check & Fix The Manifest
 			If FileExists($manifest) Then
@@ -3960,12 +4175,13 @@ Func SetupGUI()
 EndFunc ;=> SetupGUI
 
 Func FileSelectorGUI()
-	Local $Button_download, $Button_quit, $Button_uncheck, $Checkbox_cancel, $Checkbox_relax, $Checkbox_skip, $Combo_OSfle, $Combo_shutdown, $Group_exist
-	Local $Group_files, $Group_OS, $Group_select, $Label_done, $Label_percent, $Label_shut, $Label_speed, $Label_warn, $ListView_files, $Progress_bar
-	Local $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
-	Local $amount, $begin, $cancel, $changelog, $checked, $code, $col1, $col2, $col3, $col4, $color, $description, $dllcall, $downloading, $edge
-	Local $ents, $exist, $fext, $gotten, $IDD, $idlink, $idx, $imageD, $missing, $osfle, $prior, $saved, $savtxt, $secs, $sect, $sections, $SelectorGUI
-	Local $shutdown, $skip, $slugD, $speed, $styles, $sum, $taken, $theme, $titleD, $tmpman, $val, $wide
+	Local $Button_download, $Button_dwn, $Button_quit, $Button_uncheck, $Button_up, $Checkbox_cancel, $Checkbox_relax, $Checkbox_skip, $Combo_OSfle
+	Local $Combo_shutdown, $Group_exist, $Group_files, $Group_OS, $Group_select, $Label_done, $Label_percent, $Label_shut, $Label_speed, $Label_warn
+	Local $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
+	Local $amount, $begin, $cancel, $changelog, $checked, $code, $col1, $col2, $col3, $col4, $color, $description, $dllcall, $downloading, $dwn, $dwnfle
+	Local $edge, $ents, $exist, $fext, $gotten, $icoDwn, $icofle, $icoUp, $IDD, $idlink, $idx, $imageD, $missing, $movdwn, $movup, $osfle, $prior, $saved
+	Local $savtxt, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $styles, $sum, $taken, $theme, $titleD, $tmpman, $up, $upfle
+	Local $val, $wide
 	;
 	$styles = $WS_OVERLAPPED + $WS_CAPTION + $WS_MINIMIZEBOX ; + $WS_POPUP
 	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $styles + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
@@ -3997,14 +4213,24 @@ Func FileSelectorGUI()
 	GUICtrlSetColor($Label_done, $COLOR_WHITE)
 	GUICtrlSetTip($Label_done, "Downloaded!")
 	;
-	$Label_warn = GuiCtrlCreateLabel("", 10, 318, 340, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN) ;$width -
+	$Button_dwn = GuiCtrlCreateButton("Dwn", 10, 317, 25, 22, $BS_ICON)
+	GUICtrlSetFont($Button_dwn, 7, 600, 0, "Small Fonts")
+	GUICtrlSetResizing($Button_dwn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Button_dwn, "Move selected entry down!")
+	$Button_up = GuiCtrlCreateButton("Up", 40, 317, 25, 22, $BS_ICON)
+	GUICtrlSetFont($Button_up, 7, 600, 0, "Small Fonts")
+	GUICtrlSetResizing($Button_up, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Button_up, "Move selected entry up!")
+	;
+	$Label_warn = GuiCtrlCreateLabel("", 70, 318, 284, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN) ;$width -
 	GUICtrlSetBkColor($Label_warn, $COLOR_RED)
 	GUICtrlSetColor($Label_warn, $COLOR_YELLOW)
 	GUICtrlSetFont($Label_warn, 8, 600)
 	GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
 	;GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
+	GUICtrlSetTip($Label_warn, "Ensure desired download settings have been set on the SETUP window!")
 	;
-	$Checkbox_relax = GUICtrlCreateCheckbox("Relax", 360, 318, 50, 20)
+	$Checkbox_relax = GUICtrlCreateCheckbox("Relax", 363, 318, 50, 20)
 	GUICtrlSetResizing($Checkbox_relax, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Checkbox_relax, "Relax the exclusion rules for download list files!")
 	;
@@ -4078,6 +4304,19 @@ Func FileSelectorGUI()
 	GUICtrlSetTip($Button_quit, "Exit / Close / Quit the window!")
 	;
 	; SETTINGS
+	$icofle = "C:\Windows\System32\netshell.dll"
+	If FileExists($icofle) Then
+		$icoDwn = -151
+		$icoUp = -150
+	Else
+		$icofle = "C:\Windows\System32\wpdshext.dll"
+		If FileExists($icofle) Then
+			$icoDwn = -27
+			$icoUp = -26
+		EndIf
+	EndIf
+	GUICtrlSetImage($Button_dwn, $icofle, $icoDwn, 0)
+	GUICtrlSetImage($Button_up, $icofle, $icoUp, 0)
 	GUICtrlSetImage($Button_quit, $user, $icoX, 1)
 	;
 	; Testing only
@@ -4230,8 +4469,14 @@ Func FileSelectorGUI()
 	$ents = _GUICtrlListView_GetItemCount($ListView_files)
 	GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")")
 	;
+	;If $ents < 2 Then
+		GUICtrlSetState($Button_dwn, $GUI_DISABLE)
+		GUICtrlSetState($Button_up, $GUI_DISABLE)
+	;EndIf
+	;
 	;GUICtrlSetData($Label_warn, "Ensure desired download settings have been set on the SETUP window.")
-	GUICtrlSetData($Label_warn, "Ensure wanted download options are set in SETUP window.")
+	;GUICtrlSetData($Label_warn, "Ensure wanted download options are set in SETUP window.")
+	GUICtrlSetData($Label_warn, "More download options found on SETUP window.")
 	;
 	If $exists = 4 Then
 		GUICtrlSetState($Checkbox_relax, $GUI_DISABLE)
@@ -4279,6 +4524,64 @@ Func FileSelectorGUI()
 				$edge = $left
 			EndIf
 			WinMove($SelectorGUI, "", $edge, $top, $wide, $height + 38)
+		Case $msg = $Button_up
+			; Move selected entry up
+			;$movup = _GUICtrlListView_GetItemTextArray($ListView_files, 0)
+			;MsgBox(262192, "Move Info", $movup[1], 0, $SelectorGUI)
+			$idx = _GUICtrlListView_GetSelectedIndices($ListView_files, True)
+			If IsArray($idx) Then
+				If $idx[0] > 0 Then
+					$idx = $idx[1]
+					If $idx > -1 Then
+						$up = $idx - 1
+						; Entry to move up
+						$movup = _GUICtrlListView_GetItemTextArray($ListView_files, $idx)
+						; Entry to move down
+						$movdwn = _GUICtrlListView_GetItemTextArray($ListView_files, $up)
+						$dwnfle = $movdwn[4]
+						$upfle = $movup[4]
+						If IniRead($downfiles, $dwnfle, "game", "") = IniRead($downfiles, $upfle, "game", "") Then
+							_GUICtrlListView_SetItemText($ListView_files, $idx, $movdwn[2], 1)
+							_GUICtrlListView_SetItemText($ListView_files, $idx, $movdwn[3], 2)
+							_GUICtrlListView_SetItemText($ListView_files, $idx, $movdwn[4], 3)
+							_GUICtrlListView_SetItemText($ListView_files, $up, $movup[2], 1)
+							_GUICtrlListView_SetItemText($ListView_files, $up, $movup[3], 2)
+							_GUICtrlListView_SetItemText($ListView_files, $up, $movup[4], 3)
+							_GUICtrlListView_SetItemSelected($ListView_files, $up, True, True)
+							_GUICtrlListView_EnsureVisible($ListView_files, $up, False)
+							_GUICtrlListView_ClickItem($ListView_files, $up, "left", False, 1, 1)
+						EndIf
+					EndIf
+				EndIf
+			EndIf
+		Case $msg = $Button_dwn
+			; Move selected entry down
+			$idx = _GUICtrlListView_GetSelectedIndices($ListView_files, True)
+			If IsArray($idx) Then
+				If $idx[0] > 0 Then
+					$idx = $idx[1]
+					If $idx > -1 Then
+						$dwn = $idx + 1
+						; Entry to move up
+						$movup = _GUICtrlListView_GetItemTextArray($ListView_files, $dwn)
+						; Entry to move down
+						$movdwn = _GUICtrlListView_GetItemTextArray($ListView_files, $idx)
+						$dwnfle = $movdwn[4]
+						$upfle = $movup[4]
+						If IniRead($downfiles, $dwnfle, "game", "") = IniRead($downfiles, $upfle, "game", "") Then
+							_GUICtrlListView_SetItemText($ListView_files, $dwn, $movdwn[2], 1)
+							_GUICtrlListView_SetItemText($ListView_files, $dwn, $movdwn[3], 2)
+							_GUICtrlListView_SetItemText($ListView_files, $dwn, $movdwn[4], 3)
+							_GUICtrlListView_SetItemText($ListView_files, $idx, $movup[2], 1)
+							_GUICtrlListView_SetItemText($ListView_files, $idx, $movup[3], 2)
+							_GUICtrlListView_SetItemText($ListView_files, $idx, $movup[4], 3)
+							_GUICtrlListView_SetItemSelected($ListView_files, $dwn, True, True)
+							_GUICtrlListView_EnsureVisible($ListView_files, $dwn, False)
+							_GUICtrlListView_ClickItem($ListView_files, $dwn, "left", False, 1, 1)
+						EndIf
+					EndIf
+				EndIf
+			EndIf
 		Case $msg = $Button_uncheck
 			; Deselect ALL files
 			_GUICtrlListView_SetItemChecked($ListView_files, -1, False)
@@ -4304,6 +4607,8 @@ Func FileSelectorGUI()
 				If $ping > 0 Or $test = 1 Then
 					GUICtrlSetState($Button_download, $GUI_DISABLE)
 					GUICtrlSetState($ListView_files, $GUI_DISABLE)
+					GUICtrlSetState($Button_dwn, $GUI_DISABLE)
+					GUICtrlSetState($Button_up, $GUI_DISABLE)
 					If $exists = 1 Then GUICtrlSetState($Checkbox_relax, $GUI_DISABLE)
 					GUICtrlSetState($Radio_selall, $GUI_DISABLE)
 					GUICtrlSetState($Radio_selgame, $GUI_DISABLE)
@@ -5140,6 +5445,24 @@ Func FileSelectorGUI()
 					$amount = Round($amount, 3) & " Tb"
 				EndIf
 				GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")  Selected  (" & $checked & ")  (" & $amount & ")")
+			EndIf
+			$idx = _GUICtrlListView_GetSelectedIndices($ListView_files, True)
+			If IsArray($idx) Then
+				;MsgBox(262208, "Selected Index", $idx[0], 0, $SelectorGUI)
+				If $idx[0] > 0 Then
+					$idx = $idx[1]
+					;MsgBox(262208, "Selected Index", $idx, 0, $SelectorGUI)
+					If $idx < 1 Then
+						GUICtrlSetState($Button_up, $GUI_DISABLE)
+						If $idx < $ents - 1 Then GUICtrlSetState($Button_dwn, $GUI_ENABLE)
+					ElseIf $idx > $ents - 2 Then
+						GUICtrlSetState($Button_dwn, $GUI_DISABLE)
+						If $idx > 0 Then GUICtrlSetState($Button_up, $GUI_ENABLE)
+					Else
+						GUICtrlSetState($Button_dwn, $GUI_ENABLE)
+						GUICtrlSetState($Button_up, $GUI_ENABLE)
+					EndIf
+				EndIf
 			EndIf
 		Case $msg = $Radio_selset
 			; Select SETUP file entries

@@ -30,9 +30,14 @@ The program now recognizes v0.11.0 of gogcli.exe, but has had minimal testing so
 
 BUGFIX for recent improvements related to CDKey (a wrong variable was used in one section of code, which caused a program crash ... no doubt a copy & paste adjustment issue).
 
+The 'Game Files Selector' window for downloading now has UP and DOWN arrow buttons, for re-arranging the order of entries for a game on the list.
+
+Added a right-click list option, 'Check For Orphan Entries', under a new sub menu entry called 'The Manifest'. The 'Check & Fix' option has also been relocated there. Orphan entries can exist in your manifest, when GOG either remove or rename a game title in your library. If game data for the orphan title still exists via the GOG API, then the title if desired, can be restored to the 'Games List'.
+
 gogcli_details.png
 gogcli_details_2.png
 gogcli_selector_13.png
+gogcli_selector_14.png
 gogcli_setup_5.png
 gogcli_setup_6.png
 gogcli_setup_7.png
