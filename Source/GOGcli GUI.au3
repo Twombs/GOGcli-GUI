@@ -86,14 +86,14 @@ Global $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $changelogs, $checksum
 Global $cover, $covers, $covimg, $declare, $descript, $descriptions, $dest, $details, $DetailsGUI, $DLC, $dlcfile, $done, $downfiles
 Global $downlist, $download, $downloads, $drv, $entries, $entry, $erred, $existDB, $exists, $f, $file, $fileinfo, $filepth, $files
 Global $filesize, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $gametxt, $getlatest
-Global $gmefold, $gmesfld, $gogcli, $GOGcliGUI, $hash, $head, $height, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID
-Global $identry, $ignore, $image, $imgfle, $ind, $inifle, $json, $keep, $key, $lang, $left, $line, $lines, $link, $list, $listed
+Global $gmefold, $gmesfld, $gogcli, $GOGcliGUI, $hash, $head, $height, $htmlfle,  $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX
+Global $ID, $identry, $ignore, $image, $imgfle, $ind, $inifle, $json, $keep, $key, $lang, $left, $line, $lines, $link, $list, $listed
 Global $listview, $log, $logfle, $lowid, $manall, $m, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num
-Global $numb, $offline, $OP, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping, $pinged, $progress, $pth, $purge
-Global $rat, $ratify, $read, $record, $relax, $reportexe, $res, $ret, $return, $row, $s, $same, $savlog, $second, $selector, $SetupGUI
-Global $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state, $style, $subfold, $tag, $tagfle, $tail, $text
-Global $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $web, $which, $width, $winpos
-Global $z, $zipcheck, $zipfile, $zippath
+Global $numb, $offline, $OP, $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping, $pinged, $progress, $pth
+Global $purge, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $ret, $return, $row, $s, $same, $savlog, $second, $selector
+Global $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state, $style, $subfold, $tag, $tagfle
+Global $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $web, $which
+Global $width, $winpos, $z, $zipcheck, $zipfile, $zippath
 ;, $foldzip, $resultfle
 
 $addlist = @ScriptDir & "\Added.txt"
@@ -118,6 +118,7 @@ $gamelist = @ScriptDir & "\Games.txt"
 $gamesini = @ScriptDir & "\Games.ini"
 $gametxt = @ScriptDir & "\Game.txt"
 $gogcli = @ScriptDir & "\gogcli.exe"
+$htmlfle = @ScriptDir & "\Manifest.html"
 $imgfle = @ScriptDir & "\Image.jpg"
 $inifle = @ScriptDir & "\Settings.ini"
 $json = @ScriptDir & "\manifest.json"
@@ -131,6 +132,13 @@ $tagfle = @ScriptDir & "\Tags.ini"
 $titlist = @ScriptDir & "\Titles.txt"
 $updated = @ScriptDir & "\Updated.txt"
 
+If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
+
+; Restore while testing
+;$games = IniRead($gamesini, "Games", "total", "0")
+;$games = $games - 1
+;IniWrite($gamesini, "Games", "total", $games)
+
 If Not FileExists($addlist) Then _FileCreate($addlist)
 If Not FileExists($changelogs) Then DirCreate($changelogs)
 If Not FileExists($covers) Then DirCreate($covers)
@@ -138,6 +146,23 @@ If Not FileExists($descriptions) Then DirCreate($descriptions)
 If Not FileExists($downlist) Then _FileCreate($downlist)
 ;~ If Not FileExists($foldzip) Then DirCreate($foldzip)
 If Not FileExists($updated) Then _FileCreate($updated)
+
+If FileExists($manifest) Then
+	$read = FileRead($manifest)
+	If $read <> "" Then
+		If StringInStr($read, @CRLF) > 0 Then
+			SplashTextOn("", "Fixing Manifest!", 200, 120, Default, Default, 33)
+			$read = StringReplace($read, @CRLF, @LF)
+			$read = StringReplace($read, "}" & @LF & @LF & "{", "}" & @LF & "{")
+			$open = FileOpen($manifest, 2)
+			If $open <> -1 Then
+				FileWrite($open, $read)
+			EndIf
+			FileClose($open)
+			SplashOff()
+		EndIf
+	EndIf
+EndIf
 
 MainGUI()
 
@@ -150,18 +175,17 @@ Func MainGUI()
 	Local $Item_compare_declare, $Item_compare_ignore, $Item_compare_one, $Item_compare_orange, $Item_compare_overlook
 	Local $Item_compare_red, $Item_compare_rep, $Item_compare_report, $Item_compare_view, $Item_compare_wipe
 	Local $Item_compare_yellow, $Item_database_view, $Item_lists_dlcs, $Item_lists_keys, $Item_lists_latest
-	Local $Item_lists_tags, $Item_lists_updated, $Item_manifest_fix, $Item_manifest_orphan, $Item_view_down, $Item_view_man
+	Local $Item_lists_tags, $Item_lists_updated, $Item_manifest_entry, $Item_manifest_fix, $Item_manifest_orphan, $Item_manifest_view
+	Local $Item_view_down, $Item_view_man
 	Local $Sub_menu_alerts, $Sub_menu_comparisons, $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_lists, $Sub_menu_manifest
 	Local $Sub_menu_manifests
 	;
 	Local $accept, $addto, $alias, $aqua, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4, $compall, $compone
 	Local $ctrl, $description, $destfld, $destfle, $dir, $display, $dll, $e, $error, $everything, $exist, $existing, $fext
-	Local $filelist, $find, $fixed, $flename, $foldpth, $get, $IDD, $idlink, $ids, $l, $language, $languages, $last, $latest
-	Local $loop, $mans, $method, $mpos, $OPS, $orange, $orphans, $outline, $p, $patchfld, $pos, $prior, $proceed, $query
-	Local $red, $rep, $result, $retrieve, $savtxt, $sect, $sects, $slugD, $tagtxt, $tested, $titleD, $valfold, $values, $xpos
-	Local $yellow, $ypos
-	;
-	If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
+	Local $filelist, $find, $fixed, $flename, $foldpth, $gambak, $get, $IDD, $idlink, $ids, $l, $language, $languages, $last
+	Local $latest, $loop, $mans, $method, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $patchfld, $pos, $prior, $proceed
+	Local $query, $red, $rep, $result, $retrieve, $savtxt, $sect, $sects, $slugD, $tagtxt, $tested, $titleD, $valfold, $values
+	Local $xpos, $yellow, $ypos
 	;
 	If Not FileExists($blackjpg) Then
 		Local $hBitmap, $hGraphic, $hImage
@@ -409,6 +433,10 @@ Func MainGUI()
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Sub_menu_manifest = GUICtrlCreateMenu("The Manifest", $Menu_list)
+	$Item_manifest_entry = GUICtrlCreateMenuItem("View Selected Entry", $Sub_menu_manifest)
+	GUICtrlCreateMenuItem("", $Sub_menu_manifest)
+	$Item_manifest_view = GUICtrlCreateMenuItem("View ALL", $Sub_menu_manifest)
+	GUICtrlCreateMenuItem("", $Sub_menu_manifest)
 	$Item_manifest_fix = GUICtrlCreateMenuItem("Check && Fix", $Sub_menu_manifest)
 	GUICtrlCreateMenuItem("", $Sub_menu_manifest)
 	$Item_manifest_orphan = GUICtrlCreateMenuItem("Check For Orphan Entries", $Sub_menu_manifest)
@@ -3165,6 +3193,29 @@ Func MainGUI()
 				GUICtrlSetData($Button_down, "DOWNLOAD")
 			EndIf
 			GUICtrlSetState($Item_verify_file, $ratify)
+		Case $msg = $Item_manifest_view
+			; The Manifest - View ALL
+			If FileExists($manifest) Then
+				SetStateOfControls($GUI_DISABLE, "all")
+				GUICtrlSetImage($Pic_cover, $blackjpg)
+				GUICtrlSetData($Label_top, "Please Wait")
+				GUICtrlSetData($Label_mid, "Viewing The Manifest")
+				GUICtrlSetData($Label_bed, "Creating HTML")
+				$read = FileRead($manifest)
+				If $read <> "" Then
+					$open = FileOpen($htmlfle, 2)
+					$read = "<html>" & @CRLF & "<titlel>" & @CRLF & "The Manifest" & @CRLF & "</title>" & @CRLF & "<body>" & @CRLF & "<pre>" & @CRLF & $read & @CRLF & "</pre>" & @CRLF & "</body>" & @CRLF & "</html>"
+					FileWrite($open, $read)
+					FileClose($open)
+					ShellExecute($htmlfle)
+				EndIf
+				SetStateOfControls($GUI_ENABLE, "all")
+				GUICtrlSetData($Label_top, "")
+				GUICtrlSetData($Label_mid, "")
+				GUICtrlSetData($Label_bed, "")
+			Else
+				MsgBox(262192, "View Error", "Manifest.txt file does not exist!" & @LF & @LF & "( i.e. not yet created )", 0, $GOGcliGUI)
+			EndIf
 		Case $msg = $Item_manifest_orphan
 			; Check For Orphan Entries in the Manifest
 			If FileExists($manifest) Then
@@ -3221,137 +3272,161 @@ Func MainGUI()
 											"CANCEL = Exit." & @LF & @LF & _
 											"NOTE - Restore requires a web connection.", 0, $GOGcliGUI)
 										If $ans = 6 Then
-											; NOTE - The following is incomplete, Slug etc are missing
-											; I'm not sure about making updates = 0
 											_FileWriteLog($logfle, "Restoring an orphan entry - " & $title, -1)
-											$method = IniRead($inifle, "Restore Orphan", "method", "")
-											If $method = "" Then
-												$method = 1
-												IniWrite($inifle, "Restore Orphan", "method", $method)
-											EndIf
-											$everything = @ScriptDir & "\Everything.txt"
-											$error = ""
-											FileDelete($everything)
-											$ping = Ping("gog.com", 4000)
-											If $ping > 0 Then
+											$game = $title
+											$title = StringSplit($title, "|", 1)
+											$ID = $title[2]
+											$title = $title[1]
+											; Trying backups first
+											$entry = ""
+											If FileExists($backups) Then
 												GUICtrlSetData($Label_mid, "Retrieving Game Detail")
-												GUICtrlSetData($Label_bed, "Restoring An Orphan")
-												$game = $title
-												$title = StringSplit($title, "|", 1)
-												$ID = $title[2]
-												$title = $title[1]
-												If $method = 1 Then
-													; METHOD 1 - Incomplete
-													$idlink = "https://api.gog.com/products/" & $ID & "?expand=downloads,expanded_dlcs,description,screenshots,videos,related_products,changelog"
-													; Maybe use an input for category
-													$category = ""
-												ElseIf $method = 2 Then
-													; METHOD 2 - Complete but maybe inexact based on title search
-													$idlink = "https://www.gog.com/games/ajax/filtered?category=game&search=" & $title
-													; TAKE NOTE - Category is only one item, but Genres also exist with
-													; this method (unused) and they can be up to three items.
-												EndIf
-												$get = InetGet($idlink, $everything, 1, 0)
-												If FileExists($everything) Then
-													$read = FileRead($everything)
-													If $read <> "" Then
-														If StringInStr($read, "title = " & $title) > 0 Then
+												For $nmb = 5 To 1 Step -1
+													$gambak = $backups & "\Games.ini_" & $nmb & ".bak"
+													If FileExists($gambak) Then
+														If IniRead($gambak, $ID, "title", "") = $title Then
+															GUICtrlSetData($Label_mid, "Retrieving From Backups")
+															GUICtrlSetData($Label_bed, "Restoring An Orphan")
+															_FileWriteLog($logfle, "Restoring the entry from a backup.", -1)
+															$entry = IniReadSection($gambak, $ID)
+															IniWriteSection($gamesini, $ID, $entry)
 															FileWrite($titlist, @LF & $game & "|0")
-															;
-															IniWrite($gamesini, $ID, "title", $title)
-															$OSes = ""
-															$read = FixText($read)
-															$read = StringSplit($read, @CRLF, 1)
-															For $s = 1 To $read[0]
-																$line = $read[$s]
-																If StringLeft($line, 7) = "slug = " Then
-																	$slug = StringReplace($line, "slug = ", "")
-																	$slug = StringStripWS($slug, 7)
-																ElseIf $method = 1 Then
-																	If StringLeft($line, 13) = "background = " Then
-																		$image = StringReplace($line, "background = ", "")
-																		$image = StringStripWS($image, 7)
-																	ElseIf StringLeft($line, 15) = "product_card = " Then
-																		$web = StringReplace($line, "product_card = ", "")
-																		$web = StringReplace($web, "https://www.gog.com", "")
-																		$web = StringStripWS($web, 7)
-																	ElseIf StringLeft($line, 14) = "windows = true" Then
-																		$OSes = "Windows"
-																	ElseIf StringLeft($line, 14) = "osx = true" Then
-																		$OSes = $OSes & ", Mac"
-																	ElseIf StringLeft($line, 14) = "linux = true" Then
-																		$OSes = $OSes & ", Linux"
+															ExitLoop
+														EndIf
+													EndIf
+												Next
+											EndIf
+											If $entry = "" Then
+												; NOTE - The following is incomplete, Slug etc are missing
+												; I'm not sure about making updates = 0
+												$method = IniRead($inifle, "Restore Orphan", "method", "")
+												If $method = "" Then
+													$method = 1
+													IniWrite($inifle, "Restore Orphan", "method", $method)
+												EndIf
+												$everything = @ScriptDir & "\Everything.txt"
+												$error = ""
+												FileDelete($everything)
+												$ping = Ping("gog.com", 4000)
+												If $ping > 0 Then
+													GUICtrlSetData($Label_mid, "Retrieving Game Detail")
+													GUICtrlSetData($Label_bed, "Restoring An Orphan")
+													If $method = 1 Then
+														; METHOD 1 - Incomplete
+														$idlink = "https://api.gog.com/products/" & $ID & "?expand=downloads,expanded_dlcs,description,screenshots,videos,related_products,changelog"
+														; Maybe use an input for category
+														$category = ""
+													ElseIf $method = 2 Then
+														; METHOD 2 - Complete but maybe inexact based on title search
+														$idlink = "https://www.gog.com/games/ajax/filtered?category=game&search=" & $title
+														; TAKE NOTE - Category is only one item, but Genres also exist with
+														; this method (unused) and they can be up to three items.
+													EndIf
+													$get = InetGet($idlink, $everything, 1, 0)
+													If FileExists($everything) Then
+														$read = FileRead($everything)
+														If $read <> "" Then
+															If StringInStr($read, "title = " & $title) > 0 Then
+																$entry = "found"
+																FileWrite($titlist, @LF & $game & "|0")
+																;
+																IniWrite($gamesini, $ID, "title", $title)
+																$OSes = ""
+																$read = FixText($read)
+																$read = StringSplit($read, @CRLF, 1)
+																For $s = 1 To $read[0]
+																	$line = $read[$s]
+																	If StringLeft($line, 7) = "slug = " Then
+																		$slug = StringReplace($line, "slug = ", "")
+																		$slug = StringStripWS($slug, 7)
+																	ElseIf $method = 1 Then
+																		If StringLeft($line, 13) = "background = " Then
+																			$image = StringReplace($line, "background = ", "")
+																			$image = StringStripWS($image, 7)
+																		ElseIf StringLeft($line, 15) = "product_card = " Then
+																			$web = StringReplace($line, "product_card = ", "")
+																			$web = StringReplace($web, "https://www.gog.com", "")
+																			$web = StringStripWS($web, 7)
+																		ElseIf StringLeft($line, 14) = "windows = true" Then
+																			$OSes = "Windows"
+																		ElseIf StringLeft($line, 14) = "osx = true" Then
+																			$OSes = $OSes & ", Mac"
+																		ElseIf StringLeft($line, 14) = "linux = true" Then
+																			$OSes = $OSes & ", Linux"
+																		EndIf
+																	ElseIf $method = 2 Then
+																		If StringLeft($line, 8) = "image = " Then
+																			$image = StringReplace($line, "image = ", "")
+																			$image = StringStripWS($image, 7)
+																		ElseIf StringLeft($line, 6) = "url = " Then
+																			$web = StringReplace($line, "url = ", "")
+																			$web = StringStripWS($web, 7)
+																		ElseIf StringLeft($line, 11) = "category = " Then
+																			$category = StringReplace($line, "category = ", "")
+																			$category = StringStripWS($category, 7)
+																		ElseIf StringLeft($line, 14) = "Windows = true" Then
+																			$OSes = "Windows"
+																		ElseIf StringLeft($line, 14) = "Mac = true" Then
+																			$OSes = $OSes & ", Mac"
+																		ElseIf StringLeft($line, 14) = "Linux = true" Then
+																			$OSes = $OSes & ", Linux"
+																		EndIf
 																	EndIf
-																ElseIf $method = 2 Then
-																	If StringLeft($line, 8) = "image = " Then
-																		$image = StringReplace($line, "image = ", "")
-																		$image = StringStripWS($image, 7)
-																	ElseIf StringLeft($line, 6) = "url = " Then
-																		$web = StringReplace($line, "url = ", "")
-																		$web = StringStripWS($web, 7)
-																	ElseIf StringLeft($line, 11) = "category = " Then
-																		$category = StringReplace($line, "category = ", "")
-																		$category = StringStripWS($category, 7)
-																	ElseIf StringLeft($line, 14) = "Windows = true" Then
-																		$OSes = "Windows"
-																	ElseIf StringLeft($line, 14) = "Mac = true" Then
-																		$OSes = $OSes & ", Mac"
-																	ElseIf StringLeft($line, 14) = "Linux = true" Then
-																		$OSes = $OSes & ", Linux"
-																	EndIf
-																EndIf
-															Next
-															IniWrite($gamesini, $ID, "slug", $slug)
-															IniWrite($gamesini, $ID, "image", $image)
-															IniWrite($gamesini, $ID, "URL", $web)
-															IniWrite($gamesini, $ID, "category", $category)
-															IniWrite($gamesini, $ID, "OSes", $OSes)
-															IniWrite($gamesini, $ID, "DLC", "0")
-															IniWrite($gamesini, $ID, "updates", "0")
-															$games = IniRead($gamesini, "Games", "total", "0")
-															$games = $games + 1
-															IniWrite($gamesini, "Games", "total", $games)
-															; Need to reload the list
-															_GUICtrlListView_BeginUpdate($Listview_games)
-															_GUICtrlListView_DeleteAllItems($Listview_games)
-															_GUICtrlListView_EndUpdate($Listview_games)
-															FillTheGamesList()
-															$ID = ""
-															$title = ""
-															$slug = ""
-															$image = ""
-															$web = ""
-															$category = ""
-															$OSes = ""
-															$DLC = ""
-															$updates = ""
-															GUICtrlSetData($Input_title, $title)
-															GUICtrlSetData($Input_slug, $slug)
-															GUICtrlSetData($Input_cat, $category)
-															GUICtrlSetData($Input_OS, $OSes)
-															GUICtrlSetData($Input_dlc, $DLC)
-															GUICtrlSetData($Input_ups, $updates)
-															GUICtrlSetData($Input_key, "")
+																Next
+																IniWrite($gamesini, $ID, "slug", $slug)
+																IniWrite($gamesini, $ID, "image", $image)
+																IniWrite($gamesini, $ID, "URL", $web)
+																IniWrite($gamesini, $ID, "category", $category)
+																IniWrite($gamesini, $ID, "OSes", $OSes)
+																IniWrite($gamesini, $ID, "DLC", "0")
+																IniWrite($gamesini, $ID, "updates", "0")
+															Else
+																$error = "Restore failed (incorrect game data)."
+																_FileWriteLog($logfle, $error, -1)
+															EndIf
 														Else
-															$error = "Restore failed (incorrect game data)."
+															$error = "Restore failed (no data)."
 															_FileWriteLog($logfle, $error, -1)
 														EndIf
 													Else
-														$error = "Restore failed (no data)."
+														$error = "Restore failed (no detail downloaded)."
 														_FileWriteLog($logfle, $error, -1)
 													EndIf
+													InetClose($get)
 												Else
-													$error = "Restore failed (no detail downloaded)."
+													$error = "Restore failed (no connection)."
 													_FileWriteLog($logfle, $error, -1)
 												EndIf
-												InetClose($get)
-											Else
-												$error = "Restore failed (no connection)."
-												_FileWriteLog($logfle, $error, -1)
+												If $error <> "" Then
+													If $error <> "Restore failed (no connection)." Then $error = $error & @LF & @LF & "Title may no longer exist at GOG."
+													MsgBox(262192, "Restore Error", $error, 0, $GOGcliGUI)
+												EndIf
 											EndIf
-											If $error <> "" Then
-												If $error <> "Restore failed (no connection)." Then $error = $error & @LF & @LF & "Title may no longer exist at GOG."
-												MsgBox(262192, "Restore Error", $error, 0, $GOGcliGUI)
+											If $entry <> "" Then
+												$games = IniRead($gamesini, "Games", "total", "0")
+												$games = $games + 1
+												IniWrite($gamesini, "Games", "total", $games)
+												; Need to reload the list
+												_GUICtrlListView_BeginUpdate($Listview_games)
+												_GUICtrlListView_DeleteAllItems($Listview_games)
+												_GUICtrlListView_EndUpdate($Listview_games)
+												FillTheGamesList()
+												$ID = ""
+												$title = ""
+												$slug = ""
+												$image = ""
+												$web = ""
+												$category = ""
+												$OSes = ""
+												$DLC = ""
+												$updates = ""
+												GUICtrlSetData($Input_title, $title)
+												GUICtrlSetData($Input_slug, $slug)
+												GUICtrlSetData($Input_cat, $category)
+												GUICtrlSetData($Input_OS, $OSes)
+												GUICtrlSetData($Input_dlc, $DLC)
+												GUICtrlSetData($Input_ups, $updates)
+												GUICtrlSetData($Input_key, "")
 											EndIf
 										ElseIf $ans = 2 Then
 											ExitLoop
@@ -3574,6 +3649,45 @@ Func MainGUI()
 			EndIf
 			;_GUICtrlListView_SetItemSelected($Listview_games, $ind, True, True)
 			;GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Item_manifest_entry
+			; The Manifest - View Selected Entry
+			If $ID = "" Then
+				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+			Else
+				If FileExists($manifest) Then
+					SetStateOfControls($GUI_DISABLE, "all")
+					GUICtrlSetImage($Pic_cover, $blackjpg)
+					GUICtrlSetData($Label_top, "Please Wait")
+					GUICtrlSetData($Label_mid, "Viewing The Manifest")
+					GUICtrlSetData($Label_bed, "Selected Entry")
+					$read = FileRead($manifest)
+					If $read <> "" Then
+						$identry = '"Id": ' & $ID & ','
+						If StringInStr($read, $identry) > 0 Then
+							; Entry exists in the manifest.
+							; Extract just the relevant game entry
+							_FileCreate($gametxt)
+							$game = StringSplit($read, $identry, 1)
+							$game = $game[2]
+							$game = StringSplit($game, '{' & @LF & '  "Games": [', 1)
+							$game = $game[1]
+							$game = StringReplace($game, '{' & @LF & '  "Games": [' & @LF & '    {' & @LF, '')
+							$game = '{' & @LF & '  "Games": [' & @LF & '    {' & @LF & '      "Id": ' & $ID & ',' & $game
+							$game = StringReplace($game, @LF, @CRLF)
+							FileWrite($gametxt, $game)
+							ShellExecute($gametxt)
+						Else
+							MsgBox(262192, "View Error", "Game not found in the 'Manifest.txt' file!" & @LF & @LF & "( i.e. not yet added to Manifest )", 0, $GOGcliGUI)
+						EndIf
+					EndIf
+					SetStateOfControls($GUI_ENABLE, "all")
+					GUICtrlSetData($Label_top, "")
+					GUICtrlSetData($Label_mid, "")
+					GUICtrlSetData($Label_bed, "")
+				Else
+					MsgBox(262192, "View Error", "Manifest.txt file does not exist!" & @LF & @LF & "( i.e. not yet created )", 0, $GOGcliGUI)
+				EndIf
+			EndIf
 		Case $msg = $Item_lists_updated
 			; Lists - Games Updated
 			If FileExists($updated) Then ShellExecute($updated)

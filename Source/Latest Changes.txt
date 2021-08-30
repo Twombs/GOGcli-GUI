@@ -32,10 +32,15 @@ BUGFIX for recent improvements related to CDKey (a wrong variable was used in on
 
 The 'Game Files Selector' window for downloading now has UP and DOWN arrow buttons, for re-arranging the order of entries for a game on the list.
 
-Added a right-click list option, 'Check For Orphan Entries', under a new sub menu entry called 'The Manifest'. The 'Check & Fix' option has also been relocated there. Orphan entries can exist in your manifest, when GOG either remove or rename a game title in your library. If game data for the orphan title still exists via the GOG API, then the title if desired, can be restored to the 'Games List'.
+Added a right-click list option, 'Check For Orphan Entries', under a new sub menu entry called 'The Manifest'. The 'Check & Fix' option has also been relocated there. Orphan entries can exist in your manifest, when GOG either remove or rename a game title in your library. If game data for the orphan title still exists via the GOG API, then the title if desired, can be restored to the 'Games List'. EDIT - Backups are now checked for the orphan entry, and restored from there if they exist, so a web connection and GOG API entry may not be required. NOTES - Even if an entry is restored, it should only be seen as short term temporary, and no guarantee of being able to retrieve data or files from GOG. If you are quick enough, you may be able to download the last listed file(s). Updating the 'Games' list will always remove restored entries, though 'Check For Orphan Entries' may be able to restore again.
+
+Added two more right-click options to the 'The Manifest' sub-menu entry. These enable viewing either the entire manifest in your web browser or just the mainifest entry of selected game in a text file.
+
+BUGFIX involving a check of the manifest at program start, to detect if Line Feeds have been replaced by Carriage Returns plus Line Feeds. If found, then corrections are made to the manifest. This issue should only possibly occur if the user has manually edited the manifest.
 
 gogcli_details.png
 gogcli_details_2.png
+gogcli_menu.png
 gogcli_selector_13.png
 gogcli_selector_14.png
 gogcli_setup_5.png
