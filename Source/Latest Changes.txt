@@ -26,7 +26,7 @@ The DETAILS button now presents a 'Game Details' window, with some new & old (Ge
 
 The download progress field now displays some text related to current process (cover, changelog and description file downloading).
 
-The program now recognizes v0.11.0 of gogcli.exe, but has had minimal testing so far.
+The program now recognizes v0.11.0 of gogcli.exe, but has had minimal testing so far. NOTE - It now recognizes up to v0.17.0, but testing is still in progress.
 
 BUGFIX for recent improvements related to CDKey (a wrong variable was used in one section of code, which caused a program crash ... no doubt a copy & paste adjustment issue).
 
@@ -34,9 +34,19 @@ The 'Game Files Selector' window for downloading now has UP and DOWN arrow butto
 
 Added a right-click list option, 'Check For Orphan Entries', under a new sub menu entry called 'The Manifest'. The 'Check & Fix' option has also been relocated there. Orphan entries can exist in your manifest, when GOG either remove or rename a game title in your library. If game data for the orphan title still exists via the GOG API, then the title if desired, can be restored to the 'Games List'. EDIT - Backups are now checked for the orphan entry, and restored from there if they exist, so a web connection and GOG API entry may not be required. NOTES - Even if an entry is restored, it should only be seen as short term temporary, and no guarantee of being able to retrieve data or files from GOG. If you are quick enough, you may be able to download the last listed file(s). Updating the 'Games' list will always remove restored entries, though 'Check For Orphan Entries' may be able to restore again.
 
-Added two more right-click options to the 'The Manifest' sub-menu entry. These enable viewing either the entire manifest in your web browser or just the mainifest entry of selected game in a text file.
+The last restored entry is now selected after the 'Games' list reloads.
 
-BUGFIX involving a check of the manifest at program start, to detect if Line Feeds have been replaced by Carriage Returns plus Line Feeds. If found, then corrections are made to the manifest. This issue should only possibly occur if the user has manually edited the manifest.
+Added two more right-click options to the 'The Manifest' sub-menu entry. These enable viewing either the entire manifest in your web browser or just the manifest entry of selected game in a text file.
+
+BUGFIX involving a check of the manifest at program start, to detect if Line Feeds have been replaced by Carriage Returns plus Line Feeds. If found, then corrections are made to the manifest. This issue should only possibly occur if the user has manually edited the manifest. Blank lines are checked for and removed from the manifest if found.
+
+The right-click option for 'Lists' has now had the 'Games Updated' entry changed to a sub-menu, with two options - View List and Remove Duplicates. The 'Remove Duplicates' option is a new feature to reduce entries in the 'Updated.txt' file, if the user wants that to occur.
+
+When the download button is in the 'DOWNLOAD LIST' state, clicking it again for a game already on the download list will remove it. NOTE - This is of course, with CTRL key held down while clicking.
+
+If the 'Download Latest ...' option is enabled and 'DOWNLOAD LIST' button is clicked, then a query is now presented, so that the option (if not desired) can be skipped. NOTE - This has now been improved with the addition of a 'Warn' checkbox on the SETUP window.
+
+A 'Validate Now' option has been added for when the download button is in the 'DOWNLOAD LIST' state.
 
 gogcli_details.png
 gogcli_details_2.png

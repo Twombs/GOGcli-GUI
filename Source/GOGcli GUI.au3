@@ -78,11 +78,11 @@ Global $Button_dest, $Button_dir, $Button_down, $Button_exit, $Button_find, $But
 Global $Button_last, $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_sub, $Button_tag, $Button_web, $Checkbox_alpha
 Global $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_key
 Global $Input_OS, $Input_slug, $Input_title, $Input_ups, $Item_database_add, $Item_database_relax, $Item_down_all, $Item_verify_file
-Global $Item_verify_game, $Label_bed, $Label_cat, $Label_dlc, $Label_key, $Label_mid, $Label_OS, $Label_slug, $Label_top, $Label_ups
-Global $Listview_games, $Pic_cover
+Global $Item_verify_game, $Item_verify_now, $Label_bed, $Label_cat, $Label_dlc, $Label_key, $Label_mid, $Label_OS, $Label_slug
+Global $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
 Global $7zip, $a, $addlist, $alert, $alerts, $alf, $allkeys, $alpha, $ans, $array, $backups, $bigcover, $bigpic, $blackjpg, $blurb
-Global $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $changelogs, $checksum, $checkval, $cnt, $compare, $cookie, $cookies
+Global $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $changelogs, $check, $checksum, $checkval, $cnt, $compare, $cookie, $cookies
 Global $cover, $covers, $covimg, $declare, $descript, $descriptions, $dest, $details, $DetailsGUI, $DLC, $dlcfile, $done, $downfiles
 Global $downlist, $download, $downloads, $drv, $entries, $entry, $erred, $existDB, $exists, $f, $file, $fileinfo, $filepth, $files
 Global $filesize, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $gametxt, $getlatest
@@ -90,10 +90,10 @@ Global $gmefold, $gmesfld, $gogcli, $GOGcliGUI, $hash, $head, $height, $htmlfle,
 Global $ID, $identry, $ignore, $image, $imgfle, $ind, $inifle, $json, $keep, $key, $lang, $left, $line, $lines, $link, $list, $listed
 Global $listview, $log, $logfle, $lowid, $manall, $m, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num
 Global $numb, $offline, $OP, $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping, $pinged, $progress, $pth
-Global $purge, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $ret, $return, $row, $s, $same, $savlog, $second, $selector
+Global $purge, $r, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $ret, $return, $row, $s, $same, $savlog, $second, $selector
 Global $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state, $style, $subfold, $tag, $tagfle
-Global $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $web, $which
-Global $width, $winpos, $z, $zipcheck, $zipfile, $zippath
+Global $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $warn, $web
+Global $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
 ;, $foldzip, $resultfle
 
 $addlist = @ScriptDir & "\Added.txt"
@@ -160,6 +160,13 @@ If FileExists($manifest) Then
 			EndIf
 			FileClose($open)
 			SplashOff()
+		Else
+			$check = "}" & @LF & @LF & "{"
+			If StringInStr($read, $check) > 0 Then
+				;SplashTextOn("", "Adjusting Manifest!", 200, 120, Default, Default, 33)
+				_ReplaceStringInFile($manifest, $check, "}" & @LF & "{")
+				;SplashOff()
+			EndIf
 		EndIf
 	EndIf
 EndIf
@@ -174,18 +181,18 @@ Func MainGUI()
 	Local $Item_alerts_clear, $Item_alerts_view, $Item_clear_down, $Item_clear_man, $Item_compare_all, $Item_compare_aqua
 	Local $Item_compare_declare, $Item_compare_ignore, $Item_compare_one, $Item_compare_orange, $Item_compare_overlook
 	Local $Item_compare_red, $Item_compare_rep, $Item_compare_report, $Item_compare_view, $Item_compare_wipe
-	Local $Item_compare_yellow, $Item_database_view, $Item_lists_dlcs, $Item_lists_keys, $Item_lists_latest
+	Local $Item_compare_yellow, $Item_database_view, $Item_lists_dlcs, $Item_lists_dupes, $Item_lists_keys, $Item_lists_latest
 	Local $Item_lists_tags, $Item_lists_updated, $Item_manifest_entry, $Item_manifest_fix, $Item_manifest_orphan, $Item_manifest_view
 	Local $Item_view_down, $Item_view_man
 	Local $Sub_menu_alerts, $Sub_menu_comparisons, $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_lists, $Sub_menu_manifest
-	Local $Sub_menu_manifests
+	Local $Sub_menu_manifests, $Sub_menu_updated
 	;
 	Local $accept, $addto, $alias, $aqua, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4, $compall, $compone
 	Local $ctrl, $description, $destfld, $destfle, $dir, $display, $dll, $e, $error, $everything, $exist, $existing, $fext
-	Local $filelist, $find, $fixed, $flename, $foldpth, $gambak, $get, $IDD, $idlink, $ids, $l, $language, $languages, $last
-	Local $latest, $loop, $mans, $method, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $patchfld, $pos, $prior, $proceed
-	Local $query, $red, $rep, $result, $retrieve, $savtxt, $sect, $sects, $slugD, $tagtxt, $tested, $titleD, $valfold, $values
-	Local $xpos, $yellow, $ypos
+	Local $filelist, $find, $fixed, $flename, $foldpth, $former, $gambak, $get, $IDD, $idlink, $ids, $l, $language, $languages
+	Local $last, $latest, $loop, $mans, $method, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $patchfld, $pos, $prior
+	Local $proceed, $query, $red, $rep, $result, $retrieve, $savtxt, $sect, $sects, $slugD, $tagtxt, $tested, $titleD, $valfold
+	Local $valnow, $values, $xpos, $yellow, $ypos
 	;
 	If Not FileExists($blackjpg) Then
 		Local $hBitmap, $hGraphic, $hImage
@@ -415,9 +422,12 @@ Func MainGUI()
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Sub_menu_lists = GUICtrlCreateMenu("Lists", $Menu_list)
-	$Item_lists_latest = GUICtrlCreateMenuItem("Latest Additions", $Sub_menu_lists)
+	$Sub_menu_updated = GUICtrlCreateMenu("Games Updated", $Sub_menu_lists)
+	$Item_lists_updated = GUICtrlCreateMenuItem("View List", $Sub_menu_updated)
+	GUICtrlCreateMenuItem("", $Sub_menu_updated)
+	$Item_lists_dupes = GUICtrlCreateMenuItem("Remove Duplicates", $Sub_menu_updated)
 	GUICtrlCreateMenuItem("", $Sub_menu_lists)
-	$Item_lists_updated = GUICtrlCreateMenuItem("Games Updated", $Sub_menu_lists)
+	$Item_lists_latest = GUICtrlCreateMenuItem("Latest Additions", $Sub_menu_lists)
 	GUICtrlCreateMenuItem("", $Sub_menu_lists)
 	$Item_lists_keys = GUICtrlCreateMenuItem("CDKeys", $Sub_menu_lists)
 	GUICtrlCreateMenuItem("", $Sub_menu_lists)
@@ -451,6 +461,8 @@ Func MainGUI()
 	$Item_verify_file = GUICtrlCreateMenuItem("Validate File", $Menu_down, -1, 0)
 	GUICtrlCreateMenuItem("", $Menu_down)
 	$Item_verify_game = GUICtrlCreateMenuItem("Validate Game", $Menu_down, -1, 0)
+	GUICtrlCreateMenuItem("", $Menu_down)
+	$Item_verify_now = GUICtrlCreateMenuItem("Validate Now", $Menu_down)
 	;
 	$Menu_man = GUICtrlCreateContextMenu($Button_man)
 	$Item_database_add = GUICtrlCreateMenuItem("ADD To Database", $Button_man, -1, 0)
@@ -488,6 +500,7 @@ Func MainGUI()
 		GUICtrlSetState($Item_verify_game, $GUI_DISABLE)
 		$downloads = FileRead($downlist)
 	Else
+		GUICtrlSetState($Item_verify_now, $GUI_DISABLE)
 		$downloads = ""
 	EndIf
 	;
@@ -625,6 +638,18 @@ Func MainGUI()
 			$model = 10
 		ElseIf $hash = "17798e152a4597f052c77bdda99367e5" Or $hash = "331166edd599fdbf36520fb02fde166b" Then
 			$model = 11
+		ElseIf $hash = "3ffc4aba6aa6e6c516d91cea7a414878" Or $hash = "68389e4853c935756653454caf5759d6" Then
+			$model = 12
+		ElseIf $hash = "9126ac9b680e00f807fcfff6d99ea356" Or $hash = "60cd1f616d728ad312b018e9c1ef4a5c" Then
+			$model = 13
+		ElseIf $hash = "80f1547577a94fd2f6bc7d131ce26bc1" Or $hash = "2b0dd2b5bc29571bdc8a1d03f59fabed" Then
+			$model = 14
+		ElseIf $hash = "3e8d0a996ea82c1425c8ba5f20e27958" Or $hash = "f89997c91ad8aafe7a7d8dbadd4bf30b" Then
+			$model = 15
+		ElseIf $hash = "5985b3d6feaf5ebe27a561b5e7999492" Or $hash = "28429b72767f9be987b374144a20481c" Then
+			$model = 16
+		ElseIf $hash = "81d4eaf7fa7e279482c65a1f4c8ce6fd" Or $hash = "545a2bb5c22d4d4116c86f0da6bfb987" Then
+			$model = 17
 		Else
 			$model = 666
 			$accept = IniRead($inifle, "gogcli.exe", "accept", "")
@@ -690,6 +715,11 @@ Func MainGUI()
 	If $getlatest = "" Then
 		$getlatest = 4
 		IniWrite($inifle, "Download Options", "get_latest", $getlatest)
+	EndIf
+	$warn = IniRead($inifle, "Download Options", "warn_latest", "")
+	If $warn = "" Then
+		$warn = 1
+		IniWrite($inifle, "Download Options", "warn_latest", $warn)
 	EndIf
 	$selector = IniRead($inifle, "Download Options", "selector", "")
 	If $selector = "" Then
@@ -781,6 +811,7 @@ Func MainGUI()
 	$last = ""
 	$ratify = 4
 	$verify = 4
+	$valnow = ""
 	;
 	FillTheGamesList()
 	$ID = ""
@@ -2253,7 +2284,7 @@ Func MainGUI()
 				EndIf
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
-		Case $msg = $Button_down
+		Case $msg = $Button_down Or $valnow = 1
 			; Download the selected game
 			$alert = 0
 			$buttxt = GUICtrlRead($Button_down)
@@ -2261,7 +2292,7 @@ Func MainGUI()
 				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
 			Else
 				$ctrl = _IsPressed("11")
-				If $ctrl = True And ($buttxt <> "VALIDATE" & @LF & "GAME" And $buttxt <> "VALIDATE" & @LF & "FILE") Then
+				If $ctrl = True And ($buttxt <> "VALIDATE" & @LF & "GAME" And $buttxt <> "VALIDATE" & @LF & "FILE") And $valnow = "" Then
 					; Build a download list of games.
 					$cnt = _FileCountLines($downlist)
 					If $cnt < 15 Then
@@ -2270,6 +2301,7 @@ Func MainGUI()
 							GUICtrlSetData($Button_down, "DOWNLOAD" & @LF & "LIST")
 							GUICtrlSetState($Item_verify_file, $GUI_DISABLE)
 							GUICtrlSetState($Item_verify_game, $GUI_DISABLE)
+							GUICtrlSetState($Item_verify_now, $GUI_ENABLE)
 							GUICtrlSetState($Listview_games, $GUI_FOCUS)
 						EndIf
 						$entry = $title & "|" & $ID & @CRLF
@@ -2283,15 +2315,42 @@ Func MainGUI()
 								; Add new unique entry.
 								FileWriteLine($downlist, $entry)
 								$downloads = $downloads & $entry
+							Else
+								$ans = MsgBox(262209 + 256, "Remove Query", "Do you want to remove the selected" _
+									& @LF & "entry from the 'Downloads' list?" & @LF _
+									& @LF & $title, 0, $GOGcliGUI)
+								If $ans = 1 Then
+									_ReplaceStringInFile($downlist, $entry, "")
+									$downloads = StringReplace($downloads, $entry, "")
+									If $downloads = "" Then
+										GUICtrlSetData($Button_down, "DOWNLOAD")
+										GUICtrlSetTip($Button_down, "Download the selected game!")
+										GUICtrlSetState($Item_verify_file, $GUI_ENABLE)
+										GUICtrlSetState($Item_verify_game, $GUI_ENABLE)
+										GUICtrlSetState($Item_verify_now, $GUI_DISABLE)
+										_FileCreate($downlist)
+										_FileCreate($downfiles)
+									Else
+										$entries = IniReadSectionNames($downfiles)
+										$cnt = $entries[0]
+										For $c = 1 To $cnt
+											$entry = $entries[$c]
+											If IniRead($downfiles, $entry, "game", "") = $title _
+												And IniRead($downfiles, $entry, "ID", "") = $ID Then
+												IniDelete($downfiles, $entry)
+											EndIf
+										Next
+									EndIf
+								EndIf
 							EndIf
 						EndIf
 					Else
 						MsgBox(262192, "Add Error", "Limit of 15 games has been reached!", 2, $GOGcliGUI)
 					EndIf
-				ElseIf $ctrl = True Then
+				ElseIf $ctrl = True And $valnow = "" Then
 					; Abort adding to or building a download list of games.
 					MsgBox(262192, "Download ADD Error", "A validate option is enabled!", 0, $GOGcliGUI)
-				ElseIf $buttxt = "DOWNLOAD" & @LF & "LIST" Then
+				ElseIf $buttxt = "DOWNLOAD" & @LF & "LIST" And $valnow = "" Then
 					; Downloads from a list of games.
 					;MsgBox(262192, "Download Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 					;Local $e, $IDD, $paramsD, $titleD
@@ -2302,9 +2361,23 @@ Func MainGUI()
 					_FileWriteLog($logfle, "Using DOWNLOADS LIST", -1)
 					_FileWriteLog($logfle, "Checking MANIFEST", -1)
 					; Check for multiple game entries.
-					If $getlatest = 1 Or Not FileExists($manifest) Then
+					$ans = 2
+					If $getlatest = 1 Then
+						; Get Latest Is Enabled
+						If $warn = 1 Then
+							$ans = MsgBox(262209 + 256, "Download Latest Is Enabled", "Get latest entries for the manifest for game(s)?", 0, $GOGcliGUI)
+						Else
+							$ans = 1
+						EndIf
+						If $ans = 1 Then
+							RetrieveDataFromGOG($downloads, "download")
+						EndIf
+					ElseIf Not FileExists($manifest) Then
+						; No manifest file yet
 						RetrieveDataFromGOG($downloads, "download")
-					Else
+						$ans = 1
+					EndIf
+					If $ans = 2 Then
 						; Retrieve game file data where needed from GOG
 						$read = FileRead($manifest)
 						If $read = "" Then
@@ -2522,6 +2595,7 @@ Func MainGUI()
 								GUICtrlSetTip($Button_down, "Download the selected game!")
 								GUICtrlSetState($Item_verify_file, $GUI_ENABLE)
 								GUICtrlSetState($Item_verify_game, $GUI_ENABLE)
+								GUICtrlSetState($Item_verify_now, $GUI_DISABLE)
 								_FileCreate($downlist)
 								$downloads = ""
 							EndIf
@@ -2537,16 +2611,37 @@ Func MainGUI()
 						If $ind > -1 Then _GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
 					EndIf
 				Else
-					; Downloads from just one game.
+					; Download one game or Validate.
+					; Retrieve (download or extract) details for just one game.
 					SetStateOfControls($GUI_DISABLE, "all")
 					GUICtrlSetImage($Pic_cover, $blackjpg)
+					If $valnow = 1 Then
+						$ans = MsgBox(262209 + 256, "Validate Now Query", "Choose a validate option." & @LF _
+							& @LF & "OK = Validate a Game." _
+							& @LF & "CANCEL = Validate a File.", 0, $GOGcliGUI)
+						If $ans = 1 Then
+							$verify = 1
+						ElseIf $ans = 2 Then
+							$ratify = 1
+						EndIf
+					EndIf
 					$game = ""
 					$retrieve = ""
-					GUICtrlSetData($Label_mid, "Retrieving Game File Data")
+					$ans = 2
 					If $getlatest = 1 Then
-						; Retrieve game file data
-						$retrieve = 1
-					Else
+						If $warn = 1 Then
+							$ans = MsgBox(262209 + 256, "Download Latest Is Enabled", "Get latest entries for the manifest for game?", 0, $GOGcliGUI)
+							If $ans = 1 Then
+								; Retrieve game file data
+								$retrieve = 1
+							EndIf
+						Else
+							; Retrieve game file data
+							$ans = 1
+							$retrieve = 1
+						EndIf
+					EndIf
+					If $ans = 2 Then
 						If FileExists($json) Then
 							; Check for single game entry.
 							$game = FileRead($json)
@@ -2557,6 +2652,7 @@ Func MainGUI()
 								If StringInStr($game, $identry) < 1 Then
 									$game = ""
 									If FileExists($manifest) Then
+										GUICtrlSetData($Label_mid, "Extracting Game File Data")
 										$read = FileRead($manifest)
 										If StringInStr($read, $identry) < 1 Then
 											; Retrieve game file data
@@ -2584,6 +2680,7 @@ Func MainGUI()
 					EndIf
 					If $retrieve = 1 Then
 						; Download game file data from GOG
+						GUICtrlSetData($Label_mid, "Retrieving Game File Data")
 						$cookie = ""
 						If FileExists($cookies) Then
 							$res = _FileReadToArray($cookies, $array)
@@ -2764,6 +2861,7 @@ Func MainGUI()
 						EndIf
 					EndIf
 					If $game <> "" Then
+						; Process selected game
 						If $verify = 4 And $ratify = 4 Then
 							; Download
 							If $selector = 1 Then
@@ -2782,6 +2880,10 @@ Func MainGUI()
 							; Validate Game
 							GUICtrlSetData($Label_mid, "Validating Game Files")
 							_FileWriteLog($logfle, "Validating Game Files.", -1)
+							If $valnow = 1 Then
+								$valnow = ""
+								$verify = 4
+							EndIf
 							GetFileDownloadDetails()
 							;MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 							If FileExists($gamesfold) Then
@@ -2982,6 +3084,10 @@ Func MainGUI()
 							; Validate File
 							GUICtrlSetData($Label_mid, "Validating Game File")
 							_FileWriteLog($logfle, "Validating Game File.", -1)
+							If $valnow = 1 Then
+								$valnow = ""
+								$ratify = 4
+							EndIf
 							GetFileDownloadDetails()
 							;MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 							If FileExists($gamesfold) Then
@@ -3165,6 +3271,16 @@ Func MainGUI()
 		Case $msg = $Item_view_down
 			; View Downloads List
 			If FileExists($downlist) Then ShellExecute($downlist)
+		Case $msg = $Item_verify_now
+			; Validate Game now
+			$ans = MsgBox(262177 + 256, "Validate Now Query", _
+				"Validate will occur immediately, after" & @LF & _
+				"the selection of required options." & @LF & @LF & _
+				"OK = Validate a Game or File." & @LF & _
+				"CANCEL = Abort any Validate.", 0, $GOGcliGUI)
+			If $ans = 1 Then
+				$valnow = 1
+			EndIf
 		Case $msg = $Item_verify_game
 			; Validate Game for DOWNLOAD button
 			If $verify = 4 Then
@@ -3225,6 +3341,8 @@ Func MainGUI()
 					GUICtrlSetData($Label_top, "Please Wait")
 					GUICtrlSetData($Label_mid, "Checking The Manifest")
 					GUICtrlSetData($Label_bed, "Looking For Orphans")
+					$entry = ""
+					$ind = -1
 					$read = FileRead($titlist)
 					If $read <> "" Then
 						$titles = $read
@@ -3278,7 +3396,7 @@ Func MainGUI()
 											$ID = $title[2]
 											$title = $title[1]
 											; Trying backups first
-											$entry = ""
+											;$entry = ""
 											If FileExists($backups) Then
 												GUICtrlSetData($Label_mid, "Retrieving Game Detail")
 												For $nmb = 5 To 1 Step -1
@@ -3407,6 +3525,7 @@ Func MainGUI()
 												$games = $games + 1
 												IniWrite($gamesini, "Games", "total", $games)
 												; Need to reload the list
+												$game = $title
 												_GUICtrlListView_BeginUpdate($Listview_games)
 												_GUICtrlListView_DeleteAllItems($Listview_games)
 												_GUICtrlListView_EndUpdate($Listview_games)
@@ -3427,6 +3546,12 @@ Func MainGUI()
 												GUICtrlSetData($Input_dlc, $DLC)
 												GUICtrlSetData($Input_ups, $updates)
 												GUICtrlSetData($Input_key, "")
+												; Select the orphan entry
+												$ind = _GUICtrlListView_FindInText($Listview_games, $game, -1, False, False)
+												If $ind > -1 Then
+													_GUICtrlListView_SetItemSelected($Listview_games, $ind, True, True)
+													_GUICtrlListView_EnsureVisible($Listview_games, $ind, False)
+												EndIf
 											EndIf
 										ElseIf $ans = 2 Then
 											ExitLoop
@@ -3442,6 +3567,11 @@ Func MainGUI()
 					GUICtrlSetData($Label_top, "")
 					GUICtrlSetData($Label_mid, "")
 					GUICtrlSetData($Label_bed, "")
+					If $entry <> "" And $ind > -1 Then
+						Sleep(1000)
+						GUICtrlSetState($Listview_games, $GUI_FOCUS)
+						_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+					EndIf
 				EndIf
 			EndIf
 		Case $msg = $Item_manifest_fix
@@ -3689,7 +3819,7 @@ Func MainGUI()
 				EndIf
 			EndIf
 		Case $msg = $Item_lists_updated
-			; Lists - Games Updated
+			; Lists - Games Updated -> View List
 			If FileExists($updated) Then ShellExecute($updated)
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Item_lists_tags
@@ -3699,6 +3829,78 @@ Func MainGUI()
 		Case $msg = $Item_lists_latest
 			; Lists - Latest Additions
 			If FileExists($addlist) Then ShellExecute($addlist)
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Item_lists_dupes
+			; Lists - Games Updated -> Remove Duplicates
+			If FileExists($updated) Then
+				SetStateOfControls($GUI_DISABLE, "all")
+				GUICtrlSetImage($Pic_cover, $blackjpg)
+				GUICtrlSetData($Label_top, "Please Wait")
+				GUICtrlSetData($Label_mid, "Updated List Check")
+				GUICtrlSetData($Label_bed, "Remove Duplicates")
+				$lines = ""
+				$former = 1
+				;Local $checklist = @ScriptDir & "\Checked.txt"
+				;_FileCreate($checklist)
+				_FileReadToArray($updated, $array, 1)
+				If IsArray($array) Then
+					;_ArrayDisplay($array)
+					_FileCreate($updated)
+					For $a = 1 To $array[0]
+						$line = $array[$a]
+						If $line = "" Then
+							; Add a blank line
+							If $former <> "" Then
+								$lines = $lines & @CRLF
+							EndIf
+							$former = ""
+						Else
+							If $lines = "" Then
+								; Add first line
+								$lines = $line
+								$former = $line
+							Else
+								$game = StringSplit($line, " | ", 1)
+								$game = $game[1]
+								If StringInStr($lines, $game) > 0 Then
+									; Check if a match
+									$read = StringSplit($lines, @CRLF, 1)
+									For $r = 1 To $read[0]
+										$sect = $read[$r]
+										If $sect <> "" Then
+											$sect = StringSplit($sect, " | ", 1)
+											$sect = $sect[1]
+											If $sect = $game Then
+												; Duplicate found
+												$game = ""
+												ExitLoop
+											EndIf
+										EndIf
+									Next
+									$r = ""
+									If $game <> "" Then
+										; Not a match, so add
+										$lines = $lines & @CRLF & $line
+										$former = $line
+									EndIf
+								Else
+									; Appears to be unique so add
+									$lines = $lines & @CRLF & $line
+									$former = $line
+								EndIf
+							EndIf
+						EndIf
+					Next
+					;FileWrite($checklist, $lines & @CRLF)
+					FileWrite($updated, $lines & @CRLF)
+				EndIf
+				SetStateOfControls($GUI_ENABLE, "all")
+				GUICtrlSetData($Label_top, "")
+				GUICtrlSetData($Label_mid, "")
+				GUICtrlSetData($Label_bed, "")
+				;ShellExecute($checklist)
+				ShellExecute($updated)
+			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Item_lists_dlcs
 			; Lists - DLCs
@@ -3889,6 +4091,7 @@ Func MainGUI()
 				GUICtrlSetTip($Button_down, "Download the selected game!")
 				GUICtrlSetState($Item_verify_file, $GUI_ENABLE)
 				GUICtrlSetState($Item_verify_game, $GUI_ENABLE)
+				GUICtrlSetState($Item_verify_now, $GUI_DISABLE)
 				_FileCreate($downlist)
 				$downloads = ""
 			EndIf
@@ -3994,7 +4197,7 @@ EndFunc ;=> MainGUI
 
 Func SetupGUI()
 	Local $Button_close, $Button_cookie, $Checkbox_dos, $Checkbox_exist, $Checkbox_image, $Checkbox_keep, $Checkbox_latest, $Checkbox_relax
-	Local $Checkbox_select, $Checkbox_valid, $Combo_lang, $Combo_OS, $Combo_two, $Edit_info, $Group_down, $Group_lang, $Label_OS
+	Local $Checkbox_select, $Checkbox_valid, $Checkbox_warn, $Combo_lang, $Combo_OS, $Combo_two, $Edit_info, $Group_down, $Group_lang, $Label_OS
 	Local $above, $high, $info, $langs, $opsys, $side, $wide
 	;
 	$wide = 250
@@ -4044,8 +4247,10 @@ Func SetupGUI()
 	GUICtrlSetTip($Checkbox_valid, "Validate after downloading!")
 	;
 	$Group_down = GuiCtrlCreateGroup("Download Options", 10, 313, 230, 85)
-	$Checkbox_latest = GUICtrlCreateCheckbox("Download the latest game file information", 21, 331, 210, 20)
-	GUICtrlSetTip($Checkbox_latest, "Get latest manifest data for the game!")
+	$Checkbox_latest = GUICtrlCreateCheckbox("Download latest game file data", 21, 331, 164, 20)
+	GUICtrlSetTip($Checkbox_latest, "Get latest game data for the manifest!")
+	$Checkbox_warn = GUICtrlCreateCheckbox("Warn", 188, 331, 45, 20)
+	GUICtrlSetTip($Checkbox_warn, "Warn about get latest being enabled!")
 	$Checkbox_select = GUICtrlCreateCheckbox("Present the 'Game Files Selector' window", 21, 351, 210, 20)
 	GUICtrlSetTip($Checkbox_select, "Present the game files selector window!")
 	;$Checkbox_image = GUICtrlCreateCheckbox("Download the game cover image file", 21, 371, 210, 20)
@@ -4114,7 +4319,11 @@ Func SetupGUI()
 ;~ 	EndIf
 	;
 	GUICtrlSetState($Checkbox_valid, $validate)
+	;
 	GUICtrlSetState($Checkbox_latest, $getlatest)
+	GUICtrlSetState($Checkbox_warn, $warn)
+	If $getlatest = 4 Then GUICtrlSetState($Checkbox_warn, $GUI_DISABLE)
+	;
 	GUICtrlSetState($Checkbox_select, $selector)
 	GUICtrlSetState($Checkbox_image, $cover)
 	GUICtrlSetState($Checkbox_log, $log)
@@ -4170,6 +4379,14 @@ Func SetupGUI()
 				EndIf
 				_FileCreate($cookies)
 			EndIf
+		Case $msg = $Checkbox_warn
+			; Warn about get latest being enabled
+			If GUICtrlRead($Checkbox_warn) = $GUI_CHECKED Then
+				$warn = 1
+			Else
+				$warn = 4
+			EndIf
+			IniWrite($inifle, "Download Options", "warn_latest", $warn)
 		Case $msg = $Checkbox_valid
 			; Validate after downloading
 			If GUICtrlRead($Checkbox_valid) = $GUI_CHECKED Then
@@ -4206,8 +4423,10 @@ Func SetupGUI()
 			; Get latest manifest data for the game
 			If GUICtrlRead($Checkbox_latest) = $GUI_CHECKED Then
 				$getlatest = 1
+				GUICtrlSetState($Checkbox_warn, $GUI_ENABLE)
 			Else
 				$getlatest = 4
+				GUICtrlSetState($Checkbox_warn, $GUI_DISABLE)
 			EndIf
 			IniWrite($inifle, "Download Options", "get_latest", $getlatest)
 		Case $msg = $Checkbox_log
