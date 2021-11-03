@@ -56,6 +56,7 @@ gogcli_selector_14.png
 gogcli_setup_5.png
 gogcli_setup_6.png
 gogcli_setup_7.png
+gogcli_setup_8.png
 Tutor_50.png
 Tutor_51.png
 Tutor_52.png
@@ -63,6 +64,7 @@ Tutor_53.png
 Tutor_54.png
 Tutor_55.png
 Tutor_56.png
+Validate_7.png
 
 NOTE - Because file names are dynamic to the download URL, the program was doing a double check just before downloading and where necessary amending the download list values. But now due to the additional database check (if enabled), the program needs to do the file name check earlier, before loading the download list of the 'Game Files Selector' window. User will be warned of an issue, or alerted to file name changes that will require a manifest update (entries replaced).
 
