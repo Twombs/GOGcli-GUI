@@ -638,18 +638,6 @@ Func MainGUI()
 			$model = 10
 		ElseIf $hash = "17798e152a4597f052c77bdda99367e5" Or $hash = "331166edd599fdbf36520fb02fde166b" Then
 			$model = 11
-		ElseIf $hash = "3ffc4aba6aa6e6c516d91cea7a414878" Or $hash = "68389e4853c935756653454caf5759d6" Then
-			$model = 12
-		ElseIf $hash = "9126ac9b680e00f807fcfff6d99ea356" Or $hash = "60cd1f616d728ad312b018e9c1ef4a5c" Then
-			$model = 13
-		ElseIf $hash = "80f1547577a94fd2f6bc7d131ce26bc1" Or $hash = "2b0dd2b5bc29571bdc8a1d03f59fabed" Then
-			$model = 14
-		ElseIf $hash = "3e8d0a996ea82c1425c8ba5f20e27958" Or $hash = "f89997c91ad8aafe7a7d8dbadd4bf30b" Then
-			$model = 15
-		ElseIf $hash = "5985b3d6feaf5ebe27a561b5e7999492" Or $hash = "28429b72767f9be987b374144a20481c" Then
-			$model = 16
-		ElseIf $hash = "81d4eaf7fa7e279482c65a1f4c8ce6fd" Or $hash = "545a2bb5c22d4d4116c86f0da6bfb987" Then
-			$model = 17
 		Else
 			$model = 666
 			$accept = IniRead($inifle, "gogcli.exe", "accept", "")
