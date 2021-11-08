@@ -12,10 +12,9 @@
 
 ; FUNCTIONS
 ; MainGUI(), SetupGUI(), FileSelectorGUI(), GameDetailsGUI()
-; BackupManifestEtc(), ClearFieldValues(), CompareFilesToManifest($numb), FillTheGamesList(), FixText($text), FixTitle($text)
-; FixUnicode($text), GetChecksumQuery($rat), GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF)
-; GetManifestForTitle(), GetTheSize(), ParseTheGamelist(), RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which)
-; ShowCorrectImage()
+; BackupManifestEtc(), ClearFieldValues(), CompareFilesToManifest($numb), FillTheGamesList(), FixAllText($text), FixText($text), FixTitle($text)
+; FixUnicode($text), GetChecksumQuery($rat), GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF), GetManifestForTitle()
+; GetTheSize(), ParseTheGamelist(), RemoveHtml($text), RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which), ShowCorrectImage()
 ;
 ; , SetTheColumnWidths() UNUSED
 ;
@@ -2057,7 +2056,7 @@ Func MainGUI()
 							$savtxt = FileOpen($description, 2 + 32)
 							If $purge = 1 Then
 								;FileDelete($description)
-								$read = FixText($read)
+								$read = FixAllText($read)
 								$head = StringSplit($read, "purchase_link", 1)
 								$tail = $head[$head[0]]
 								$head = $head[1]
@@ -2152,7 +2151,7 @@ Func MainGUI()
 							$savtxt = FileOpen($changelog, 2 + 32)
 							If $purge = 1 Then
 								;FileDelete($changelog)
-								$read = FixText($read)
+								$read = FixAllText($read)
 								$head = StringSplit($read, "purchase_link", 1)
 								$tail = $head[$head[0]]
 								$head = $head[1]
@@ -2252,7 +2251,7 @@ Func MainGUI()
 							$savtxt = FileOpen($everything, 2 + 32)
 							If $purge = 1 Then
 								;FileDelete($everything)
-								$read = FixText($read)
+								$read = FixAllText($read)
 								;FileWrite($everything, $read)
 							EndIf
 							FileWrite($savtxt, $read)
@@ -5350,7 +5349,7 @@ Func FileSelectorGUI()
 																$savtxt = FileOpen($changelog, 2 + 32)
 																If $purge = 1 Then
 																	;FileDelete($changelog)
-																	$read = FixText($read)
+																	$read = FixAllText($read)
 																	$head = StringSplit($read, "purchase_link", 1)
 																	$tail = $head[$head[0]]
 																	$head = $head[1]
@@ -5380,7 +5379,7 @@ Func FileSelectorGUI()
 																$savtxt = FileOpen($description, 2 + 32)
 																If $purge = 1 Then
 																	;FileDelete($description)
-																	$read = FixText($read)
+																	$read = FixAllText($read)
 																	$head = StringSplit($read, "purchase_link", 1)
 																	$tail = $head[$head[0]]
 																	$head = $head[1]
@@ -7113,41 +7112,25 @@ Func FillTheGamesList()
 	EndIf
 EndFunc ;=> FillTheGamesList
 
+Func FixAllText($text)
+	$text = FixText($text)
+	$text = RemoveHtml($text)
+	Return $text
+EndFunc ;=> FixAllText
+
 Func FixText($text)
-	;Return $text
 	$text = StringReplace($text, '{"id":', 'ID = ')
-;~ 	$text = StringReplace($text, '\u00e7', 'c')
-;~ 	$text = StringReplace($text, '\u00f1', 'n')
-;~ 	$text = StringReplace($text, '\u0440', 'r')
-;~ 	$text = StringReplace($text, '\u0443', 'u')
-;~ 	$text = StringReplace($text, '\u0441', 's')
-;~ 	$text = StringReplace($text, '\u043a', 'i')
-;~ 	$text = StringReplace($text, '\u0438', 'a')
-;~ 	$text = StringReplace($text, '\u0439', 'n')
-;~ 	$text = StringReplace($text, '\u0641', 'f')
-;~ 	$text = StringReplace($text, '\u0627', 'a')
-;~ 	$text = StringReplace($text, '\u0631', 'r')
-;~ 	$text = StringReplace($text, '\u0633', 's')
-;~ 	$text = StringReplace($text, '\u06cc', 'i')
-;~ 	$text = StringReplace($text, '\u0644', 'r')
-;~ 	$text = StringReplace($text, '\u0639r', 'a')
-;~ 	$text = StringReplace($text, '\u0628', 'b')
-;~ 	$text = StringReplace($text, '\u064a', 'i')
-;~ 	$text = StringReplace($text, '\u0629', 'c')
-;~ 	$text = StringReplace($text, '\u0142', 'l')
 	$text = StringReplace($text, '\u010desk\u00fd', 'czech')
 	$text = StringReplace($text, 'T\u00fcrkce', 'turkish')
 	$text = StringReplace($text, 'portugu\u00eas', 'portuguese')
 	$text = StringReplace($text, '\u4e2d\u6587(\u7b80\u4f53)', 'chinese')
 	$text = StringReplace($text, '\u65e5\u672c\u8a9e', 'japanese')
 	$text = StringReplace($text, '\ud55c\uad6d\uc5b4', 'korean')
-	;$text = StringReplace($text, '', '')
+	$text = FixUnicode($text)
 	$text = StringReplace($text, '{"lead":', '')
-	;$text = StringReplace($text, '\u0027', '')
 	$text = StringReplace($text, '[],"', '"' & @CRLF)
 	$text = StringReplace($text, '[],', @CRLF)
 	$text = StringReplace($text, '":"', ' = ')
-	;$text = StringReplace($text, '":{"', ' - ')
 	$text = StringReplace($text, '":{"', @CRLF)
 	$text = StringReplace($text, '":', ' = ')
 	$text = StringReplace($text, '","', @CRLF)
@@ -7158,35 +7141,6 @@ Func FixText($text)
 	$text = StringReplace($text, '\/', '/')
 	$text = StringReplace($text, '"}}', '')
 	$text = StringReplace($text, '"}', '')
-;~ 	$text = StringReplace($text, '\n', ' ')
-;~ 	$text = StringReplace($text, '\u003Cbr', '')
-;~ 	$text = StringReplace($text, '\u003Chr', '')
-;~ 	$text = StringReplace($text, '\u003Ch4', '')
-;~ 	$text = StringReplace($text, '\u003C/h4', '')
-;~ 	$text = StringReplace($text, '\u003Cul', '')
-;~ 	$text = StringReplace($text, '\u003C/ul', '')
-;~ 	$text = StringReplace($text, '\u003Cli', '')
-;~ 	$text = StringReplace($text, '\u003C/li', '')
-;~ 	$text = StringReplace($text, '\u003Ci', '')
-;~ 	$text = StringReplace($text, '\u003C/i', '')
-;~ 	$text = StringReplace($text, '\u003Cb', '')
-;~ 	$text = StringReplace($text, '\u003C/b', '')
-;~ 	$text = StringReplace($text, '\u003Ch5', '')
-;~ 	$text = StringReplace($text, '\u003C/h5', '')
-;~ 	$text = StringReplace($text, '\u003Cp', '')
-;~ 	$text = StringReplace($text, '\u003C/p', '')
-;~ 	$text = StringReplace($text, '\u003C', '')
-;~ 	;$text = StringReplace($text, '', '')
-;~ 	$text = StringReplace($text, '\u003E', '')
-;~ 	$text = StringReplace($text, "\u201c", "'")
-;~ 	$text = StringReplace($text, "\u201d", "'")
-;~ 	$text = StringReplace($text, '\u2013', '-')
-;~ 	$text = StringReplace($text, "\u2018", "'")
-;~ 	$text = StringReplace($text, "\u2019", "'")
-;~ 	$text = StringReplace($text, '\u0022', '"')
-;~ 	$text = StringReplace($text, '\u0026', '-')
-;~ 	$text = StringReplace($text, "\u0027", "'")
-;~ 	$text = StringReplace($text, '\u2026', '.')
 	$text = StringReplace($text, '\n', @CRLF)
 	$text = StringReplace($text, ']},{"', @CRLF)
 	$text = StringReplace($text, ',{"', @CRLF)
@@ -7207,7 +7161,6 @@ Func FixText($text)
 	$text = StringReplace($text, "<br><br>", @CRLF)
 	$text = StringReplace($text, "<br>", @CRLF)
 	;$text = StringStripWS($text, 4)
-	$text = FixUnicode($text)
 	Return $text
 EndFunc ;=> FixText
 
@@ -7815,6 +7768,51 @@ Func ParseTheGamelist()
 		MsgBox(48 + 262144, "Path Error", "The 'Games.txt' file wasn't found.")
 	EndIf
 EndFunc ;=> ParseTheGamelist
+
+Func RemoveHtml($text)
+	$text = StringReplace($text, "<p>", "")
+	$text = StringReplace($text, "</p>", "")
+	$text = StringReplace($text, "<hr>", @CRLF)
+	$text = StringReplace($text, "<b>", "")
+	$text = StringReplace($text, "</b>", "")
+	$text = StringReplace($text, "<li>", "")
+	$text = StringReplace($text, "</li>", "")
+	$text = StringReplace($text, "<ul>", "")
+	$text = StringReplace($text, "</ul>", "")
+	$text = StringReplace($text, "</a>", "")
+	$text = StringReplace($text, "</div>", "")
+	$text = StringReplace($text, "</span>", "")
+	$text = StringReplace($text, "<h4>", "")
+	$text = StringReplace($text, "</h4>", "")
+	$text = StringReplace($text, "</video>", "")
+	$text = StringReplace($text, '<p class="module">', '')
+	$text = StringReplace($text, '<div style="overflow: hidden;">', '')
+	$text = StringReplace($text, '<span style="display: block;">', '')
+	$text = StringReplace($text, '<ul class="bb_ul">', '')
+	If StringInStr($text, "<") > 0 Then
+		$parts = StringSplit($text, "<", 1)
+		$text = $parts[1]
+		For $p = 2 To $parts[0]
+			$part = $parts[$p]
+			If StringInStr($part, ">") > 0 Then
+				$part = StringSplit($part, ">", 1)
+				$text = $text & $part[2]
+			ElseIf StringInStr($part, @CRLF) > 0 Then
+				$part = StringSplit($part, @CRLF, 1)
+				$text = $text & $part[2]
+			Else
+				$text = $text & $part
+			EndIf
+		Next
+	EndIf
+	While StringInStr($text, @CRLF & @CRLF)
+		$text = StringReplace($text, @CRLF & @CRLF, @CRLF)
+	WEnd
+	$text = StringReplace($text, ".", ". ")
+	$text = StringReplace($text, "  ", " ")
+	$text = StringReplace($text, ". . . ", "...")
+	Return $text
+EndFunc ;=> RemoveHtml
 
 Func RetrieveDataFromGOG($listed, $list)
 	Local $e, $IDD, $ids, $l, $paramsD, $pos, $prior, $titleD
