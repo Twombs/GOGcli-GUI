@@ -1,71 +1,10 @@
-Ambitious new feature update.
+Latest v2.1 update includes improvements & bugfix.
 
-Started work on an 'Exists' database. WORK IN PROGRESS
+Discovered the CHANGELOG button in the DETAILS window wasn't working, so corrected that.
+The ALL button in the DETAILS window can now save an 'Everything.txt' file to the program, Game or Games folder etc. This includes a new program sub-folder called 'Details'.
+The 'Unicode Replacements' edit field in the DETAILS window, which was never implemented for use, has now been removed (will no longer be needed).
+The 'Santitize' (purge) option in the DETAILS window, has now been improved to include a proper unicode text converter.
+Other minor changes.
 
-This involves a new enabling option on the SETUP window, and new sub-option.
-And another right-click menu option on the ADD TO MANIFEST button. This changes the button to ADD TO DATABASE, which enables add to database browsing etc.
-One or more game titles can be processed ... individual or full list (from specified starting point). You browse to an individual game folder (with files) (COMPLETED), or select the main game folder of game title sub-folders (INCOMPLETE).
-
-A 'Warning Alert & Advice' dialog prompt enabled for game titles added to the database, that contain a keyword (chapter, episode, part, volume) that could indicate a multi game folder title.
-
-Downloaded files that pass validation, are added to the new 'Exists' database.
-
-Validating a File or Game can add to the new 'Exists' database, dependent on success or a query.
-
-The 'Games' list has a new right-click sub-menu 'Database' with two entries (Relax and View). The 'Relax' option mirrors the SETUP window one ... change one and the other is also changed.
-
-The 'Game Files Selector' window now has a 'Relax' option, tied to that SETUP window (etc) option, but unlike them, is not a permanent change to the setting ... temporary only while the 'Selector' window remains open. This 'Relax' option if changed, reloads the files on the 'Selector' window.
-
-What now shows on the 'Game Files Selector' window for downloading, is dependent on the new 'Enable' and 'Relax' options, and on what exists in the new 'Exists' database.
-
-The '(Loading List)' splash now displays 'Checking Database' instead of 'Checking FIle Names'. This hopefully makes things a bit clearer. NOTE - If the download list on the 'Game Files Selector' window, is not being populated or displays fewer items than expected, then checking the Log file should explain why. Generally though, if a file has been downloaded before for a game, and no change (update) has been detected, then the file is skipped for downloading. If you want to re-download the same file, then a setting on the SETUP window needs to be disabled to allow this (the 'Enable the exists database for usage' option).
-
-The program can now download the Changelog and Description for a game. This can occur during the game files download process, or manually via the DETAILS button options. See the SETUP window for the two new options.
-
-The DETAILS button now presents a 'Game Details' window, with some new & old (General) options. The new options allow viewing and or saving a Changelog.txt and Description.txt file, as well as viewing everything (ALL) about the selected game. The GENERAL button displays the previous DETAILS data etc. UPDATE - The 'Game Details' window, has now been further improved, with the addition of a MANIFEST button, to show the manifest entry for the selected game in a text file, plus a CDKey CHECK & FIX button, which rechecks the manifest for CDKeys for the current game, and saves the result if changed. The GENERAL button now also checks for further CDKey entries in the downloaded game data, and reports and saves if changes detected. NOTE - Unfortunately the manifest appears to only display one CDKey at most for a game, whereas included DLCs etc may also have CDKeys in reality. The GENERAL button process is the only method at present to overcome this issue, and it also offers to copy the 'Details.txt' file with its CDKey specifics, to the game folder.
-
-The download progress field now displays some text related to current process (cover, changelog and description file downloading).
-
-The program now recognizes v0.11.0 of gogcli.exe, but has had minimal testing so far. NOTE - It now recognizes up to v0.17.0, but testing is still in progress.
-
-BUGFIX for recent improvements related to CDKey (a wrong variable was used in one section of code, which caused a program crash ... no doubt a copy & paste adjustment issue).
-
-The 'Game Files Selector' window for downloading now has UP and DOWN arrow buttons, for re-arranging the order of entries for a game on the list.
-
-Added a right-click list option, 'Check For Orphan Entries', under a new sub menu entry called 'The Manifest'. The 'Check & Fix' option has also been relocated there. Orphan entries can exist in your manifest, when GOG either remove or rename a game title in your library. If game data for the orphan title still exists via the GOG API, then the title if desired, can be restored to the 'Games List'. EDIT - Backups are now checked for the orphan entry, and restored from there if they exist, so a web connection and GOG API entry may not be required. NOTES - Even if an entry is restored, it should only be seen as short term temporary, and no guarantee of being able to retrieve data or files from GOG. If you are quick enough, you may be able to download the last listed file(s). Updating the 'Games' list will always remove restored entries, though 'Check For Orphan Entries' may be able to restore again.
-
-The last restored entry is now selected after the 'Games' list reloads.
-
-Added two more right-click options to the 'The Manifest' sub-menu entry. These enable viewing either the entire manifest in your web browser or just the manifest entry of selected game in a text file.
-
-BUGFIX involving a check of the manifest at program start, to detect if Line Feeds have been replaced by Carriage Returns plus Line Feeds. If found, then corrections are made to the manifest. This issue should only possibly occur if the user has manually edited the manifest. Blank lines are checked for and removed from the manifest if found.
-
-The right-click option for 'Lists' has now had the 'Games Updated' entry changed to a sub-menu, with two options - View List and Remove Duplicates. The 'Remove Duplicates' option is a new feature to reduce entries in the 'Updated.txt' file, if the user wants that to occur.
-
-When the download button is in the 'DOWNLOAD LIST' state, clicking it again for a game already on the download list will remove it. NOTE - This is of course, with CTRL key held down while clicking.
-
-If the 'Download Latest ...' option is enabled and 'DOWNLOAD LIST' button is clicked, then a query is now presented, so that the option (if not desired) can be skipped. NOTE - This has now been improved with the addition of a 'Warn' checkbox on the SETUP window.
-
-A 'Validate Now' option has been added for when the download button is in the 'DOWNLOAD LIST' state.
-
-gogcli_details.png
-gogcli_details_2.png
-gogcli_menu.png
-gogcli_selector_13.png
-gogcli_selector_14.png
-gogcli_setup_5.png
-gogcli_setup_6.png
-gogcli_setup_7.png
-gogcli_setup_8.png
-Tutor_50.png
-Tutor_51.png
-Tutor_52.png
-Tutor_53.png
-Tutor_54.png
-Tutor_55.png
-Tutor_56.png
-Validate_7.png
-
-NOTE - Because file names are dynamic to the download URL, the program was doing a double check just before downloading and where necessary amending the download list values. But now due to the additional database check (if enabled), the program needs to do the file name check earlier, before loading the download list of the 'Game Files Selector' window. User will be warned of an issue, or alerted to file name changes that will require a manifest update (entries replaced).
-
-The FIND button process on the main window, now stores the last search text. To recall that search text for usage, the Title input field needs to be empty (before clicking the FIND button). It takes a second click to then do the search using that returned text.
+gogcli_details_3.png
+gogcli_details_main.png

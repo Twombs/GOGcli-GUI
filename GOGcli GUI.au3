@@ -13,8 +13,9 @@
 ; FUNCTIONS
 ; MainGUI(), SetupGUI(), FileSelectorGUI(), GameDetailsGUI()
 ; BackupManifestEtc(), ClearFieldValues(), CompareFilesToManifest($numb), FillTheGamesList(), FixText($text), FixTitle($text)
-; GetChecksumQuery($rat), GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF), GetManifestForTitle()
-; GetTheSize(), ParseTheGamelist(), RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which), ShowCorrectImage()
+; FixUnicode($text), GetChecksumQuery($rat), GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF)
+; GetManifestForTitle(), GetTheSize(), ParseTheGamelist(), RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which)
+; ShowCorrectImage()
 ;
 ; , SetTheColumnWidths() UNUSED
 ;
@@ -44,9 +45,10 @@
 
 Local $exe, $script, $status, $w, $wins
 
-Global $handle, $pid, $Scriptname, $version
+Global $handle, $pid, $Scriptname, $update, $version
 
-$version = "v2.0"
+$update = "Updated in November 2021."
+$version = "v2.1"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -81,9 +83,9 @@ Global $Input_OS, $Input_slug, $Input_title, $Input_ups, $Item_database_add, $It
 Global $Item_verify_game, $Item_verify_now, $Label_bed, $Label_cat, $Label_dlc, $Label_key, $Label_mid, $Label_OS, $Label_slug
 Global $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $7zip, $a, $addlist, $alert, $alerts, $alf, $allkeys, $alpha, $ans, $array, $backups, $bigcover, $bigpic, $blackjpg, $blurb
-Global $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $changelogs, $check, $checksum, $checkval, $cnt, $compare, $cookie, $cookies
-Global $cover, $covers, $covimg, $declare, $descript, $descriptions, $dest, $details, $DetailsGUI, $DLC, $dlcfile, $done, $downfiles
+Global $7zip, $a, $addlist, $alert, $alerts, $alf, $alldetail, $allkeys, $alpha, $ans, $array, $backups, $bigcover, $bigpic, $blackjpg
+Global $blurb, $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $changelogs, $check, $checksum, $checkval, $cnt, $compare, $cookie
+Global $cookies, $cover, $covers, $covimg, $declare, $descript, $descriptions, $dest, $details, $DetailsGUI, $DLC, $dlcfile, $done, $downfiles
 Global $downlist, $download, $downloads, $drv, $entries, $entry, $erred, $existDB, $exists, $f, $file, $fileinfo, $filepth, $files
 Global $filesize, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $gametxt, $getlatest
 Global $gmefold, $gmesfld, $gogcli, $GOGcliGUI, $hash, $head, $height, $htmlfle,  $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX
@@ -91,13 +93,14 @@ Global $ID, $identry, $ignore, $image, $imgfle, $ind, $inifle, $json, $keep, $ke
 Global $listview, $log, $logfle, $lowid, $manall, $m, $manifest, $manifests, $manlist, $md5check, $minimize, $model, $n, $name, $num
 Global $numb, $offline, $OP, $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping, $pinged, $progress, $pth
 Global $purge, $r, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $ret, $return, $row, $s, $same, $savlog, $second, $selector
-Global $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $split, $splits, $state, $style, $subfold, $tag, $tagfle
-Global $tail, $text, $title, $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $warn, $web
-Global $which, $width, $winpos, $z, $zipcheck, $zipfile, $zippath
+Global $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $state, $style, $subfold, $tag, $tagfle, $tail, $text, $title
+Global $titleF, $titlist, $top, $type, $types, $updated, $updates, $URL, $user, $validate, $verify, $warn, $web, $which, $width, $winpos
+Global $z, $zipcheck, $zipfile, $zippath
 ;, $foldzip, $resultfle
 
 $addlist = @ScriptDir & "\Added.txt"
 $alerts = @ScriptDir & "\Alerts.txt"
+$alldetail = @ScriptDir & "\Details"
 $backups = @ScriptDir & "\Backups"
 $bigpic = @ScriptDir & "\Big.jpg"
 $blackjpg = @ScriptDir & "\Black.jpg"
@@ -140,6 +143,7 @@ If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Defaul
 ;IniWrite($gamesini, "Games", "total", $games)
 
 If Not FileExists($addlist) Then _FileCreate($addlist)
+If Not FileExists($alldetail) Then DirCreate($alldetail)
 If Not FileExists($changelogs) Then DirCreate($changelogs)
 If Not FileExists($covers) Then DirCreate($covers)
 If Not FileExists($descriptions) Then DirCreate($descriptions)
@@ -1522,7 +1526,8 @@ Func MainGUI()
 					"BIG thanks to j0kky (AutoIt Forum) for download size help," & @LF & _
 					"and to torels_ & smashley (AutoIt Forum) for zip functions." & @LF & _
 					"Praise & BIG thanks as always, to Jon & team for free AutoIt." & @LF & @LF & _
-					"© February 2021 - Created by Timboli (aka TheSaint). (" & $version & ")" & @LF & @LF & _
+					"© February 2021 - Created by Timboli (aka TheSaint)." & @LF & _
+					$update & " (" & $version & ")" & @LF & @LF & _
 					"Click OK to open the program folder.", 0, $GOGcliGUI)
 				If $ans = 1 Then ShellExecute(@ScriptDir)
 			EndIf
@@ -2199,6 +2204,29 @@ Func MainGUI()
 					_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
 				ElseIf $return = "everything" Then
 					; ALL Game Details
+					$everything = $alldetail & "\" & $ID & ".txt"
+					If $offline = 1 Then
+						If FileExists($everything) Then
+							ShellExecute($everything)
+							ContinueLoop
+						Else
+							$outline = ""
+							If $gmefold = 1 Then
+								$outline = $gamefold & "\Everything.txt"
+							ElseIf $gmesfld = 1 Then
+								If FileExists($gamesfold) Then
+									$outfold = $gamesfold & "\_Details"
+									If Not FileExists($outfold) Then DirCreate($outfold)
+									;$outline = $outfold & "\Changelog_(" & $ID & ").txt"
+									$outline = $outfold & "\" & $ID & "_(Everything).txt"
+								EndIf
+							EndIf
+							If FileExists($outline) Then
+								ShellExecute($outline)
+								ContinueLoop
+							EndIf
+						EndIf
+					EndIf
 					SetStateOfControls($GUI_DISABLE, "all")
 					$ping = Ping("gog.com", 4000)
 					If $ping > 0 Then
@@ -2209,18 +2237,57 @@ Func MainGUI()
 						Else
 							$flag = @SW_SHOW
 						EndIf
+						If $savlog = 4 Then
+							$everything = @ScriptDir & "\Everything.txt"
+						EndIf
 						;categories,updated,
 						$idlink = "https://api.gog.com/products/" & $ID & "?expand=downloads,expanded_dlcs,description,screenshots,videos,related_products,changelog"
 						;$idlink = "https://api.gog.com/products/" & $ID & "?expand=gen_type,category_types,game_types"
 						;$idlink = "https://www.gog.com/games/ajax/filtered?category=game&search=" & $title
-						$everything = @ScriptDir & "\Everything.txt"
+						;$everything = @ScriptDir & "\Everything.txt"
 						$get = InetGet($idlink, $everything, 1, 0)
 						$read = FileRead($everything)
 						If $read <> "" Then
 							;ShellExecuteWait($everything)
-							FileDelete($everything)
-							$read = FixText($read)
-							FileWrite($everything, $read)
+							$savtxt = FileOpen($everything, 2 + 32)
+							If $purge = 1 Then
+								;FileDelete($everything)
+								$read = FixText($read)
+								;FileWrite($everything, $read)
+							EndIf
+							FileWrite($savtxt, $read)
+							FileClose($savtxt)
+							If $subfold = 1 Or $gmefold = 1 Or $gmesfld = 1 Then
+								$outline = ""
+								If $subfold = 1 Then
+									If $gmefold = 1 Then
+										$outline = $gamefold & "\Everything.txt"
+									ElseIf $gmesfld = 1 Then
+										If FileExists($gamesfold) Then
+											$outfold = $gamesfold & "\_Details"
+											If Not FileExists($outfold) Then DirCreate($outfold)
+											;$outline = $outfold & "\Everything_(" & $ID & ").txt"
+											$outline = $outfold & "\" & $ID & "_(Everything).txt"
+										EndIf
+									EndIf
+									If $outline <> "" Then FileCopy($everything, $outline, 9)
+								Else
+									If $gmefold = 1 Then
+										$outline = $gamefold & "\Everything.txt"
+									ElseIf $gmesfld = 1 Then
+										If FileExists($gamesfold) Then
+											$outfold = $gamesfold & "\_Details"
+											If Not FileExists($outfold) Then DirCreate($outfold)
+											;$outline = $outfold & "\Everything_(" & $ID & ").txt"
+											$outline = $outfold & "\" & $ID & "_(Everything).txt"
+										EndIf
+									EndIf
+									If $outline <> "" Then
+										FileMove($everything, $outline, 9)
+										$everything = $outline
+									EndIf
+								EndIf
+							EndIf
 							ShellExecute($everything)
 						EndIf
 						InetClose($get)
@@ -6301,7 +6368,7 @@ Func GameDetailsGUI()
 	Local $above, $high, $side, $wide
 	;
 	$wide = 268
-	$high = 355
+	$high = 255
 	$side = IniRead($inifle, "Details Window", "left", $left)
 	$above = IniRead($inifle, "Details Window", "top", $top)
 	$DetailsGUI = GuiCreate("Game Details - View & Save", $wide, $high, $side, $above, $WS_OVERLAPPED + $WS_CAPTION + $WS_SYSMENU _
@@ -6323,39 +6390,36 @@ Func GameDetailsGUI()
 	$Checkbox_changelog = GUICtrlCreateCheckbox("Save changelog", 152, 62, 95, 20)
 	GUICtrlSetTip($Checkbox_changelog, "Save the game changelog locally!")
 	;
-	$Group_save = GuiCtrlCreateGroup("Save To Folder Locations", 10, 95, 248, 45)
-	$Checkbox_local = GUICtrlCreateCheckbox("Program Sub-folder", 20, 111, 110, 20)
+	$Group_save = GuiCtrlCreateGroup("Save To Folder Locations", 10, 95, 248, 47)
+	$Checkbox_local = GUICtrlCreateCheckbox("Program Sub-folder", 20, 112, 110, 20)
 	GUICtrlSetTip($Checkbox_local, "Save to a program sub-folder!")
-	$Checkbox_game = GUICtrlCreateCheckbox("Game", 140, 111, 50, 20)
+	$Checkbox_game = GUICtrlCreateCheckbox("Game", 140, 112, 50, 20)
 	GUICtrlSetTip($Checkbox_game, "Save to a game folder!")
-	$Checkbox_games = GUICtrlCreateCheckbox("Games", 198, 111, 50, 20)
+	$Checkbox_games = GUICtrlCreateCheckbox("Games", 198, 112, 50, 20)
 	GUICtrlSetTip($Checkbox_games, "Save to the games folder!")
 	;
-	$Group_purge = GuiCtrlCreateGroup("Unicode etc Replacements", 10, 145, 248, 100)
-	$Edit_purge = GUICtrlCreateEdit("", 20, 162, 228, 80)
-	;
-	$Checkbox_purge = GUICtrlCreateCheckbox("Sanitize Saves", 14, 250, 100, 20)
+	$Checkbox_purge = GUICtrlCreateCheckbox("Sanitize Saves", 14, 150, 100, 20)
 	GUICtrlSetTip($Checkbox_purge, "Sanitize (cleanup) text in the saved files!")
 	;
-	$Checkbox_offline = GUICtrlCreateCheckbox("Use Offline", 118, 250, 70, 20)
+	$Checkbox_offline = GUICtrlCreateCheckbox("Use Offline", 118, 150, 70, 20)
 	GUICtrlSetTip($Checkbox_offline, "Use offline saves if they exist!")
 	;
-	$Button_general = GuiCtrlCreateButton("GENERAL", 10, 275, 85, 30)
+	$Button_general = GuiCtrlCreateButton("GENERAL", 10, 175, 85, 30)
 	GUICtrlSetFont($Button_general, 8, 600)
 	GUICtrlSetTip($Button_general, "Return general details!")
 	;
-	$Button_manifest = GuiCtrlCreateButton("MANIFEST", 105, 275, 85, 30)
+	$Button_manifest = GuiCtrlCreateButton("MANIFEST", 105, 175, 85, 30)
 	GUICtrlSetFont($Button_manifest, 8, 600)
 	GUICtrlSetTip($Button_manifest, "View the game entry in the manifest!")
 	;
-	$Button_all = GuiCtrlCreateButton("ALL", 198, 255, 60, 30)
+	$Button_all = GuiCtrlCreateButton("ALL", 198, 153, 60, 32)
 	GUICtrlSetFont($Button_all, 9, 600)
 	GUICtrlSetTip($Button_all, "Return ALL details!")
 	;
-	$Button_close = GuiCtrlCreateButton("EXIT", 198, 295, 60, 50, $BS_ICON)
+	$Button_close = GuiCtrlCreateButton("EXIT", 198, 195, 60, 50, $BS_ICON)
 	GUICtrlSetTip($Button_close, "Exit / Close / Quit the window!")
 	;
-	$Button_cdkey = GuiCtrlCreateButton("CDKey CHECK && FIX", 10, 315, 180, 30)
+	$Button_cdkey = GuiCtrlCreateButton("CDKey CHECK && FIX", 10, 215, 180, 30)
 	GUICtrlSetFont($Button_cdkey, 9, 600)
 	GUICtrlSetTip($Button_cdkey, "Check for CDKeys & update the record!")
 	;
@@ -6373,9 +6437,6 @@ Func GameDetailsGUI()
 	ElseIf $gmesfld = 1 Then
 		GUICtrlSetState($Checkbox_game, $GUI_DISABLE)
 	EndIf
-	;
-	;$reps = "bozo | loppy" & @CRLF & "doya | nosy"
-	;GUICtrlSetData($Edit_purge, $reps)
 	;
 	GUICtrlSetState($Checkbox_purge, $purge)
 	GUICtrlSetState($Checkbox_offline, $offline)
@@ -6417,6 +6478,7 @@ Func GameDetailsGUI()
 			$return = "description"
 		Case $msg = $Button_changelog
 			; Return game changelog
+			$return = "changelog"
 		Case $msg = $Button_cdkey
 			; Check for CDKeys & update the record
 			$return = "cdkey"
@@ -7054,25 +7116,25 @@ EndFunc ;=> FillTheGamesList
 Func FixText($text)
 	;Return $text
 	$text = StringReplace($text, '{"id":', 'ID = ')
-	$text = StringReplace($text, '\u00e7', 'c')
-	$text = StringReplace($text, '\u00f1', 'n')
-	$text = StringReplace($text, '\u0440', 'r')
-	$text = StringReplace($text, '\u0443', 'u')
-	$text = StringReplace($text, '\u0441', 's')
-	$text = StringReplace($text, '\u043a', 'i')
-	$text = StringReplace($text, '\u0438', 'a')
-	$text = StringReplace($text, '\u0439', 'n')
-	$text = StringReplace($text, '\u0641', 'f')
-	$text = StringReplace($text, '\u0627', 'a')
-	$text = StringReplace($text, '\u0631', 'r')
-	$text = StringReplace($text, '\u0633', 's')
-	$text = StringReplace($text, '\u06cc', 'i')
-	$text = StringReplace($text, '\u0644', 'r')
-	$text = StringReplace($text, '\u0639r', 'a')
-	$text = StringReplace($text, '\u0628', 'b')
-	$text = StringReplace($text, '\u064a', 'i')
-	$text = StringReplace($text, '\u0629', 'c')
-	$text = StringReplace($text, '\u0142', 'l')
+;~ 	$text = StringReplace($text, '\u00e7', 'c')
+;~ 	$text = StringReplace($text, '\u00f1', 'n')
+;~ 	$text = StringReplace($text, '\u0440', 'r')
+;~ 	$text = StringReplace($text, '\u0443', 'u')
+;~ 	$text = StringReplace($text, '\u0441', 's')
+;~ 	$text = StringReplace($text, '\u043a', 'i')
+;~ 	$text = StringReplace($text, '\u0438', 'a')
+;~ 	$text = StringReplace($text, '\u0439', 'n')
+;~ 	$text = StringReplace($text, '\u0641', 'f')
+;~ 	$text = StringReplace($text, '\u0627', 'a')
+;~ 	$text = StringReplace($text, '\u0631', 'r')
+;~ 	$text = StringReplace($text, '\u0633', 's')
+;~ 	$text = StringReplace($text, '\u06cc', 'i')
+;~ 	$text = StringReplace($text, '\u0644', 'r')
+;~ 	$text = StringReplace($text, '\u0639r', 'a')
+;~ 	$text = StringReplace($text, '\u0628', 'b')
+;~ 	$text = StringReplace($text, '\u064a', 'i')
+;~ 	$text = StringReplace($text, '\u0629', 'c')
+;~ 	$text = StringReplace($text, '\u0142', 'l')
 	$text = StringReplace($text, '\u010desk\u00fd', 'czech')
 	$text = StringReplace($text, 'T\u00fcrkce', 'turkish')
 	$text = StringReplace($text, 'portugu\u00eas', 'portuguese')
@@ -7096,35 +7158,36 @@ Func FixText($text)
 	$text = StringReplace($text, '\/', '/')
 	$text = StringReplace($text, '"}}', '')
 	$text = StringReplace($text, '"}', '')
-	$text = StringReplace($text, '\n', ' ')
-	$text = StringReplace($text, '\u003Cbr', '')
-	$text = StringReplace($text, '\u003Chr', '')
-	$text = StringReplace($text, '\u003Ch4', '')
-	$text = StringReplace($text, '\u003C/h4', '')
-	$text = StringReplace($text, '\u003Cul', '')
-	$text = StringReplace($text, '\u003C/ul', '')
-	$text = StringReplace($text, '\u003Cli', '')
-	$text = StringReplace($text, '\u003C/li', '')
-	$text = StringReplace($text, '\u003Ci', '')
-	$text = StringReplace($text, '\u003C/i', '')
-	$text = StringReplace($text, '\u003Cb', '')
-	$text = StringReplace($text, '\u003C/b', '')
-	$text = StringReplace($text, '\u003Ch5', '')
-	$text = StringReplace($text, '\u003C/h5', '')
-	$text = StringReplace($text, '\u003Cp', '')
-	$text = StringReplace($text, '\u003C/p', '')
-	$text = StringReplace($text, '\u003C', '')
-	;$text = StringReplace($text, '', '')
-	$text = StringReplace($text, '\u003E', '')
-	$text = StringReplace($text, "\u201c", "'")
-	$text = StringReplace($text, "\u201d", "'")
-	$text = StringReplace($text, '\u2013', '-')
-	$text = StringReplace($text, "\u2018", "'")
-	$text = StringReplace($text, "\u2019", "'")
-	$text = StringReplace($text, '\u0022', '"')
-	$text = StringReplace($text, '\u0026', '-')
-	$text = StringReplace($text, "\u0027", "'")
-	$text = StringReplace($text, '\u2026', '.')
+;~ 	$text = StringReplace($text, '\n', ' ')
+;~ 	$text = StringReplace($text, '\u003Cbr', '')
+;~ 	$text = StringReplace($text, '\u003Chr', '')
+;~ 	$text = StringReplace($text, '\u003Ch4', '')
+;~ 	$text = StringReplace($text, '\u003C/h4', '')
+;~ 	$text = StringReplace($text, '\u003Cul', '')
+;~ 	$text = StringReplace($text, '\u003C/ul', '')
+;~ 	$text = StringReplace($text, '\u003Cli', '')
+;~ 	$text = StringReplace($text, '\u003C/li', '')
+;~ 	$text = StringReplace($text, '\u003Ci', '')
+;~ 	$text = StringReplace($text, '\u003C/i', '')
+;~ 	$text = StringReplace($text, '\u003Cb', '')
+;~ 	$text = StringReplace($text, '\u003C/b', '')
+;~ 	$text = StringReplace($text, '\u003Ch5', '')
+;~ 	$text = StringReplace($text, '\u003C/h5', '')
+;~ 	$text = StringReplace($text, '\u003Cp', '')
+;~ 	$text = StringReplace($text, '\u003C/p', '')
+;~ 	$text = StringReplace($text, '\u003C', '')
+;~ 	;$text = StringReplace($text, '', '')
+;~ 	$text = StringReplace($text, '\u003E', '')
+;~ 	$text = StringReplace($text, "\u201c", "'")
+;~ 	$text = StringReplace($text, "\u201d", "'")
+;~ 	$text = StringReplace($text, '\u2013', '-')
+;~ 	$text = StringReplace($text, "\u2018", "'")
+;~ 	$text = StringReplace($text, "\u2019", "'")
+;~ 	$text = StringReplace($text, '\u0022', '"')
+;~ 	$text = StringReplace($text, '\u0026', '-')
+;~ 	$text = StringReplace($text, "\u0027", "'")
+;~ 	$text = StringReplace($text, '\u2026', '.')
+	$text = StringReplace($text, '\n', @CRLF)
 	$text = StringReplace($text, ']},{"', @CRLF)
 	$text = StringReplace($text, ',{"', @CRLF)
 	$text = StringReplace($text, ' = [{"', @CRLF)
@@ -7141,7 +7204,10 @@ Func FixText($text)
 	$text = StringReplace($text, '%2C', ',')
 	$text = StringReplace($text, '   /', '')
 	$text = StringReplace($text, ']' & @CRLF, @CRLF)
+	$text = StringReplace($text, "<br><br>", @CRLF)
+	$text = StringReplace($text, "<br>", @CRLF)
 	;$text = StringStripWS($text, 4)
+	$text = FixUnicode($text)
 	Return $text
 EndFunc ;=> FixText
 
@@ -7157,6 +7223,21 @@ Func FixTitle($text)
 	$text = StringReplace($text, '"', '')
 	Return $text
 EndFunc ;=> FixTitle
+
+Func FixUnicode($text)
+	Local $chunk, $hextxt, $split, $string, $val
+	$split = StringSplit($text, "\u", 1)
+	$text = $split[1]
+	For $s = 2 To $split[0]
+		$chunk = $split[$s]
+		$string = StringMid($chunk, 5)
+		$hextxt = StringLeft($chunk, 4)
+		$val = Dec($hextxt)
+		$val = ChrW($val)
+		$text = $text & $val & $string
+	Next
+	Return $text
+EndFunc ;=> FixUnicode
 
 Func GetChecksumQuery($rat = "")
 	If $same <> "" Then
@@ -7615,7 +7696,7 @@ Func GetTheSize()
 EndFunc ;=> GetTheSize
 
 Func ParseTheGamelist()
-	Local $new, $p, $titles, $uplist
+	Local $new, $p, $split, $splits, $titles, $uplist
 	If FileExists($gamelist) Then
 		; Parse for titles
 		;SplashTextOn("", "Please Wait!", 140, 120, Default, Default, 33)
