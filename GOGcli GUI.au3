@@ -47,7 +47,7 @@ Local $exe, $script, $status, $w, $wins
 Global $handle, $pid, $Scriptname, $update, $version
 
 $update = "Updated in November 2021."
-$version = "v2.1"
+$version = "v2.2"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -4577,10 +4577,12 @@ Func FileSelectorGUI()
 	Local $Button_download, $Button_dwn, $Button_quit, $Button_uncheck, $Button_up, $Checkbox_cancel, $Checkbox_relax, $Checkbox_skip, $Combo_OSfle
 	Local $Combo_shutdown, $Group_exist, $Group_files, $Group_OS, $Group_select, $Label_done, $Label_percent, $Label_shut, $Label_speed, $Label_warn
 	Local $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
+	Local $Menu_list, $Sub_menu_remove, $Item_remove_ext, $Item_remove_lin, $Item_remove_mac, $Item_remove_sel, $Item_remove_win
+	;
 	Local $amount, $begin, $cancel, $changelog, $checked, $code, $col1, $col2, $col3, $col4, $color, $description, $dllcall, $downloading, $dwn, $dwnfle
-	Local $edge, $ents, $exist, $fext, $gotten, $icoDwn, $icofle, $icoUp, $IDD, $idlink, $idx, $imageD, $missing, $movdwn, $movup, $osfle, $prior, $saved
-	Local $savtxt, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $styles, $sum, $taken, $theme, $titleD, $tmpman, $up, $upfle
-	Local $val, $wide
+	Local $edge, $ents, $exist, $fext, $gotten, $icoDwn, $icofle, $icoUp, $IDD, $idlink, $idx, $imageD, $missing, $movdwn, $movup, $osfle, $prior, $removed
+	Local $saved, $savtxt, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $styles, $sum, $taken, $theme, $titleD, $tmpman, $up
+	Local $upfle, $val, $wide
 	;
 	$styles = $WS_OVERLAPPED + $WS_CAPTION + $WS_MINIMIZEBOX ; + $WS_POPUP
 	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $styles + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
@@ -4701,6 +4703,16 @@ Func FileSelectorGUI()
 	$Button_quit = GuiCtrlCreateButton("EXIT", $width - 60, $height - 60, 45, 50, $BS_ICON)
 	GUICtrlSetResizing($Button_quit, $GUI_DOCKLEFT + $GUI_DOCKALL + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Button_quit, "Exit / Close / Quit the window!")
+	;
+	; CONTEXT MENU
+	$Menu_list = GUICtrlCreateContextMenu($ListView_files)
+	$Sub_menu_remove = GUICtrlCreateMenu("Remove", $Menu_list)
+	$Item_remove_mac = GUICtrlCreateMenuItem("Mac Files", $Sub_menu_remove)
+	$Item_remove_lin = GUICtrlCreateMenuItem("Linux Files", $Sub_menu_remove)
+	$Item_remove_win = GUICtrlCreateMenuItem("Windows Files", $Sub_menu_remove)
+	$Item_remove_ext = GUICtrlCreateMenuItem("Extra Files", $Sub_menu_remove)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Item_remove_sel = GUICtrlCreateMenuItem("Remove Selected", $Menu_list)
 	;
 	; SETTINGS
 	$icofle = "C:\Windows\System32\netshell.dll"
@@ -5799,6 +5811,81 @@ Func FileSelectorGUI()
 			GUICtrlSetState($Radio_selext, $GUI_UNCHECKED)
 			GUICtrlSetState($Radio_selset, $GUI_UNCHECKED)
 			GUICtrlSetState($Radio_selpat, $GUI_UNCHECKED)
+		Case $msg = $Item_remove_win
+			; Remove - Windows Files
+			$removed = 0
+			For $a = $ents To 0 Step - 1
+				$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+				If StringRight($entry, 4) = ".exe" Or StringRight($entry, 4) = ".bin" Then
+					IniDelete($downfiles, $entry)
+					_GUICtrlListView_DeleteItem($ListView_files, $a)
+					$removed = $removed + 1
+				EndIf
+			Next
+			If $removed > 0 Then
+				$ents = _GUICtrlListView_GetItemCount($ListView_files)
+				GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")")
+			EndIf
+		Case $msg = $Item_remove_sel
+			; Remove Selected
+			$removed = 0
+			For $a = $ents To 0 Step - 1
+				If _GUICtrlListView_GetItemChecked($ListView_files, $a) = True Then
+					$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+					IniDelete($downfiles, $entry)
+					_GUICtrlListView_DeleteItem($ListView_files, $a)
+					$removed = $removed + 1
+				EndIf
+			Next
+			If $removed > 0 Then
+				$ents = _GUICtrlListView_GetItemCount($ListView_files)
+				GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")")
+			EndIf
+		Case $msg = $Item_remove_mac
+			; Remove - Mac Files
+			$removed = 0
+			For $a = $ents To 0 Step - 1
+				$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+				If StringRight($entry, 4) = ".pkg" Or StringRight($entry, 4) = ".dmg" Then
+					IniDelete($downfiles, $entry)
+					_GUICtrlListView_DeleteItem($ListView_files, $a)
+					$removed = $removed + 1
+				EndIf
+			Next
+			If $removed > 0 Then
+				$ents = _GUICtrlListView_GetItemCount($ListView_files)
+				GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")")
+			EndIf
+		Case $msg = $Item_remove_lin
+			; Remove - Linux Files
+			$removed = 0
+			For $a = $ents To 0 Step - 1
+				$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+				If StringRight($entry, 3) = ".sh" Then
+					IniDelete($downfiles, $entry)
+					_GUICtrlListView_DeleteItem($ListView_files, $a)
+					$removed = $removed + 1
+				EndIf
+			Next
+			If $removed > 0 Then
+				$ents = _GUICtrlListView_GetItemCount($ListView_files)
+				GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")")
+			EndIf
+		Case $msg = $Item_remove_ext
+			; Remove - Extra Files
+			$removed = 0
+			For $a = $ents To 0 Step - 1
+				$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+				If StringRight($entry, 4) = ".zip" Or StringRight($entry, 3) = ".7z" Then
+					IniDelete($downfiles, $entry)
+					_GUICtrlListView_DeleteItem($ListView_files, $a)
+					$removed = $removed + 1
+				EndIf
+			Next
+			If $removed > 0 Then
+				$ents = _GUICtrlListView_GetItemCount($ListView_files)
+				GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")")
+			EndIf
 		Case $msg = $ListView_files Or $msg > $Button_quit
 			; Game Files To Download
 			$amount = 0
@@ -7249,6 +7336,7 @@ Func GetFileDownloadDetails($listview = "")
 	Else
 		$ping = 0
 	EndIf
+	;MsgBox(262192, "$game", $game, 0, $GOGcliGUI)
 	;
 	$alias = ""
 	$checksum = ""
@@ -7362,29 +7450,33 @@ Func GetFileDownloadDetails($listview = "")
 						EndIf
 					EndIf
 				EndIf
-				; Check to skip existing in Database.
-				$values = IniRead($existDB, $col4, $slug, "")
-				If $values <> "" Then
-					$values = StringSplit($values, "|")
-					If $values[1] = $filesize Then
-						; File Size Match
-						If $relax = 1 And $values[2] = "" Then
-							; Relaxed Match.
-							$proceed = ""
-						ElseIf $values[2] = $checksum Then
-							; Checksum Match
-							$fext = StringRight($col4, 4)
-							If $values[2] = "" And $fext <> ".zip" Then
-								; Don't exclude just based on size, unless a zip.
-							Else
-								; Perfect Match, so exclude.
+				If $verify = 4 And $ratify = 4 Then
+					; Check to skip existing in Database.
+					$values = IniRead($existDB, $col4, $slug, "")
+					If $values <> "" Then
+						$values = StringSplit($values, "|")
+						If $values[1] = $filesize Then
+							; File Size Match
+							If $relax = 1 And $values[2] = "" Then
+								; Relaxed Match.
 								$proceed = ""
+							ElseIf $values[2] = $checksum Then
+								; Checksum Match
+								$fext = StringRight($col4, 4)
+								If $values[2] = "" And $fext <> ".zip" Then
+									; Don't exclude just based on size, unless a zip.
+								Else
+									; Perfect Match, so exclude.
+									$proceed = ""
+								EndIf
 							EndIf
 						EndIf
 					EndIf
 				EndIf
+				;MsgBox(262192, "$verify $ratify", $verify & @LF & $ratify, 0, $GOGcliGUI)
 			EndIf
 			If $proceed = 1 Then
+				;MsgBox(262192, "$col4 $col3 $checksum", $col4 & @LF & $col3 & @LF & $checksum, 0, $GOGcliGUI)
 				; Check to skip duplicates.
 				If IniRead($downfiles, $col4, "file", "") <> $col4 Then
 					IniWrite($downfiles, $col4, "game", $title)
