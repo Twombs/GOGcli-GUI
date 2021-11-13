@@ -4580,9 +4580,9 @@ Func FileSelectorGUI()
 	Local $Menu_list, $Sub_menu_remove, $Item_remove_ext, $Item_remove_lin, $Item_remove_mac, $Item_remove_sel, $Item_remove_win
 	;
 	Local $amount, $begin, $cancel, $changelog, $checked, $code, $col1, $col2, $col3, $col4, $color, $description, $dllcall, $downloading, $dwn, $dwnfle
-	Local $edge, $ents, $exist, $fext, $gotten, $icoDwn, $icofle, $icoUp, $IDD, $idlink, $idx, $imageD, $missing, $movdwn, $movup, $osfle, $prior, $removed
-	Local $saved, $savtxt, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $styles, $sum, $taken, $theme, $titleD, $tmpman, $up
-	Local $upfle, $val, $wide
+	Local $edge, $ents, $exist, $fext, $gotten, $icoDwn, $icofle, $icoUp, $IDD, $idlink, $idx, $imageD, $lastid, $missing, $movdwn, $movup, $osfle, $prior
+	Local $removed, $saved, $savtxt, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $styles, $sum, $taken, $theme, $titleD, $tmpman
+	Local $up, $upfle, $val, $wide
 	;
 	$styles = $WS_OVERLAPPED + $WS_CAPTION + $WS_MINIMIZEBOX ; + $WS_POPUP
 	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $styles + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
@@ -4713,6 +4713,8 @@ Func FileSelectorGUI()
 	$Item_remove_ext = GUICtrlCreateMenuItem("Extra Files", $Sub_menu_remove)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Item_remove_sel = GUICtrlCreateMenuItem("Remove Selected", $Menu_list)
+	;
+	$lastid = $Item_remove_sel
 	;
 	; SETTINGS
 	$icofle = "C:\Windows\System32\netshell.dll"
@@ -5089,7 +5091,7 @@ Func FileSelectorGUI()
 											If $i > -1 Then
 												_GUICtrlListView_SetItemSelected($ListView_files, $i, True, True)
 												_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
-												$row = $Button_quit + $i + 1
+												$row = $lastid + $i + 1
 												GUICtrlSetBkColor($row, $COLOR_SILVER)  ;$COLOR_MEDGRAY
 												_GUICtrlListView_SetItemText($ListView_files, $i, "SKIPPED..." & $file, 3)
 												_FileWriteLog($logfle, "File exists.", -1)
@@ -5113,7 +5115,7 @@ Func FileSelectorGUI()
 									$checksum = IniRead($downfiles, $file, "checksum", "")
 									$i = _GUICtrlListView_FindInText($ListView_files, $file, -1, True, False)
 									If $i > -1 Then
-										$row = $Button_quit + $i + 1
+										$row = $lastid + $i + 1
 										GUICtrlSetBkColor($row, $COLOR_YELLOW)
 										_GUICtrlListView_SetItemSelected($ListView_files, $i, True, True)
 										_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
@@ -5432,7 +5434,7 @@ Func FileSelectorGUI()
 									If $i > -1 Then
 										_GUICtrlListView_SetItemSelected($ListView_files, $i, True, True)
 										_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
-										$row = $Button_quit + $i + 1
+										$row = $lastid + $i + 1
 										GUICtrlSetBkColor($row, $COLOR_FUCHSIA)
 										_GUICtrlListView_SetItemText($ListView_files, $i, "SKIPPED..." & $file, 3)
 									EndIf
@@ -5468,7 +5470,7 @@ Func FileSelectorGUI()
 									$i = Number($i)
 									_GUICtrlListView_SetItemSelected($ListView_files, $i, True, True)
 									_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
-									$row = $Button_quit + $i + 1
+									$row = $lastid + $i + 1
 									If FileExists($filepth) Then
 										$file = StringSplit($filepth, "\", 1)
 										$file = $file[$file[0]]
@@ -5542,7 +5544,7 @@ Func FileSelectorGUI()
 									$i = Number($i)
 									_GUICtrlListView_SetItemSelected($ListView_files, $i, True, True)
 									_GUICtrlListView_EnsureVisible($ListView_files, $i, False)
-									$row = $Button_quit + $i + 1
+									$row = $lastid + $i + 1
 									If FileExists($zippath) Then
 										$file = StringSplit($zippath, "\", 1)
 										$file = $file[$file[0]]
@@ -5886,7 +5888,7 @@ Func FileSelectorGUI()
 				$ents = _GUICtrlListView_GetItemCount($ListView_files)
 				GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")")
 			EndIf
-		Case $msg = $ListView_files Or $msg > $Button_quit
+		Case $msg = $ListView_files Or $msg > $lastid
 			; Game Files To Download
 			$amount = 0
 			$checked = 0
