@@ -1,6 +1,7 @@
-Latest v2.2 update includes a new feature & bugfix.
+Latest v2.3 update includes a new feature & improvements.
 
-Discovered the VALIDATE FILE and VALIDATE GAME button processes were skipping files found in the database, which has now been corrected.
-The 'Game Files Selector' window now has some right-click 'Remove' options.
+When validation occurs, the result is now recorded in a 'Validation.txt' file in the game folder, and it includes values for file size and checksum. NOTE - This file can be added to with future downloads for the game, including updates. This is useful where file sizes and checksums have been replaced in the manifest with new versions, though if the Database had been enabled, then those values should exist there after each download.
 
-gogcli_selector_15.png
+When validating a game folder, independently from what automatically occurs after downloading, the number and total of files being validated is now shown.
+
+Validate_8.png

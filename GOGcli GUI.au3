@@ -47,7 +47,7 @@ Local $exe, $script, $status, $w, $wins
 Global $handle, $pid, $Scriptname, $update, $version
 
 $update = "Updated in November 2021."
-$version = "v2.2"
+$version = "v2.3"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -2972,6 +2972,7 @@ Func MainGUI()
 									$foldpth = $pth
 									$valfold = $pth
 									_FileWriteLog($logfle, $valfold, -1)
+									Local $valfile = $valfold & "\Validation.txt"
 									$ans = MsgBox(262209 + 256, "Validate Query", "Do you want to include sub-folder content?", 0, $GOGcliGUI)
 									If $ans = 1 Then
 										$filelist = _FileListToArrayRec($foldpth, "*.*", 1, 1, 0, 1)
@@ -3038,11 +3039,26 @@ Func MainGUI()
 												$result = $result & ", " & $zip & " ZIP files"
 											EndIf
 										EndIf
+										;$files = $bin + $dmg + $exe + $pkg + $sh + $zip
+										;MsgBox(262192, "$files $filelist $cnt", $files & @LF & $filelist[0] & @LF & $cnt, 0, $GOGcliGUI)
 										_FileWriteLog($logfle, $cnt & " files listed in the manifest (for the game).", -1)
 										$same = ""
 										$result = $result & ")"
 										_FileWriteLog($logfle, $result, -1)
 										$result = $cnt & " files listed in the manifest (for the game)." & @LF & $result & @LF
+										Local $x, $fexts = 0
+										For $x = 1 To $filelist[0]
+											$file = $filelist[$x]
+											$fext = StringRight($file, 4)
+											If $fext = ".exe" Or $fext = ".bin" Or $fext = ".dmg" Or $fext = ".pkg" Or $fext = ".zip" Then
+												$fexts = $fexts + 1
+											EndIf
+											$fext = StringRight($file, 3)
+											If $fext = ".sh" Then
+												$fexts = $fexts + 1
+											EndIf
+										Next
+										;MsgBox(262192, "$fexts", $fexts, 0, $GOGcliGUI)
 										_Crypt_Startup()
 										For $f = 1 To $filelist[0]
 											$file = $filelist[$f]
@@ -3055,21 +3071,24 @@ Func MainGUI()
 												$flename = StringLeft($file, 20)
 												If $flename <> $file Then $flename = $flename & "...."
 												GUICtrlSetData($Label_top, $flename)
-												GUICtrlSetData($Label_bed, StringUpper(StringTrimLeft($fext, 1)))
+												GUICtrlSetData($Label_bed, $tested & " of " & $fexts & "  -  " & StringUpper(StringTrimLeft($fext, 1)))
 												$result = $result & @LF & "Validating = " & $file
 												$bytes = FileGetSize($filepth)
 												$filesize = IniRead($downfiles, $file, "bytes", 0)
 												If $filesize = 0 Then
 													$result = $result & @LF & "File Size is missing."
 													_FileWriteLog($logfle, "File Size is missing.", -1)
+													_FileWriteLog($valfile, $file & " (size missing)")
 												Else
 													;$bytes = FileGetSize($filepth)
 													If $bytes = $filesize Then
 														$result = $result & @LF & "File Size passed."
 														_FileWriteLog($logfle, "File Size passed.", -1)
+														_FileWriteLog($valfile, $file & " (size passed) " & $filesize & " bytes")
 													Else
 														$result = $result & @LF & "File Size failed."
 														_FileWriteLog($logfle, "File Size failed.", -1)
+														_FileWriteLog($valfile, $file & " (size failed)")
 													EndIf
 												EndIf
 												$checksum = IniRead($downfiles, $file, "checksum", "")
@@ -3079,6 +3098,7 @@ Func MainGUI()
 														;$result = $result & @LF & "MD5 (checksum) is missing."
 														$result = $result & " MD5 (checksum) is missing."
 														_FileWriteLog($logfle, "MD5 (checksum) is missing.", -1)
+														_FileWriteLog($valfile, $file & " (checksum missing)")
 														If $filesize > 0 Then
 															If $bytes = $filesize Then
 																GetChecksumQuery()
@@ -3094,6 +3114,7 @@ Func MainGUI()
 															$result = $result & " MD5 (checksum) passed."
 															_FileWriteLog($logfle, "MD5 (checksum) passed.", -1)
 															_FileWriteLog($logfle, "ADDING FILE to Database.", -1)
+															_FileWriteLog($valfile, $file & " (checksum passed) " & $checksum)
 															If $bytes <> $filesize Then _FileWriteLog($logfle, "File Size Mismatch.", -1)
 															_FileWriteLog($logfle, "MD5 (checksum) added.", -1)
 															IniWrite($existDB, $file, $slug, $bytes & "|" & $checksum)
@@ -3101,6 +3122,7 @@ Func MainGUI()
 															;$result = $result & @LF & "MD5 (checksum) failed."
 															$result = $result & " MD5 (checksum) failed."
 															_FileWriteLog($logfle, "MD5 (checksum) failed.", -1)
+															_FileWriteLog($valfile, $file & " (checksum failed)")
 														EndIf
 													EndIf
 												ElseIf $fext = ".zip" Then
@@ -3110,6 +3132,7 @@ Func MainGUI()
 														;$result = $result & @LF & "ZIP check passed."
 														$result = $result & " ZIP check passed."
 														_FileWriteLog($logfle, "ZIP check passed.", -1)
+														_FileWriteLog($valfile, $file & " (zip passed)")
 														If $filesize = 0 Or $bytes = $filesize Then
 															_FileWriteLog($logfle, "ADDING FILE to Database.", -1)
 															IniWrite($existDB, $file, $slug, $bytes & "|" & $checksum)
@@ -3118,6 +3141,7 @@ Func MainGUI()
 														;$result = $result & @LF & "ZIP check failed."
 														$result = $result & " ZIP check failed."
 														_FileWriteLog($logfle, "ZIP check failed.", -1)
+														_FileWriteLog($valfile, $file & " (zip failed)")
 													EndIf
 												EndIf
 											EndIf
@@ -3176,6 +3200,7 @@ Func MainGUI()
 									_PathSplit($filepth, $drv, $dir, $flename, $fext)
 									$valfold = StringTrimRight($drv & $dir, 1)
 									_FileWriteLog($logfle, $valfold, -1)
+									Local $valfile = $valfold & "\Validation.txt"
 									$file = $flename & $fext
 									_FileWriteLog($logfle, $file, -1)
 									$flename = StringLeft($file, 20)
@@ -3189,14 +3214,17 @@ Func MainGUI()
 									If $filesize = 0 Then
 										$result = $result & @LF & "File Size is missing."
 										_FileWriteLog($logfle, "File Size is missing.", -1)
+										_FileWriteLog($valfile, $file & " (size missing)")
 									Else
 										;$bytes = FileGetSize($filepth)
 										If $bytes = $filesize Then
 											$result = $result & @LF & "File Size passed."
 											_FileWriteLog($logfle, "File Size passed.", -1)
+											_FileWriteLog($valfile, $file & " (size passed) " & $filesize & " bytes")
 										Else
 											$result = $result & @LF & "File Size failed."
 											_FileWriteLog($logfle, "File Size failed.", -1)
+											_FileWriteLog($valfile, $file & " (size failed)")
 										EndIf
 									EndIf
 									$checksum = IniRead($downfiles, $file, "checksum", "")
@@ -3205,6 +3233,7 @@ Func MainGUI()
 										If $checksum = "" Then
 											$result = $result & @LF & "MD5 (checksum) is missing."
 											_FileWriteLog($logfle, "MD5 (checksum) is missing.", -1)
+											_FileWriteLog($valfile, $file & " (checksum missing)")
 											$same = ""
 											If $filesize > 0 Then
 												If $bytes = $filesize Then
@@ -3222,12 +3251,14 @@ Func MainGUI()
 												$result = $result & @LF & "MD5 (checksum) passed."
 												_FileWriteLog($logfle, "MD5 (checksum) passed.", -1)
 												_FileWriteLog($logfle, "ADDING FILE to Database.", -1)
+												_FileWriteLog($valfile, $file & " (checksum passed) " & $checksum)
 												If $bytes <> $filesize Then _FileWriteLog($logfle, "File Size Mismatch.", -1)
 												_FileWriteLog($logfle, "MD5 (checksum) added.", -1)
 												IniWrite($existDB, $file, $slug, $bytes & "|" & $checksum)
 											Else
 												$result = $result & @LF & "MD5 (checksum) failed."
 												_FileWriteLog($logfle, "MD5 (checksum) failed.", -1)
+												_FileWriteLog($valfile, $file & " (checksum failed)")
 											EndIf
 										EndIf
 									ElseIf $fext = ".zip" Then
@@ -3236,6 +3267,7 @@ Func MainGUI()
 										If $ret > 0 Then
 											$result = $result & @LF & "ZIP check passed."
 											_FileWriteLog($logfle, "ZIP check passed.", -1)
+											_FileWriteLog($valfile, $file & " (zip passed)")
 											If $filesize = 0 Or $bytes = $filesize Then
 												_FileWriteLog($logfle, "ADDING FILE to Database.", -1)
 												IniWrite($existDB, $file, $slug, $bytes & "|" & $checksum)
@@ -3243,6 +3275,7 @@ Func MainGUI()
 										Else
 											$result = $result & @LF & "ZIP check failed."
 											_FileWriteLog($logfle, "ZIP check failed.", -1)
+											_FileWriteLog($valfile, $file & " (zip failed)")
 										EndIf
 									EndIf
 									FileWriteLine($logfle, "")
@@ -4581,8 +4614,8 @@ Func FileSelectorGUI()
 	;
 	Local $amount, $begin, $cancel, $changelog, $checked, $code, $col1, $col2, $col3, $col4, $color, $description, $dllcall, $downloading, $dwn, $dwnfle
 	Local $edge, $ents, $exist, $fext, $gotten, $icoDwn, $icofle, $icoUp, $IDD, $idlink, $idx, $imageD, $lastid, $missing, $movdwn, $movup, $osfle, $prior
-	Local $removed, $saved, $savtxt, $secs, $sect, $sections, $SelectorGUI, $shutdown, $skip, $slugD, $speed, $styles, $sum, $taken, $theme, $titleD, $tmpman
-	Local $up, $upfle, $val, $wide
+	Local $removed, $saved, $savtxt, $secs, $sect, $sections, $SelectorGUI, $shutdown, $sizecheck, $skip, $slugD, $speed, $styles, $sum, $taken, $theme
+	Local $titleD, $tmpman, $up, $upfle, $val, $valfile, $wide
 	;
 	$styles = $WS_OVERLAPPED + $WS_CAPTION + $WS_MINIMIZEBOX ; + $WS_POPUP
 	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $styles + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
@@ -5237,6 +5270,7 @@ Func FileSelectorGUI()
 															_GUICtrlListView_SetItemText($ListView_files, $i, "PASSED..." & $file, 3)
 														EndIf
 														_FileWriteLog($logfle, "Passed the File Size check.", -1)
+														$sizecheck = $file & " (size passed) " & $filesize & " bytes"
 														;$nmb = $nmb + 1
 														;IniWrite($existDB, $slugD, "file_" & $nmb, $filesize)
 														;IniWrite($existDB, $sect, "bytes", $filesize)
@@ -5246,6 +5280,7 @@ Func FileSelectorGUI()
 														GUICtrlSetBkColor($row, $COLOR_RED)
 														_GUICtrlListView_SetItemText($ListView_files, $i, "FAILED..." & $file, 3)
 														_FileWriteLog($logfle, "File Size check failed.", -1)
+														$sizecheck = $file & " (size failed)"
 														; NOTE - Could add an optional ContinueLoop to skip further checking.
 														; An option could be added to the SETUP window's 'Download Options' for this.
 														; 'Skip validation if file size check fails'
@@ -5286,6 +5321,7 @@ Func FileSelectorGUI()
 														If $blurb = 1 Then
 															$description = $gamefold & "\Description.txt"
 														EndIf
+														$valfile = $gamefold & "\Validation.txt"
 													ElseIf FileExists($gamesfold) Then
 														; General Games Folder
 														; Shouldn't really be here. In theory $gamesfold could be download folder, so no move needed.
@@ -5312,7 +5348,9 @@ Func FileSelectorGUI()
 															If Not FileExists($outfold) Then DirCreate($outfold)
 															$description = $outfold & "\" & $IDD & "_(Description).txt"
 														EndIf
+														$valfile = $gamesfold & "\Validation.txt"
 													EndIf
+													_FileWriteLog($valfile, $sizecheck)
 													If $validate = 1 Then
 														; Build Validation List
 														If $filepth <> "" Then
@@ -5322,6 +5360,7 @@ Func FileSelectorGUI()
 															Else
 																$md5check = $md5check & "||" & $checkval
 															EndIf
+															If $checksum = "" Then _FileWriteLog($valfile, $file & " (checksum missing)")
 														EndIf
 														If $zippath <> "" Then
 															$checkval = $zippath & "|" & $i & "|" & $slugD
@@ -5417,6 +5456,8 @@ Func FileSelectorGUI()
 											EndIf
 										Else
 											_FileWriteLog($logfle, "No file size listed.", -1)
+											$valfile = $gamesfold & "\Validation.txt"
+											_FileWriteLog($valfile, $file & " (size missing)")
 											If FileExists($download) Then
 												GUICtrlSetData($Progress_bar, 100)
 												GUICtrlSetData($Label_percent, "100%")
@@ -5474,6 +5515,7 @@ Func FileSelectorGUI()
 									If FileExists($filepth) Then
 										$file = StringSplit($filepth, "\", 1)
 										$file = $file[$file[0]]
+										$valfile = StringTrimRight($filepth, StringLen($file)) & "Validation.txt"
 										_GUICtrlListView_SetItemText($ListView_files, $i, "MD5check..." & $file, 3)
 										GUICtrlSetStyle($Progress_bar, $PBS_MARQUEE)
 										GUICtrlSetData($Progress_bar, 0)
@@ -5514,12 +5556,14 @@ Func FileSelectorGUI()
 											_GUICtrlListView_SetItemText($ListView_files, $i, "MD5okay..." & $file, 3)
 											_FileWriteLog($logfle, $file, -1)
 											_FileWriteLog($logfle, "MD5 Check passed.", -1)
+											_FileWriteLog($valfile, $file & " (checksum passed) " & $checksum)
 										Else
 											; Checksum Failed.
 											GUICtrlSetBkColor($row, $COLOR_RED)
 											_GUICtrlListView_SetItemText($ListView_files, $i, "MD5bad..." & $file, 3)
 											_FileWriteLog($logfle, $file, -1)
 											_FileWriteLog($logfle, "MD5 Check failed.", -1)
+											_FileWriteLog($valfile, $file & " (checksum failed)")
 											;MsgBox(262192, "Checksum Failure", "MD5 = " & $checksum & @LF & "Hash = " & $hash, 0, $SelectorGUI)
 											; Delete database entry due to incomplete pass.
 											IniDelete($existDB, $file, $slugD)
@@ -5548,6 +5592,7 @@ Func FileSelectorGUI()
 									If FileExists($zippath) Then
 										$file = StringSplit($zippath, "\", 1)
 										$file = $file[$file[0]]
+										$valfile = StringTrimRight($filepth, StringLen($file)) & "Validation.txt"
 										_GUICtrlListView_SetItemText($ListView_files, $i, "ZIPcheck..." & $file, 3)
 										GUICtrlSetStyle($Progress_bar, $PBS_MARQUEE)
 										GUICtrlSetData($Progress_bar, 0)
@@ -5565,12 +5610,14 @@ Func FileSelectorGUI()
 											_GUICtrlListView_SetItemText($ListView_files, $i, "ZIPokay..." & $file, 3)
 											_FileWriteLog($logfle, $file, -1)
 											_FileWriteLog($logfle, "ZIP Check passed.", -1)
+											_FileWriteLog($valfile, $file & " (zip passed)")
 										Else
 											; Zip Failed.
 											GUICtrlSetBkColor($row, $COLOR_RED)
 											_GUICtrlListView_SetItemText($ListView_files, $i, "ZIPbad..." & $file, 3)
 											_FileWriteLog($logfle, $file, -1)
 											_FileWriteLog($logfle, "ZIP Check failed.", -1)
+											_FileWriteLog($valfile, $file & " (zip failed)")
 											; Delete database entry due to incomplete pass.
 											IniDelete($existDB, $file, $slugD)
 										EndIf
