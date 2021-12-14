@@ -46,8 +46,8 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $update, $version
 
-$update = "Updated in November 2021."
-$version = "v2.3"
+$update = "Updated in December 2021."
+$version = "v2.4"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -2361,7 +2361,7 @@ Func MainGUI()
 				If $ctrl = True And ($buttxt <> "VALIDATE" & @LF & "GAME" And $buttxt <> "VALIDATE" & @LF & "FILE") And $valnow = "" Then
 					; Build a download list of games.
 					$cnt = _FileCountLines($downlist)
-					If $cnt < 15 Then
+					If $cnt < 20 Then
 						If $buttxt <> "DOWNLOAD" & @LF & "LIST" Then
 							GUICtrlSetStyle($Button_down, $BS_MULTILINE)
 							GUICtrlSetData($Button_down, "DOWNLOAD" & @LF & "LIST")
@@ -2946,11 +2946,11 @@ Func MainGUI()
 							; Validate Game
 							GUICtrlSetData($Label_mid, "Validating Game Files")
 							_FileWriteLog($logfle, "Validating Game Files.", -1)
+							GetFileDownloadDetails()
 							If $valnow = 1 Then
 								$valnow = ""
 								$verify = 4
 							EndIf
-							GetFileDownloadDetails()
 							;MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 							If FileExists($gamesfold) Then
 								If $title <> "" Then
@@ -3174,11 +3174,11 @@ Func MainGUI()
 							; Validate File
 							GUICtrlSetData($Label_mid, "Validating Game File")
 							_FileWriteLog($logfle, "Validating Game File.", -1)
+							GetFileDownloadDetails()
 							If $valnow = 1 Then
 								$valnow = ""
 								$ratify = 4
 							EndIf
-							GetFileDownloadDetails()
 							;MsgBox(262192, "Verify Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 							If FileExists($gamesfold) Then
 								If $title <> "" Then
@@ -3202,6 +3202,7 @@ Func MainGUI()
 									_FileWriteLog($logfle, $valfold, -1)
 									Local $valfile = $valfold & "\Validation.txt"
 									$file = $flename & $fext
+									;MsgBox(262192, "$file", $file, 0, $GOGcliGUI)
 									_FileWriteLog($logfle, $file, -1)
 									$flename = StringLeft($file, 20)
 									If $flename <> $file Then $flename = $flename & "...."

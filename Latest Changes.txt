@@ -1,7 +1,2 @@
-Latest v2.3 update includes a new feature & improvements.
 
-When validation occurs, the result is now recorded in a 'Validation.txt' file in the game folder, and it includes values for file size and checksum. NOTE - This file can be added to with future downloads for the game, including updates. This is useful where file sizes and checksums have been replaced in the manifest with new versions, though if the Database had been enabled, then those values should exist there after each download.
-
-When validating a game folder, independently from what automatically occurs after downloading, the number and total of files being validated is now shown.
-
-Validate_8.png
+Latest v2.4 update includes an increase from 15 to 20 for the DOWNLOAD LIST limit, and a Bugfix for the VALIDATE NOW, where MD5 and Size values files in the database, were being skipped when extracting from the Manifest.
