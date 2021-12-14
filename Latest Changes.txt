@@ -1,2 +1,2 @@
 
-Latest v2.4 update includes an increase from 15 to 20 for the DOWNLOAD LIST limit, and a Bugfix for the VALIDATE NOW, where MD5 and Size values files in the database, were being skipped when extracting from the Manifest.
+Latest v2.4 update includes an increase from 15 to 20 for the DOWNLOAD LIST games limit, and a Bugfix for the VALIDATE NOW option, where MD5 and Size values for files in the database, were being skipped when extracting from the Manifest.
