@@ -1,0 +1,10 @@
+Latest v2.1 update includes improvements & bugfix.
+
+Discovered the CHANGELOG button in the DETAILS window wasn't working, so corrected that.
+The ALL button in the DETAILS window can now save an 'Everything.txt' file to the program, Game or Games folder etc. This includes a new program sub-folder called 'Details'.
+The 'Unicode Replacements' edit field in the DETAILS window, which was never implemented for use, has now been removed (will no longer be needed).
+The 'Santitize' (purge) option in the DETAILS window, has now been improved to include a proper unicode text converter. It now also strips out any HTML from the text.
+Other minor changes.
+
+gogcli_details_3.png
+gogcli_details_main.png
