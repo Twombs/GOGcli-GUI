@@ -1,0 +1,6 @@
+Latest v2.2 update includes a new feature & bugfix.
+
+Discovered the VALIDATE FILE and VALIDATE GAME button processes were skipping files found in the database, which has now been corrected.
+The 'Game Files Selector' window now has some right-click 'Remove' options.
+
+gogcli_selector_15.png
