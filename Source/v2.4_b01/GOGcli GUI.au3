@@ -516,8 +516,8 @@ Func MainGUI()
 	Local $ctrl, $description, $destfld, $destfle, $dir, $display, $dll, $e, $error, $everything, $exist, $existing, $fext
 	Local $filelist, $find, $fixed, $flename, $foldpth, $former, $gambak, $get, $IDD, $idlink, $ids, $l, $language, $languages
 	Local $last, $latest, $loop, $mans, $method, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $patchfld, $pos, $prior
-	Local $proceed, $query, $red, $rep, $result, $retrieve, $savtxt, $sect, $sects, $slugD, $tagtxt, $tested, $titleD, $valfold
-	Local $valnow, $values, $xpos, $yellow, $ypos
+	Local $proceed, $query, $red, $rep, $result, $retrieve, $savtxt, $sect, $sects, $skipped, $slugD, $tagtxt, $tested, $titleD
+	Local $valfold, $valnow, $values, $xpos, $yellow, $ypos
 	;
 	If Not FileExists($blackjpg) Then
 		Local $hBitmap, $hGraphic, $hImage
@@ -3469,14 +3469,32 @@ Func MainGUI()
 											EndIf
 										Next
 										;MsgBox(262192, "$fexts", $fexts, 0, $GOGcliGUI)
+										$skipped = 0
 										_Crypt_Startup()
 										For $f = 1 To $filelist[0]
 											$file = $filelist[$f]
 											$filepth = $foldpth & "\" & $file
 											_PathSplit($filepth, $drv, $dir, $flename, $fext)
 											If $fext = ".exe" Or $fext = ".bin" Or $fext = ".dmg" Or $fext = ".pkg" Or $fext = ".sh" Or $fext = ".zip" Then
+												$ans = MsgBox(262179 + 256, "Continue Query", "Do you want to continue with validating?" & @LF _
+													& @LF & $file & @LF _
+													& @LF & "YES = Continue." _
+													& @LF & "NO = Skip to next" _
+													& @LF & "CANCEL = Abort all" & @LF _
+													& @LF & "(continuing in 9 seconds)", 9, $GOGcliGUI)
+												If $ans = 2 Then
+													_FileWriteLog($logfle, "(skipped) " & $file, -1)
+													_FileWriteLog($logfle, "User Aborted.", -1)
+													ExitLoop
+												Else
+													$tested = $tested + 1
+													If $ans = 7 Then
+														_FileWriteLog($logfle, "(skipped) " & $file, -1)
+														$skipped = $skipped + 1
+														ContinueLoop
+													EndIf
+												EndIf
 												_FileWriteLog($logfle, $file, -1)
-												$tested = $tested + 1
 												If StringInStr($file, "\") > 0 Then $file = $flename & $fext
 												$flename = StringLeft($file, 20)
 												If $flename <> $file Then $flename = $flename & "...."
@@ -3555,12 +3573,8 @@ Func MainGUI()
 													EndIf
 												EndIf
 											EndIf
-											$ans = MsgBox(262177 + 256, "Continue Query", "Do you want to continue with validating?" _
-												& @LF & @LF & "(continuing in 9 seconds)", 9, $GOGcliGUI)
-											If $ans = 2 Then
-												ExitLoop
-											EndIf
 										Next
+										$tested = $tested - $skipped
 										$result = $result & @LF & @LF & "The " & $tested & " files listed above, were tested (checked)."
 										_FileWriteLog($logfle, $tested & " files were tested (checked).", -1)
 										_Crypt_Shutdown()
