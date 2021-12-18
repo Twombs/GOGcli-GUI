@@ -1,5 +1,0 @@
-
-Latest v2.4 update includes an increase from 15 to 20 for the DOWNLOAD LIST limit, and a Bugfix for the VALIDATE NOW, where MD5 and Size values files in the database, were being skipped when extracting from the Manifest.
-
-
-Latest v2.5 update includes a 'Continue Query' for 9 seconds between each file being validated with the 'Validate Game' option. Added new right-click menu entries for the 'Games' list. The 'Downloads' menu has two new entries - 'Excluded File Types' and 'History'. The 'Excluded File Types' entry has further entries for file type extensions, which can be set to be skipped from appearing in the 'Game Files Selector' Window. The 'History' entry runs a viewer for the new 'History.log' file that will have been created on first use of this update. The 'History.log' file is also updated when downloading game files. NOTE - If your current 'Log.txt' file already contains download records, then they will be extracted, to populate the 'History.log' file when this update first runs. In which case a splash titled 'Creating History!' will show until complete.
