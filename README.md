@@ -32,6 +32,8 @@ Compare options added and 'Manifest Comparison Report' GUI.
 
 CDKeys and DLCs are now detected and recorded for checking.
 
+DOWNLOAD ALL option now available.
+
 See the Wiki link above, for more information and a tutorial.
 
 BIG BIG THANKS to TerriblePurpose for their support and encouragement.
