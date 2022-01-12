@@ -1,0 +1,2 @@
+
+Latest v2.6 update includes a persist option & query for disabling DOWNLOAD ALL.
