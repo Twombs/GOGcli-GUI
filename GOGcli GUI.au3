@@ -48,7 +48,7 @@ Local $exe, $script, $status, $w, $wins
 Global $handle, $pid, $Scriptname, $update, $version
 
 $update = "Updated in January 2022."
-$version = "v2.6"
+$version = "v2.7"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -90,8 +90,8 @@ Global $DetailsGUI, $DLC, $dlcfile, $done, $downfiles, $downlist, $download, $do
 Global $erred, $existDB, $exists, $extbin, $extdmg, $extexe, $extpkg, $extsh, $extzip, $f, $file, $fileinfo, $filepth, $files, $filesize
 Global $final, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $gametxt, $gams, $getlatest
 Global $gmefold, $gmesfld, $gogcli, $GOGcliGUI, $hash, $head, $height, $histfile, $history, $htmlfle, $i, $icoD, $icoF, $icoI, $icoS
-Global $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $include, $ind, $inifle, $json, $keep, $key, $lang, $left, $line
-Global $lines, $link, $list, $listed, $listview, $log, $logfle, $lowid, $manall, $m, $manifest, $manifests, $manlist, $md5check, $minimize
+Global $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $include, $ind, $inifle, $json, $keep, $key, $lang, $left, $line, $lines
+Global $link, $list, $listed, $listview, $log, $logfle, $lowid, $manall, $m, $manifest, $manifests, $manlist, $md5check, $mini, $minimize
 Global $model, $n, $name, $num, $numb, $offline, $OP, $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping
 Global $pinged, $processed, $progress, $pth, $purge, $r, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $rest, $results, $ret
 Global $return, $row, $s, $same, $savkeys, $savlog, $second, $selector, $session, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld
@@ -144,6 +144,13 @@ $updated = @ScriptDir & "\Updated.txt"
 $valhistory = @ScriptDir & "\Validations.log"
 
 If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
+
+If FileExists($downlog) Then
+	$res = _ReplaceStringInFile($downlog, @TAB & @TAB, @TAB & "na" & @TAB, 0)
+	If $res > 0 Then
+		_ReplaceStringInFile($downlog, @TAB & @TAB, @TAB & "na" & @TAB, 1)
+	EndIf
+EndIf
 
 ; Restore while testing
 ;$games = IniRead($gamesini, "Games", "total", "0")
@@ -1161,8 +1168,8 @@ Func MainGUI()
 	Local $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_exclude, $Sub_menu_lists, $Sub_menu_manifest
 	Local $Sub_menu_manifests, $Sub_menu_save, $Sub_menu_updated, $Sub_menu_validate
 	;
-	Local $Sub_menu_downall, $Item_downall_clear, $Item_downall_create, $Item_downall_disable, $Item_downall_display
-	Local $Item_downall_info, $Item_downall_log, $Item_downall_opts, $Item_downall_start, $Item_downall_view, $downall
+	Local $downall, $Sub_menu_downall, $Item_downall_clear, $Item_downall_create, $Item_downall_disable, $Item_downall_display
+	Local $Item_downall_info, $Item_downall_list, $Item_downall_log, $Item_downall_opts, $Item_downall_start, $Item_downall_view
 	;
 	Local $accept, $addto, $alias, $aqua, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4, $compall, $compone
 	Local $ctrl, $delay, $description, $destfld, $destfle, $dir, $disable, $display, $dll, $e, $error, $everything, $exist
@@ -1428,9 +1435,11 @@ Func MainGUI()
 	GUICtrlCreateMenuItem("", $Sub_menu_downall)
 	$Item_downall_display = GUICtrlCreateMenuItem("Display List", $Sub_menu_downall)
 	GUICtrlCreateMenuItem("", $Sub_menu_downall)
-	$Item_downall_view = GUICtrlCreateMenuItem("View List", $Sub_menu_downall)
+	$Item_downall_list = GUICtrlCreateMenuItem("View List", $Sub_menu_downall)
 	GUICtrlCreateMenuItem("", $Sub_menu_downall)
-	$Item_downall_log = GUICtrlCreateMenuItem("LOG", $Sub_menu_downall)
+	$Item_downall_view = GUICtrlCreateMenuItem("LOG Viewer", $Sub_menu_downall)
+	GUICtrlCreateMenuItem("", $Sub_menu_downall)
+	$Item_downall_log = GUICtrlCreateMenuItem("View LOG", $Sub_menu_downall)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Sub_menu_downloads = GUICtrlCreateMenu("Downloads", $Menu_list)
@@ -1911,7 +1920,7 @@ Func MainGUI()
 			;GUICtrlSetState($Item_downall_start, $GUI_ENABLE)
 			;GUICtrlSetState($Item_downall_clear, $GUI_ENABLE)
 			;GUICtrlSetState($Item_downall_display, $GUI_ENABLE)
-			;GUICtrlSetState($Item_downall_view, $GUI_ENABLE)
+			;GUICtrlSetState($Item_downall_list, $GUI_ENABLE)
 		Else
 			$downall = "pause"
 			GUICtrlSetState($Item_downall_create, $GUI_DISABLE)
@@ -1926,7 +1935,7 @@ Func MainGUI()
 		GUICtrlSetState($Item_downall_start, $GUI_DISABLE)
 		GUICtrlSetState($Item_downall_clear, $GUI_DISABLE)
 		GUICtrlSetState($Item_downall_display, $GUI_DISABLE)
-		GUICtrlSetState($Item_downall_view, $GUI_DISABLE)
+		GUICtrlSetState($Item_downall_list, $GUI_DISABLE)
 	EndIf
 	$gams = IniRead($inifle, "Download ALL", "games", "")
 	If $gams = "" Then
@@ -1959,6 +1968,7 @@ Func MainGUI()
 		IniWrite($inifle, "Download ALL", "include", $include)
 	EndIf
 	IniWrite($inifle, "Download ALL", "shutdown", "")
+	$mini = 4
 	$session = ""
 	;
 	$compall = 4
@@ -3846,9 +3856,12 @@ Func MainGUI()
 							GUICtrlSetData($Label_bed, "List")
 							_FileWriteLog($logfle, "Loading FILE SELECTOR", -1)
 							FileWriteLine($logfle, "")
-							GuiSetState(@SW_DISABLE, $GOGcliGUI)
+							;GuiSetState(@SW_MINIMIZE, $GOGcliGUI)
+							;GuiSetState(@SW_DISABLE, $GOGcliGUI)
+							$mini = 4
 							FileSelectorGUI()
-							GuiSetState(@SW_ENABLE, $GOGcliGUI)
+							;GuiSetState(@SW_ENABLE, $GOGcliGUI)
+							;GuiSetState(@SW_RESTORE, $GOGcliGUI)
 							$ans = MsgBox(262209 + 256, "Remove Query", "Do you want to clear the 'Downloads' list?", 0, $GOGcliGUI)
 							If $ans = 1 Then
 								_FileWriteLog($logfle, "Clearing DOWNLOADS LIST", -1)
@@ -4164,9 +4177,12 @@ Func MainGUI()
 							If $selector = 1 Then
 								GUICtrlSetData($Label_mid, "Game Files Selector")
 								$caption = $title
-								GuiSetState(@SW_DISABLE, $GOGcliGUI)
+								;GuiSetState(@SW_MINIMIZE, $GOGcliGUI)
+								;GuiSetState(@SW_DISABLE, $GOGcliGUI)
+								$mini = 4
 								FileSelectorGUI()
-								GuiSetState(@SW_ENABLE, $GOGcliGUI)
+								;GuiSetState(@SW_ENABLE, $GOGcliGUI)
+								;GuiSetState(@SW_RESTORE, $GOGcliGUI)
 							Else
 								GUICtrlSetData($Label_mid, "Game Downloading")
 								MsgBox(262192, "Download Error", "This feature is not yet supported!", 2, $GOGcliGUI)
@@ -5783,8 +5799,32 @@ Func MainGUI()
 			IniWrite($inifle, "Exclude File Types", "bin", $extbin)
 			GUICtrlSetState($Item_exclude_bin, $extbin)
 		Case $msg = $Item_downall_view
-			; DOWNLOAD ALL - View List
-			If FileExists($alldown) Then ShellExecute($alldown)
+			; DOWNLOAD ALL - LOG Viewer
+			If FileExists($downlog) Then
+				GUISetState(@SW_MINIMIZE, $GOGcliGUI)
+				_FileReadToArray($downlog, $array, 1, @TAB)
+				If @error = 0 Then
+					$ans = MsgBox(262144 + 35 + 256, "Sort Query", "Sort entries by a result column?" & @LF _
+						& @LF & "YES = MD5 results." _
+						& @LF & "NO = ZIP results." _
+						& @LF & "CANCEL = No sorting.", 0, $GOGcliGUI)
+					If $ans = 6 Then
+						SplashTextOn("", "Sorting MD5 results!", 200, 120, -1, -1, 33)
+						_ArraySort($array, 0, 1, 0, 6)
+						SplashOff()
+					ElseIf $ans = 7 Then
+						SplashTextOn("", "Sorting ZIP results!", 200, 120, -1, -1, 33)
+						_ArraySort($array, 0, 1, 0, 7)
+						SplashOff()
+					EndIf
+					; Display results.
+					$header = "File Name|Game Title|Game ID|Bytes|Size|Checksum|MD5|Zip|Started|Finished|Taken|Validate|Complete|Taken|Total"
+					$res = _ArrayDisplay($array, "Download ALL History", "", 16, Default, $header, Default, $COLOR_SKYBLUE)
+				EndIf
+				GUISetState(@SW_RESTORE, $GOGcliGUI)
+			Else
+				MsgBox(262192, "Path Error", "LOG file does not exist.", 0, $GOGcliGUI)
+			EndIf
 		Case $msg = $Item_downall_start Or $allgames = 1
 			; DOWNLOAD ALL - Start
 			; Start the actual downloading (same as clicking the DOWNLOAD ALL button).
@@ -5802,8 +5842,8 @@ Func MainGUI()
 			; prompt will appear regarding cancellation of DOWNLOAD ALL, though this will only be
 			; a temporary disable, and not clear the list.
 			$allgames = ""
-			$ans = MsgBox(262177 + 256, "Start Query", "DOWNLOAD ALL is not yet fully supported!" & @LF _
-				& @LF & "This process can potentially be a lengthy one, and monopolize" _
+			;$ans = MsgBox(262177 + 256, "Start Query", "DOWNLOAD ALL is not yet fully supported!" & @LF _
+			$ans = MsgBox(262177 + 256, "Start Query", "This process can potentially be a lengthy one, and monopolize" _
 				& @LF & "both your PC and web connection. Do you want to continue?" & @LF _
 				& @LF & "OK = Continue." _
 				& @LF & "CANCEL = Abort." & @LF _
@@ -5890,7 +5930,11 @@ Func MainGUI()
 											$final = 1
 										EndIf
 										$caption = "Download ALL - " & $title
+										;GuiSetState(@SW_MINIMIZE, $GOGcliGUI)
+										;GuiSetState(@SW_DISABLE, $GOGcliGUI)
 										FileSelectorGUI()
+										;GuiSetState(@SW_ENABLE, $GOGcliGUI)
+										;GuiSetState(@SW_RESTORE, $GOGcliGUI)
 										_ReplaceStringInFile($alldown, $titleIDup, $titleID & "|DONE", 0, 1)
 										;$processed = $processed + 1
 										If $processed = $endgame Then
@@ -5927,6 +5971,7 @@ Func MainGUI()
 							FileWriteLine($logfle, "")
 							GUICtrlSetData($Label_mid, "Session Completed")
 							GUICtrlSetData($Label_bed, "Titles processed = " & $completed)
+							GuiSetState(@SW_RESTORE, $GOGcliGUI)
 							SetStateOfControls($GUI_ENABLE, "all")
 							;GUICtrlSetState($Listview_games, $GUI_FOCUS)
 							;GUICtrlSetState($Pic_cover, $GUI_FOCUS)
@@ -5949,32 +5994,14 @@ Func MainGUI()
 			GuiSetState(@SW_ENABLE, $GOGcliGUI)
 		Case $msg = $Item_downall_log
 			; DOWNLOAD ALL - LOG
-			;If FileExists($downlog) Then ShellExecute($downlog)
 			If FileExists($downlog) Then
-				GUISetState(@SW_MINIMIZE, $GOGcliGUI)
-				_FileReadToArray($downlog, $array, 1, @TAB)
-				If @error = 0 Then
-					$ans = MsgBox(262144 + 35 + 256, "Sort Query", "Sort entries by a result column?" & @LF _
-						& @LF & "YES = MD5 results." _
-						& @LF & "NO = ZIP results." _
-						& @LF & "CANCEL = No sorting.", 0, $GOGcliGUI)
-					If $ans = 6 Then
-						SplashTextOn("", "Sorting MD5 results!", 200, 120, -1, -1, 33)
-						_ArraySort($array, 0, 1, 0, 6)
-						SplashOff()
-					ElseIf $ans = 7 Then
-						SplashTextOn("", "Sorting ZIP results!", 200, 120, -1, -1, 33)
-						_ArraySort($array, 0, 1, 0, 7)
-						SplashOff()
-					EndIf
-					; Display results.
-					$header = "File Name|Game Title|Game ID|Bytes|Size|Checksum|MD5|Zip|Started|Finished|Taken|Validate|Complete|Taken|Total"
-					$res = _ArrayDisplay($array, "Download ALL History", "", 16, Default, $header, Default, $COLOR_SKYBLUE)
-				EndIf
-				GUISetState(@SW_RESTORE, $GOGcliGUI)
+				ShellExecute($downlog)
 			Else
 				MsgBox(262192, "Path Error", "LOG file does not exist.", 0, $GOGcliGUI)
 			EndIf
+		Case $msg = $Item_downall_list
+			; DOWNLOAD ALL - View List
+			If FileExists($alldown) Then ShellExecute($alldown)
 		Case $msg = $Item_downall_info
 			; DOWNLOAD ALL - Info
 			MsgBox(262208, "Process Information", _
@@ -6087,7 +6114,7 @@ Func MainGUI()
 						GUICtrlSetState($Item_downall_start, $GUI_ENABLE)
 						GUICtrlSetState($Item_downall_clear, $GUI_ENABLE)
 						GUICtrlSetState($Item_downall_display, $GUI_ENABLE)
-						GUICtrlSetState($Item_downall_view, $GUI_ENABLE)
+						GUICtrlSetState($Item_downall_list, $GUI_ENABLE)
 						GUICtrlSetData($Button_down, "DOWNLOAD" & @LF & "ALL")
 					EndIf
 				EndIf
@@ -6110,7 +6137,7 @@ Func MainGUI()
 				GUICtrlSetState($Item_downall_start, $GUI_DISABLE)
 				GUICtrlSetState($Item_downall_clear, $GUI_DISABLE)
 				GUICtrlSetState($Item_downall_display, $GUI_DISABLE)
-				GUICtrlSetState($Item_downall_view, $GUI_DISABLE)
+				GUICtrlSetState($Item_downall_list, $GUI_DISABLE)
 				If GUICtrlRead($Button_down) = "DOWNLOAD" & @LF & "ALL" Then
 					GUICtrlSetData($Button_down, "DOWNLOAD")
 				EndIf
@@ -6958,9 +6985,9 @@ Func FileSelectorGUI()
 ;~ 	$caption = "Download ALL - The Elder Scrolls IV: Oblivion - Game of the Year Edition Deluxe"
 ;~ 	$caption = "Download ALL - The Interactive Adventures of Dog Mendonça and Pizzaboy®"
 ;~ 	$caption = "Download ALL - Wallace and Gromit's Episode 1 Fright of the Bumblebees"
-	Local $Button_download, $Button_dwn, $Button_quit, $Button_uncheck, $Button_up, $Checkbox_cancel, $Checkbox_relax, $Checkbox_skip, $Combo_OSfle
-	Local $Combo_shutdown, $Group_exist, $Group_files, $Group_OS, $Group_select, $Label_done, $Label_percent, $Label_shut, $Label_speed, $Label_warn
-	Local $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
+	Local $Button_download, $Button_dwn, $Button_quit, $Button_uncheck, $Button_up, $Checkbox_cancel, $Checkbox_mini, $Checkbox_relax, $Checkbox_skip
+	Local $Combo_OSfle, $Combo_shutdown, $Group_exist, $Group_files, $Group_OS, $Group_select, $Label_done, $Label_percent, $Label_shut, $Label_speed
+	Local $Label_warn, $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
 	Local $Menu_list, $Sub_menu_remove, $Item_remove_ext, $Item_remove_lin, $Item_remove_mac, $Item_remove_sel, $Item_remove_win
 	;
 	Local $amount, $began, $begin, $begun, $cancel, $changelog, $checked, $code, $col1, $col2, $col3, $col4, $color, $description, $dllcall, $downloading
@@ -6968,15 +6995,17 @@ Func FileSelectorGUI()
 	Local $mins, $missing, $movdwn, $movup, $osfle, $prior, $removed, $saved, $savtxt, $secs, $sect, $sections, $SelectorGUI, $serial, $shutdown, $sizecheck
 	Local $skip, $slugD, $speed, $start, $styles, $sum, $taken, $theme, $titleD, $tmpman, $up, $upfle, $val, $valfile, $valid, $visible, $wide
 	;
-	$styles = $WS_OVERLAPPED + $WS_CAPTION + $WS_MINIMIZEBOX ; + $WS_POPUP
-	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $styles + $WS_SIZEBOX + $WS_VISIBLE, $WS_EX_TOPMOST, $GOGcliGUI)
-	GUISetState(@SW_HIDE, $SelectorGUI)
+	;$mini = 1
+	$styles = $WS_OVERLAPPED + $WS_CAPTION + $WS_MINIMIZEBOX + $WS_SIZEBOX + $WS_VISIBLE ; + $WS_POPUP
+	$SelectorGUI = GuiCreate("Game Files Selector - " & $caption, $width - 5, $height, $left, $top, $styles, $WS_EX_TOPMOST, $GOGcliGUI)
+	;GUISetState(@SW_HIDE, $SelectorGUI)
+	GUISetState(@SW_MINIMIZE, $SelectorGUI)
 	GUISetBkColor(0xBBFFBB, $SelectorGUI)
 	; CONTROLS
 	$Group_files = GuiCtrlCreateGroup("Files To Download", 10, 10, $width - 25, 302)
 	GUICtrlSetResizing($Group_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
 	$ListView_files = GUICtrlCreateListView("||||", 20, 30, $width - 45, 270, $LVS_SHOWSELALWAYS + $LVS_SINGLESEL + $LVS_REPORT + $LVS_NOCOLUMNHEADER, _
-													$LVS_EX_FULLROWSELECT + $LVS_EX_GRIDLINES + $LVS_EX_CHECKBOXES) ;
+																						$LVS_EX_FULLROWSELECT + $LVS_EX_GRIDLINES + $LVS_EX_CHECKBOXES)
 	GUICtrlSetBkColor($ListView_files, 0xF0D0F0)
 	GUICtrlSetResizing($ListView_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
 	;
@@ -7008,13 +7037,18 @@ Func FileSelectorGUI()
 	GUICtrlSetResizing($Button_up, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
 	GUICtrlSetTip($Button_up, "Move selected entry up!")
 	;
-	$Label_warn = GuiCtrlCreateLabel("", 70, 318, 284, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN) ;$width -
+	;$Label_warn = GuiCtrlCreateLabel("", 70, 318, 284, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN) ;$width -
+	$Label_warn = GuiCtrlCreateLabel("", 70, 318, 184, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN) ;$width -
 	GUICtrlSetBkColor($Label_warn, $COLOR_RED)
 	GUICtrlSetColor($Label_warn, $COLOR_YELLOW)
 	GUICtrlSetFont($Label_warn, 8, 600)
 	GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
 	;GUICtrlSetResizing($Label_warn, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
 	GUICtrlSetTip($Label_warn, "Ensure desired download settings have been set on the SETUP window!")
+	;
+	$Checkbox_mini = GUICtrlCreateCheckbox("Keep Minimized", 260, 318, 90, 20)
+	GUICtrlSetResizing($Checkbox_mini, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
+	GUICtrlSetTip($Checkbox_mini, "Keep the window minimized in DOWNLOAD ALL mode!")
 	;
 	$Checkbox_relax = GUICtrlCreateCheckbox("Relax", 363, 318, 50, 20)
 	GUICtrlSetResizing($Checkbox_relax, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKSIZE)
@@ -7139,12 +7173,27 @@ Func FileSelectorGUI()
 	;
 	;GUICtrlSetData($Combo_shutdown, "none|Hibernate|Logoff|Powerdown|Reboot|Shutdown|Standby", "none")
 	;
-	$visible = @SW_SHOW
+	GUICtrlSetState($Checkbox_mini, $mini)
+	;$allgames = 1
+	If $allgames = 1 Then
+		If $mini = 4 Then
+			$visible = "show"
+		Else
+			$visible = "noshow"
+		EndIf
+	Else
+		$mini = 4
+		$visible = "show"
+	EndIf
 	$start = ""
 	$pinged = ""
 	If $caption = "Downloads List" Then
 		GUICtrlSetData($Combo_shutdown, "none|Hibernate|Logoff|Powerdown|Reboot|Shutdown|Standby", "none")
-		GUISetState(@SW_SHOW, $SelectorGUI)
+		GUICtrlSetState($Checkbox_mini, $GUI_DISABLE)
+		GuiSetState(@SW_MINIMIZE, $GOGcliGUI)
+		;GUISetState(@SW_SHOW, $SelectorGUI)
+		GuiSetState(@SW_RESTORE, $SelectorGUI)
+		$visible = "noneed"
 		If $getlatest = 4 And $exists = 1 Then
 			$ping = Ping("gog.com", 4000)
 			If $ping = 0 Then
@@ -7298,17 +7347,19 @@ Func FileSelectorGUI()
 					$amount = Round($amount, 3) & " Tb"
 				EndIf
 				GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")  Selected  (" & $ents & ")  (" & $amount & ")")
-				GUISetState(@SW_SHOW, $SelectorGUI)
+				;GUISetState(@SW_SHOW, $SelectorGUI)
 			Else
 				; No files to download, so close the window and advance to next game (if one).
 				GUICtrlSetData($Group_files, "Files To Download")
 				$start = "next"
-				$visible = @SW_HIDE
+				;$visible = @SW_HIDE
+				$visible = "hide"
 			EndIf
 		Else
 			GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")")
 			GUICtrlSetData($Combo_shutdown, "none|Hibernate|Logoff|Powerdown|Reboot|Shutdown|Standby", "none")
-			GUISetState(@SW_SHOW, $SelectorGUI)
+			GUICtrlSetState($Checkbox_mini, $GUI_DISABLE)
+			;GUISetState(@SW_SHOW, $SelectorGUI)
 		EndIf
 	EndIf
 	;
@@ -7332,7 +7383,8 @@ Func FileSelectorGUI()
 	;
 	;GUICtrlSetData($Label_warn, "Ensure desired download settings have been set on the SETUP window.")
 	;GUICtrlSetData($Label_warn, "Ensure wanted download options are set in SETUP window.")
-	GUICtrlSetData($Label_warn, "More download options found on SETUP window.")
+	;GUICtrlSetData($Label_warn, "More download options found on SETUP window.")
+	GUICtrlSetData($Label_warn, "See SETUP window options.")
 	;
 	If $exists = 4 Then
 		GUICtrlSetState($Checkbox_relax, $GUI_DISABLE)
@@ -7357,7 +7409,15 @@ Func FileSelectorGUI()
 	EndIf
 	GUICtrlSetState($Checkbox_skip, $skip)
 
-	GuiSetState($visible, $SelectorGUI)
+	If $visible = "hide" Then
+		GUISetState(@SW_HIDE, $SelectorGUI)
+	ElseIf $visible = "show" Then
+		GuiSetState(@SW_MINIMIZE, $GOGcliGUI)
+		;GuiSetState(@SW_SHOW, $SelectorGUI)
+		GuiSetState(@SW_RESTORE, $SelectorGUI)
+	ElseIf $visible = "noshow" Or $visible = "noneed" Then
+		; Don't do anything.
+	EndIf
 	While 1
 		$msg = GuiGetMsg()
 		Select
@@ -7366,10 +7426,23 @@ Func FileSelectorGUI()
 			If $start = "next" Then $start = ""
 			$exists = IniRead($inifle, "Exists Database", "use", "")
 			$relax = IniRead($inifle, "Exists Database", "relax", "")
+			If $allgames = 1 Then
+				; Keep the window minimized check.
+				If GUICtrlRead($Checkbox_mini) = $GUI_CHECKED Then
+					$mini = 1
+				Else
+					$mini = 4
+					$visible = "show"
+				EndIf
+				;IniWrite($inifle, "Download ALL", "minimized", $mini)
+			EndIf
 			GUIDelete($SelectorGUI)
+			If ($visible = "show" Or $visible = "noneed") And $mini = 4 Then
+				GuiSetState(@SW_RESTORE, $GOGcliGUI)
+			EndIf
 			ExitLoop
 		Case $msg = $GUI_EVENT_MINIMIZE
-			GUISetState(@SW_MINIMIZE, $GOGcliGUI)
+			;GUISetState(@SW_MINIMIZE, $GOGcliGUI)
 		Case $msg = $GUI_EVENT_RESIZED
 			$winpos = WinGetPos($SelectorGUI, "")
 			$wide = $winpos[2]
@@ -8192,6 +8265,7 @@ Func FileSelectorGUI()
 											;
 											IniWrite($results, $file, "zip_check", "fail")
 										EndIf
+										IniRead($results, $file, "checksum", "na")
 										IniWrite($results, $file, "md5_check", "na")
 										; Validate Finish
 										$valid = _NowCalc()
@@ -8288,11 +8362,16 @@ Func FileSelectorGUI()
 							$titleD = IniRead($results, $file, "game", "")
 							$IDD = IniRead($results, $file, "ID", "")
 							$filesize = IniRead($results, $file, "bytes", "")
+							If $filesize = "" Then $filesize = "na"
 							$size = IniRead($results, $file, "size_check", "")
+							If $size = "" Then $size = "na"
 							$checksum = IniRead($results, $file, "checksum", "")
+							If $checksum = "" Then $checksum = "na"
 							$entry = $file & @TAB & $titleD & @TAB & $IDD & @TAB & $filesize & @TAB & $size & @TAB & $checksum
 							$md5check = IniRead($results, $file, "md5_check", "")
+							If $md5check = "" Then $md5check = "na"
 							$zipcheck = IniRead($results, $file, "zip_check", "")
+							If $zipcheck = "" Then $zipcheck = "na"
 							; Download Start
 							$begun = IniRead($results, $file, "started", "")
 							$finish = IniRead($results, $file, "finished", "")
@@ -8300,13 +8379,17 @@ Func FileSelectorGUI()
 							$taken = IniRead($results, $file, "taken", "")
 							; Validate Start
 							$began = IniRead($results, $file, "verifying", "")
+							If $began = "" Then $began = "na"
 							; Validate Finish
 							$valid = IniRead($results, $file, "validated", "")
+							If $valid = "" Then $valid = "na"
 							$entry = $entry & @TAB & $taken & @TAB & $began & @TAB & $valid
 							$taken = IniRead($results, $file, "validate", "")
+							If $taken = "" Then $taken = "na"
 							$entry = $entry & @TAB & $taken
 							; Total Time Taken
 							$taken = IniRead($results, $file, "completed", "")
+							If $taken = "" Then $taken = "na"
 							$entry = $entry & @TAB & $taken
 							;IniWrite($results, $file, "download", "done")
 							;IniWrite($results, $file, "download", "missing")
@@ -8322,7 +8405,11 @@ Func FileSelectorGUI()
 					If $start = 1 Then
 						$processed = $processed + 1
 						; Using a small delay, to show final results for processed game files.
+						GUICtrlSetFont($Label_percent, 7, 600, 0, "Small Fonts")
+						GUICtrlSetData($Label_percent, "Pause && Show")
 						Sleep(5000)
+						GUICtrlSetData($Label_percent, "")
+						GUICtrlSetFont($Label_percent, 9, 600)
 						If $cancel = 1 Then
 							_FileWriteLog($logfle, "User enabled cancel.", -1)
 							$endgame = $processed
@@ -8556,6 +8643,10 @@ Func FileSelectorGUI()
 			Else
 				GUICtrlSetState($Checkbox_relax, $relax)
 			EndIf
+		Case $msg = $Checkbox_mini
+			; Keep the window minimized in DOWNLOAD ALL mode
+			; NOTE - This setting can only be done live and set on exit, but not saved.
+			; IMPORTANT - WIth every first use, the window should be visible, until set otherwise.
 		Case $msg = $Combo_OSfle
 			; OS for files
 			$osfle = GUICtrlRead($Combo_OSfle)
@@ -10522,12 +10613,16 @@ Func GetFileDownloadDetails($listview = "")
 			Else
 				$pinged = 1
 				;SplashTextOn("", "Please Wait!" & @LF & @LF & "(Checking File Names)" & @LF & "(Loading List)", 200, 140, Default, Default, 33)
-				SplashTextOn("", "Please Wait!" & @LF & @LF & "(Checking Database)" & @LF & "(Loading List)", 200, 140, Default, Default, 33)
+				SplashTextOn("", "Please Wait! 1" & @LF & @LF & "(Checking Database)" & @LF & "(Loading List)", 200, 140, Default, Default, 33)
+				;Sleep(2000)
 			EndIf
 		Else
 			$ping = 0
 		EndIf
-		If $ping = 0 Then SplashTextOn("", "Please Wait!" & @LF & @LF & "(Loading List)", 180, 130, Default, Default, 33)
+		If $ping = 0 And $allgames = "" Then
+			SplashTextOn("", "Please Wait! 2" & @LF & @LF & "(Loading List)", 180, 130, Default, Default, 33)
+			;Sleep(2000)
+		EndIf
 	Else
 		$ping = 0
 	EndIf
