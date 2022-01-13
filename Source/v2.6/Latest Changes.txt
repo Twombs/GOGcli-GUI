@@ -1,0 +1,2 @@
+
+Latest v2.6 update includes a persist query & option for disabling DOWNLOAD ALL. Startup splash screen now appears sooner. 'Games Updated' has been relocated to its own 'Updated' right-click list menu, and a 'Mark Orange' option and process has been added. Database right-click 'Games' list menu now has two more entries & processes - 'Display The Database' and 'Display The Previous'. NOTE - The 'Display The Database' option may correct some entries in the 'Database.ini' file.
