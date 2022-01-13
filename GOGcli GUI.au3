@@ -47,8 +47,8 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $update, $version
 
-$update = "Updated in December 2021."
-$version = "v2.5"
+$update = "Updated in January 2022."
+$version = "v2.6"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -85,7 +85,7 @@ Global $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
 Global $7zip, $a, $addlist, $alert, $alerts, $alf, $alldetail, $alldown, $allgames, $allkeys, $alpha, $ans, $array, $backups, $bigcover
 Global $bigpic, $blackjpg, $blurb, $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $cease, $changelogs, $check, $checksum, $checkval
-Global $cnt, $compare, $completed, $cookie, $cookies, $cover, $covers, $covimg, $declare, $descript, $descriptions, $dest, $details
+Global $cnt, $compare, $completed, $cookie, $cookies, $cover, $covers, $covimg, $DBfile, $declare, $descript, $descriptions, $dest, $details
 Global $DetailsGUI, $DLC, $dlcfile, $done, $downfiles, $downlist, $download, $downloads, $downlog, $drv, $endgame, $entries, $entry
 Global $erred, $existDB, $exists, $extbin, $extdmg, $extexe, $extpkg, $extsh, $extzip, $f, $file, $fileinfo, $filepth, $files, $filesize
 Global $final, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $gametxt, $gams, $getlatest
@@ -112,6 +112,7 @@ $changelogs = @ScriptDir & "\Changelogs"
 $compare = @ScriptDir & "\Comparisons.txt"
 $cookies = @ScriptDir & "\Cookie.txt"
 $covers = @ScriptDir & "\Covers"
+$DBfile = @ScriptDir & "\Database.txt"
 $details = @ScriptDir & "\Detail.txt"
 $dlcfile = @ScriptDir & "\DLCs.ini"
 $descriptions = @ScriptDir & "\Descriptions"
@@ -141,6 +142,8 @@ $tagfle = @ScriptDir & "\Tags.ini"
 $titlist = @ScriptDir & "\Titles.txt"
 $updated = @ScriptDir & "\Updated.txt"
 $valhistory = @ScriptDir & "\Validations.log"
+
+If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
 
 ; Restore while testing
 ;$games = IniRead($gamesini, "Games", "total", "0")
@@ -1139,8 +1142,6 @@ Else
 	EndIf
 EndIf
 
-If FileExists($splash) Then SplashImageOn("", $splash, 350, 300, Default, Default, 1)
-
 MainGUI()
 
 Exit
@@ -1151,23 +1152,24 @@ Func MainGUI()
 	Local $Item_alerts_clear, $Item_alerts_view, $Item_compare_all, $Item_compare_aqua, $Item_compare_declare
 	Local $Item_compare_ignore, $Item_compare_one, $Item_compare_orange, $Item_compare_overlook, $Item_compare_red
 	Local $Item_compare_rep, $Item_compare_report, $Item_compare_view, $Item_compare_wipe, $Item_compare_yellow
-	Local $Item_database_view, $Item_down_clear, $Item_down_history, $Item_down_view, $Item_exclude_bin, $Item_exclude_dmg
-	Local $Item_exclude_exe, $Item_exclude_pkg, $Item_exclude_sh, $Item_exclude_zip, $Item_lists_dlcs, $Item_lists_dupes
-	Local $Item_lists_keys, $Item_lists_latest, $Item_lists_updated, $Item_lists_tags, $Item_man_clear, $Item_man_view
-	Local $Item_manifest_entry, $Item_manifest_fix, $Item_manifest_orphan, $Item_manifest_view, $Item_save_keys
-	Local $Item_validate_histfle, $Item_validate_history, $Label_progress, $Progress_valid, $Sub_menu_alerts
-	Local $Sub_menu_comparisons, $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_exclude, $Sub_menu_lists
-	Local $Sub_menu_manifest, $Sub_menu_manifests, $Sub_menu_save, $Sub_menu_updated, $Sub_menu_validate
+	Local $Item_database_display, $Item_database_prior, $Item_database_view, $Item_down_clear, $Item_down_history
+	Local $Item_down_view, $Item_exclude_bin, $Item_exclude_dmg, $Item_exclude_exe, $Item_exclude_pkg, $Item_exclude_sh
+	Local $Item_exclude_zip, $Item_lists_dlcs, $Item_lists_keys, $Item_lists_latest, $Item_lists_tags, $Item_man_clear
+	Local $Item_man_view, $Item_manifest_entry, $Item_manifest_fix, $Item_manifest_orphan, $Item_manifest_view
+	Local $Item_save_keys, $Item_updated_dupes, $Item_updated_list, $Item_updated_mark, $Item_validate_histfle
+	Local $Item_validate_history, $Label_progress, $Progress_valid, $Sub_menu_alerts, $Sub_menu_comparisons
+	Local $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_exclude, $Sub_menu_lists, $Sub_menu_manifest
+	Local $Sub_menu_manifests, $Sub_menu_save, $Sub_menu_updated, $Sub_menu_validate
 	;
 	Local $Sub_menu_downall, $Item_downall_clear, $Item_downall_create, $Item_downall_disable, $Item_downall_display
 	Local $Item_downall_info, $Item_downall_log, $Item_downall_opts, $Item_downall_start, $Item_downall_view, $downall
 	;
 	Local $accept, $addto, $alias, $aqua, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4, $compall, $compone
-	Local $ctrl, $delay, $description, $destfld, $destfle, $dir, $display, $dll, $e, $error, $everything, $exist, $existing
-	Local $fext, $filelist, $find, $fixed, $flename, $foldpth, $former, $gambak, $get, $IDD, $idlink, $ids, $l, $language
-	Local $languages, $last, $lastgame, $latest, $loop, $mans, $method, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p
-	Local $patchfld, $pos, $prior, $proceed, $query, $red, $rep, $result, $retrieve, $savtxt, $sect, $sects, $serial, $skipped
-	Local $slugD, $tagtxt, $tested, $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
+	Local $ctrl, $delay, $description, $destfld, $destfle, $dir, $disable, $display, $dll, $e, $error, $everything, $exist
+	Local $existing, $fext, $filelist, $find, $fixed, $flename, $foldpth, $former, $gambak, $get, $IDD, $idlink, $ids, $l
+	Local $language, $languages, $last, $lastgame, $latest, $loop, $mans, $method, $mpos, $nmb, $OPS, $orange, $orphans
+	Local $outline, $p, $patchfld, $pos, $prior, $proceed, $query, $red, $rep, $result, $retrieve, $savtxt, $sect, $sects
+	Local $serial, $skipped, $slugD, $tagtxt, $tested, $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
 	;
 	Local $amount, $finished, $hours, $mins, $secs, $started, $taken
 	;
@@ -1397,7 +1399,12 @@ Func MainGUI()
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Sub_menu_database = GUICtrlCreateMenu("Database", $Menu_list)
 	$Item_database_relax = GUICtrlCreateMenuItem("Relax The Rules", $Sub_menu_database, -1, 0)
-	GUICtrlCreateMenuItem("", $Sub_menu_downloads)
+	GUICtrlCreateMenuItem("", $Sub_menu_database)
+	GUICtrlCreateMenuItem("", $Sub_menu_database)
+	$Item_database_display = GUICtrlCreateMenuItem("Display The Database", $Sub_menu_database)
+	GUICtrlCreateMenuItem("", $Sub_menu_database)
+	$Item_database_prior = GUICtrlCreateMenuItem("Display The Previous", $Sub_menu_database)
+	GUICtrlCreateMenuItem("", $Sub_menu_database)
 	$Item_database_view = GUICtrlCreateMenuItem("View The Database", $Sub_menu_database)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
@@ -1447,11 +1454,6 @@ Func MainGUI()
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Sub_menu_lists = GUICtrlCreateMenu("Lists", $Menu_list)
-	$Sub_menu_updated = GUICtrlCreateMenu("Games Updated", $Sub_menu_lists)
-	$Item_lists_updated = GUICtrlCreateMenuItem("View List", $Sub_menu_updated)
-	GUICtrlCreateMenuItem("", $Sub_menu_updated)
-	$Item_lists_dupes = GUICtrlCreateMenuItem("Remove Duplicates", $Sub_menu_updated)
-	GUICtrlCreateMenuItem("", $Sub_menu_lists)
 	$Item_lists_latest = GUICtrlCreateMenuItem("Latest Additions", $Sub_menu_lists)
 	GUICtrlCreateMenuItem("", $Sub_menu_lists)
 	$Item_lists_keys = GUICtrlCreateMenuItem("CDKeys", $Sub_menu_lists)
@@ -1480,6 +1482,14 @@ Func MainGUI()
 	GUICtrlCreateMenuItem("", $Sub_menu_manifest)
 	$Item_manifest_orphan = GUICtrlCreateMenuItem("Check For Orphan Entries", $Sub_menu_manifest)
 	;$Item_manifest_fix = GUICtrlCreateMenuItem("Check && Fix The Manifest", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Sub_menu_updated = GUICtrlCreateMenu("Updated", $Menu_list)
+	$Item_updated_mark = GUICtrlCreateMenuItem("Mark Orange", $Sub_menu_updated)
+	GUICtrlCreateMenuItem("", $Sub_menu_updated)
+	$Item_updated_dupes = GUICtrlCreateMenuItem("Remove Duplicates", $Sub_menu_updated)
+	GUICtrlCreateMenuItem("", $Sub_menu_updated)
+	$Item_updated_list = GUICtrlCreateMenuItem("View List", $Sub_menu_updated)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Sub_menu_validate = GUICtrlCreateMenu("Validations", $Menu_list)
@@ -1884,17 +1894,24 @@ Func MainGUI()
 	$allgames = ""
 	If FileExists($alldown) Then
 		If GUICtrlRead($Button_down) = "DOWNLOAD" Then
-			$downall = 1
 			GUICtrlSetState($Item_downall_create, $GUI_DISABLE)
-			GUICtrlSetState($Item_verify_file, $GUI_DISABLE)
-			GUICtrlSetState($Item_verify_game, $GUI_DISABLE)
-			GUICtrlSetState($Item_verify_now, $GUI_ENABLE)
+			$disable = IniRead($inifle, "Download ALL", "disabled", "")
+			If $disable = 1 Then
+				$downall = "pause"
+				GUICtrlSetData($Item_downall_disable, "Enable")
+				GUICtrlSetState($Item_downall_start, $GUI_DISABLE)
+			Else
+				$downall = 1
+				GUICtrlSetData($Button_down, "DOWNLOAD" & @LF & "ALL")
+				GUICtrlSetState($Item_verify_file, $GUI_DISABLE)
+				GUICtrlSetState($Item_verify_game, $GUI_DISABLE)
+				GUICtrlSetState($Item_verify_now, $GUI_ENABLE)
+			EndIf
 			;GUICtrlSetState($Item_downall_disable, $GUI_ENABLE)
 			;GUICtrlSetState($Item_downall_start, $GUI_ENABLE)
 			;GUICtrlSetState($Item_downall_clear, $GUI_ENABLE)
 			;GUICtrlSetState($Item_downall_display, $GUI_ENABLE)
 			;GUICtrlSetState($Item_downall_view, $GUI_ENABLE)
-			GUICtrlSetData($Button_down, "DOWNLOAD" & @LF & "ALL")
 		Else
 			$downall = "pause"
 			GUICtrlSetState($Item_downall_create, $GUI_DISABLE)
@@ -4970,6 +4987,159 @@ Func MainGUI()
 			Else
 				MsgBox(262192, "Path Error", "History file does not exist.", 0, $GOGcliGUI)
 			EndIf
+		Case $msg = $Item_updated_mark
+			; Updated -> Mark Orange
+			If FileExists($updated) Then
+				$ans = MsgBox(262177, "Mark Orange Query", _
+					"If you have a lot of games listed, then" & @LF & _
+					"this could potentially take a while." & @LF & @LF & _
+					"OK = Continue with marking." & @LF & _
+					"CANCEL = Abort any marking." & @LF & @LF & _
+					"NOTE - It is suggested that you use the" & @LF & _
+					"'Remove Duplicates' option first, which" & @LF & _
+					"can speed up overall processing time." & @LF & @LF & _
+					"INFO - Usually any updated games will" & @LF & _
+					"be marked RED, and those entries won't" & @LF & _
+					"be changed by this process. However at" & @LF & _
+					"times GOG's automatic processes often " & @LF & _
+					"clear some 'updated' indicators. So this" & @LF & _
+					"process helps to overcome that.", 0, $GOGcliGUI)
+				If $ans = 1 Then
+					SetStateOfControls($GUI_DISABLE, "all")
+					GUICtrlSetImage($Pic_cover, $blackjpg)
+					GUICtrlSetData($Label_top, "Please Wait")
+					GUICtrlSetData($Label_mid, "Checking Updated")
+					GUICtrlSetData($Label_bed, "Marking Orange")
+					_FileReadToArray($updated, $array, 1)
+					If IsArray($array) Then
+						;_ArrayUnique($array, 0, 1)
+						_ArraySort($array, 0, 1)
+						;_ArrayDisplay($array)
+						$lastgame = ""
+						$marked = 0
+						$redmark = 0
+						For $a = 1 To $array[0]
+							$line = $array[$a]
+							If $line <> "" Then
+								$game = StringSplit($line, " | ", 1)
+								$game = $game[1]
+								If $game <> $lastgame Then
+									$lastgame = $game
+									$ind = -1
+									While 1
+										$ind = _GUICtrlListView_FindInText($Listview_games, $game, $ind, False, False)
+										If $ind > -1 Then
+											$text = _GUICtrlListView_GetItemText($Listview_games, $ind, 1)
+											If $text = $game Then
+												$ID = _GUICtrlListView_GetItemText($Listview_games, $ind, 0)
+												;MsgBox(262192, "Compare Results", "Game = " & $game & @LF & "Found = " & $text & @LF & "ID = " & $ID, 0, $GOGcliGUI)
+												If IniRead($gamesini, $ID, "updates", "") = 0 Then
+													$row = $lowid + $ind + 1
+													GUICtrlSetBkColor($row, 0xFF8000)
+													$marked = $marked + 1
+												Else
+													$redmark = $redmark + 1
+												EndIf
+												ExitLoop
+											EndIf
+											;ExitLoop 2
+										Else
+											; Not found
+											ExitLoop
+										EndIf
+									WEnd
+								EndIf
+							EndIf
+						Next
+						MsgBox(262192, "Mark Result", $redmark & " games previously marked RED as updated." & @LF _
+							& $marked & " further games marked ORANGE as updated." & @LF & @LF _
+							& "NOTE - This does not ignore games that you" & @LF _
+							& "have downloaded updates for, if they remain" & @LF _
+							& "on the list still, as updated. You will manually" & @LF _
+							& "need to remove such entries if downloaded.", 0, $GOGcliGUI)
+					EndIf
+					SetStateOfControls($GUI_ENABLE, "all")
+					GUICtrlSetData($Label_top, "")
+					GUICtrlSetData($Label_mid, "")
+					GUICtrlSetData($Label_bed, "")
+				EndIf
+			EndIf
+		Case $msg = $Item_updated_list
+			; Updated -> View List
+			If FileExists($updated) Then ShellExecute($updated)
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Item_updated_dupes
+			; Updated -> Remove Duplicates
+			If FileExists($updated) Then
+				SetStateOfControls($GUI_DISABLE, "all")
+				GUICtrlSetImage($Pic_cover, $blackjpg)
+				GUICtrlSetData($Label_top, "Please Wait")
+				GUICtrlSetData($Label_mid, "Updated List Check")
+				GUICtrlSetData($Label_bed, "Remove Duplicates")
+				$lines = ""
+				$former = 1
+				;Local $checklist = @ScriptDir & "\Checked.txt"
+				;_FileCreate($checklist)
+				_FileReadToArray($updated, $array, 1)
+				If IsArray($array) Then
+					;_ArrayDisplay($array)
+					_FileCreate($updated)
+					For $a = 1 To $array[0]
+						$line = $array[$a]
+						If $line = "" Then
+							; Add a blank line
+							If $former <> "" Then
+								$lines = $lines & @CRLF
+							EndIf
+							$former = ""
+						Else
+							If $lines = "" Then
+								; Add first line
+								$lines = $line
+								$former = $line
+							Else
+								$game = StringSplit($line, " | ", 1)
+								$game = $game[1]
+								If StringInStr($lines, $game) > 0 Then
+									; Check if a match
+									$read = StringSplit($lines, @CRLF, 1)
+									For $r = 1 To $read[0]
+										$sect = $read[$r]
+										If $sect <> "" Then
+											$sect = StringSplit($sect, " | ", 1)
+											$sect = $sect[1]
+											If $sect = $game Then
+												; Duplicate found
+												$game = ""
+												ExitLoop
+											EndIf
+										EndIf
+									Next
+									$r = ""
+									If $game <> "" Then
+										; Not a match, so add
+										$lines = $lines & @CRLF & $line
+										$former = $line
+									EndIf
+								Else
+									; Appears to be unique so add
+									$lines = $lines & @CRLF & $line
+									$former = $line
+								EndIf
+							EndIf
+						EndIf
+					Next
+					;FileWrite($checklist, $lines & @CRLF)
+					FileWrite($updated, $lines & @CRLF)
+				EndIf
+				SetStateOfControls($GUI_ENABLE, "all")
+				GUICtrlSetData($Label_top, "")
+				GUICtrlSetData($Label_mid, "")
+				GUICtrlSetData($Label_bed, "")
+				;ShellExecute($checklist)
+				ShellExecute($updated)
+			EndIf
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Item_save_keys
 			; Save To File - CDkey or Serial
 			If $title = "" Then
@@ -5542,10 +5712,6 @@ Func MainGUI()
 			GUICtrlSetTip($Button_man, "Add selected game to manifest!")
 			_FileCreate($manlist)
 			$manifests = ""
-		Case $msg = $Item_lists_updated
-			; Lists - Games Updated -> View List
-			If FileExists($updated) Then ShellExecute($updated)
-			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Item_lists_tags
 			; Lists - Tags
 			If FileExists($tagfle) Then ShellExecute($tagfle)
@@ -5553,78 +5719,6 @@ Func MainGUI()
 		Case $msg = $Item_lists_latest
 			; Lists - Latest Additions
 			If FileExists($addlist) Then ShellExecute($addlist)
-			GUICtrlSetState($Listview_games, $GUI_FOCUS)
-		Case $msg = $Item_lists_dupes
-			; Lists - Games Updated -> Remove Duplicates
-			If FileExists($updated) Then
-				SetStateOfControls($GUI_DISABLE, "all")
-				GUICtrlSetImage($Pic_cover, $blackjpg)
-				GUICtrlSetData($Label_top, "Please Wait")
-				GUICtrlSetData($Label_mid, "Updated List Check")
-				GUICtrlSetData($Label_bed, "Remove Duplicates")
-				$lines = ""
-				$former = 1
-				;Local $checklist = @ScriptDir & "\Checked.txt"
-				;_FileCreate($checklist)
-				_FileReadToArray($updated, $array, 1)
-				If IsArray($array) Then
-					;_ArrayDisplay($array)
-					_FileCreate($updated)
-					For $a = 1 To $array[0]
-						$line = $array[$a]
-						If $line = "" Then
-							; Add a blank line
-							If $former <> "" Then
-								$lines = $lines & @CRLF
-							EndIf
-							$former = ""
-						Else
-							If $lines = "" Then
-								; Add first line
-								$lines = $line
-								$former = $line
-							Else
-								$game = StringSplit($line, " | ", 1)
-								$game = $game[1]
-								If StringInStr($lines, $game) > 0 Then
-									; Check if a match
-									$read = StringSplit($lines, @CRLF, 1)
-									For $r = 1 To $read[0]
-										$sect = $read[$r]
-										If $sect <> "" Then
-											$sect = StringSplit($sect, " | ", 1)
-											$sect = $sect[1]
-											If $sect = $game Then
-												; Duplicate found
-												$game = ""
-												ExitLoop
-											EndIf
-										EndIf
-									Next
-									$r = ""
-									If $game <> "" Then
-										; Not a match, so add
-										$lines = $lines & @CRLF & $line
-										$former = $line
-									EndIf
-								Else
-									; Appears to be unique so add
-									$lines = $lines & @CRLF & $line
-									$former = $line
-								EndIf
-							EndIf
-						EndIf
-					Next
-					;FileWrite($checklist, $lines & @CRLF)
-					FileWrite($updated, $lines & @CRLF)
-				EndIf
-				SetStateOfControls($GUI_ENABLE, "all")
-				GUICtrlSetData($Label_top, "")
-				GUICtrlSetData($Label_mid, "")
-				GUICtrlSetData($Label_bed, "")
-				;ShellExecute($checklist)
-				ShellExecute($updated)
-			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Item_lists_dlcs
 			; Lists - DLCs
@@ -5939,6 +6033,17 @@ Func MainGUI()
 						GUICtrlSetState($Item_verify_game, $GUI_ENABLE)
 						GUICtrlSetState($Item_verify_now, $GUI_DISABLE)
 						$downall = "paused"
+						$ans = MsgBox(262177 + 256, "Disable Query", "Do you want this to persist on future program starts?" & @LF _
+							& @LF & "OK = Persist for all sessions." _
+							& @LF & "CANCEL = Only this session." & @LF _
+							& @LF & "NOTE - The OK option means you can avoid repeated" _
+							& @LF & "disabling, while retaining the full list of DONE entries.", 0, $GOGcliGUI)
+						If $ans = 1 Then
+							$disable = 1
+						Else
+							$disable = 4
+						EndIf
+						IniWrite($inifle, "Download ALL", "disabled", $disable)
 					Else
 						MsgBox(262192, "Option Error", "Not currently available!", 2, $GOGcliGUI)
 					EndIf
@@ -5953,6 +6058,8 @@ Func MainGUI()
 						GUICtrlSetState($Item_verify_now, $GUI_ENABLE)
 						GUICtrlSetState($Item_downall_start, $GUI_ENABLE)
 						$downall = 1
+						$disable = 4
+						IniWrite($inifle, "Download ALL", "disabled", $disable)
 					Else
 						MsgBox(262192, "Option Error", "Not currently available!", 2, $GOGcliGUI)
 					EndIf
@@ -6150,6 +6257,131 @@ Func MainGUI()
 			EndIf
 			GUICtrlSetState($Item_database_relax, $relax)
 			IniWrite($inifle, "Exists Database", "relax", $relax)
+		Case $msg = $Item_database_prior
+			; Display The Previous
+			If FileExists($DBfile) Then
+				SetStateOfControls($GUI_DISABLE, "all")
+				GUICtrlSetImage($Pic_cover, $blackjpg)
+				GUICtrlSetData($Label_top, "Please Wait")
+				GUICtrlSetData($Label_mid, "Previous Database")
+				GUICtrlSetData($Label_bed, "Loading")
+				GUISetState(@SW_MINIMIZE, $GOGcliGUI)
+				_FileReadToArray($DBfile, $array, 1, @TAB)
+				$error = @error
+				If $error = 0 Then
+					$ans = MsgBox(262144 + 35 + 256, "Sort Query", "Sort entries by game title?" & @LF _
+						& @LF & "YES = Game Titles." _
+						& @LF & "NO = File Names." _
+						& @LF & "CANCEL = No sorting.", 0, $GOGcliGUI)
+					If $ans = 6 Then
+						SplashTextOn("", "Sorting Titles!", 200, 120, -1, -1, 33)
+						_ArraySort($array, 0, 1, 0, 1)
+						SplashOff()
+					ElseIf $ans = 7 Then
+						SplashTextOn("", "Sorting Files!", 200, 120, -1, -1, 33)
+						_ArraySort($array, 0, 1, 0, 0)
+						SplashOff()
+					EndIf
+					; Display results.
+					$header = "File Name|Game Title|Size|Checksum"
+					$res = _ArrayDisplay($array, "Database", "", 16, Default, $header, Default, $COLOR_SKYBLUE)
+				Else
+					MsgBox(262192, "Array Error", $error, 0, $GOGcliGUI)
+				EndIf
+				GUISetState(@SW_RESTORE, $GOGcliGUI)
+				SetStateOfControls($GUI_ENABLE, "all")
+				GUICtrlSetData($Label_top, "")
+				GUICtrlSetData($Label_mid, "")
+				GUICtrlSetData($Label_bed, "")
+			EndIf
+		Case $msg = $Item_database_display
+			; Display The Database
+			If FileExists($existDB) Then
+				SetStateOfControls($GUI_DISABLE, "all")
+				GUICtrlSetImage($Pic_cover, $blackjpg)
+				GUICtrlSetData($Label_top, "Please Wait")
+				GUICtrlSetData($Label_mid, "Checking Database")
+				GUICtrlSetData($Label_bed, "Converting")
+				$read = FileRead($existDB)
+				If $read <> "" Then
+					If FileExists($DBfile) Then FileDelete($DBfile)
+					$read = @CRLF & StringStripWS($read, 2)
+					$lines = ""
+					$array = StringSplit($read, @CRLF & "[", 1)
+					For $a = 2 To $array[0]
+						$entry = $array[$a]
+						$file = StringSplit($entry, "]" & @CRLF, 1)
+						$game = $file[2]
+						$file = $file[1]
+						$game = StringSplit($game, @CRLF, 1)
+						For $g = 1 To $game[0]
+							$entry = $game[$g]
+							;If StringInStr($entry, "=") < 1 Then
+								;MsgBox(262192, "Entry Error", $entry & " - " & $a & " - " & $array[0], 0, $GOGcliGUI)
+								;Exit
+							;ElseIf $game[0] > 1 Then
+								;MsgBox(262192, "Multiple Entry", $file, 0, $GOGcliGUI)
+								;Exit
+							;EndIf
+							$title = StringSplit($entry, "=", 1)
+							$size = $title[2]
+							$title = $title[1]
+							If $title <> "" Then
+								If StringInStr($size, "|") > 0 Then
+									$size = StringSplit($size, "|", 1)
+									$checksum = $size[2]
+									$size = $size[1]
+									If $checksum = "" Then $checksum = "na"
+								Else
+									$checksum = "na"
+								EndIf
+								$line = $file & @TAB & $title & @TAB & $size & @TAB & $checksum
+								If $lines = "" Then
+									$lines = $line
+								Else
+									$lines = $lines & @CRLF & $line
+								EndIf
+							Else
+								IniDelete($existDB, $file, "")
+								;MsgBox(262192, "Bad Entry", $file, 0, $GOGcliGUI)
+								;ClipPut($file)
+								;Exit
+							EndIf
+						Next
+					Next
+					If $lines <> "" Then
+						FileWriteLine($DBfile, $lines)
+						GUISetState(@SW_MINIMIZE, $GOGcliGUI)
+						_FileReadToArray($DBfile, $array, 1, @TAB)
+						$error = @error
+						If $error = 0 Then
+							$ans = MsgBox(262144 + 35 + 256, "Sort Query", "Sort entries by game title?" & @LF _
+								& @LF & "YES = Game Titles." _
+								& @LF & "NO = File Names." _
+								& @LF & "CANCEL = No sorting.", 0, $GOGcliGUI)
+							If $ans = 6 Then
+								SplashTextOn("", "Sorting Titles!", 200, 120, -1, -1, 33)
+								_ArraySort($array, 0, 1, 0, 1)
+								SplashOff()
+							ElseIf $ans = 7 Then
+								SplashTextOn("", "Sorting Files!", 200, 120, -1, -1, 33)
+								_ArraySort($array, 0, 1, 0, 0)
+								SplashOff()
+							EndIf
+							; Display results.
+							$header = "File Name|Game Title|Size|Checksum"
+							$res = _ArrayDisplay($array, "Database", "", 16, Default, $header, Default, $COLOR_SKYBLUE)
+						Else
+							MsgBox(262192, "Array Error", $error, 0, $GOGcliGUI)
+						EndIf
+						GUISetState(@SW_RESTORE, $GOGcliGUI)
+					EndIf
+				EndIf
+				SetStateOfControls($GUI_ENABLE, "all")
+				GUICtrlSetData($Label_top, "")
+				GUICtrlSetData($Label_mid, "")
+				GUICtrlSetData($Label_bed, "")
+			EndIf
 		Case $msg = $Item_database_add
 			; ADD To Database
 			If $addto = 4 Then
