@@ -1,6 +1,10 @@
 
-Finally remembered to remove the 'DOWNLOAD ALL is not yet fully supported!' from query text. Improved display options for main window and 'Game Files Selector' window, including providing a 'Keep Minimized' option on the latter window. BUGFIX for missing elements in DOWNLOAD ALL log (i.e due to an EXE file in Extras, without a checksum value). A fix also occurs at startup for incomplete entries in the 'Downall.log' file.
+GOGcli GUI v2.8 update purely involves an important BUGFIX for the DOWNLOAD ALL process.
 
-The 'LOG' option for DOWNLOAD ALL has been renamed to 'LOG Viewer', and a 'View LOG' option has been added to open it as a text file instead.
+NOTES - First off let me apologize for a flaw in my program, especially to first time users, who would likely have all been impacted. Those already using my program likely weren't impacted, as I wasn't.
 
-NOTE - Even though the 'Game Files Selector' window can now be set to minimized, you will likely see a momentary flash of it each time it would have appeared. Unfortunately I am yet to find a way around that.
+The flaw appears to be fixed, and just took renaming of one variable to do so. It seems I probably should not have used a generic name for it, as somewhere in related code I must have used that name already ... code that only runs, it seems, for first time users.
+
+However, while that was certainly a big mistake of small proportions, perhaps my worst mistake was not running everything as a new user, before releasing the update with DOWNLOAD ALL, as doing so would have allowed me to detect the flaw.
+
+In my defense, I can only say it had a been a long day with lots of coding, that involved tweaking and troubleshooting, and in the end I had run out of time and energy, to go that extra mile, and being so tired, my thinking at that point was no doubt a bit flawed too. In hindsight I probably should have waited another day, but my mind could not see an issue at that point ... oh sweet confidence ... ever the coder's nemesis.

@@ -48,7 +48,7 @@ Local $exe, $script, $status, $w, $wins
 Global $handle, $pid, $Scriptname, $update, $version
 
 $update = "Updated in January 2022."
-$version = "v2.7"
+$version = "v2.8"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -1171,14 +1171,13 @@ Func MainGUI()
 	Local $downall, $Sub_menu_downall, $Item_downall_clear, $Item_downall_create, $Item_downall_disable, $Item_downall_display
 	Local $Item_downall_info, $Item_downall_list, $Item_downall_log, $Item_downall_opts, $Item_downall_start, $Item_downall_view
 	;
-	Local $accept, $addto, $alias, $aqua, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4, $compall, $compone
-	Local $ctrl, $delay, $description, $destfld, $destfle, $dir, $disable, $display, $dll, $e, $error, $everything, $exist
-	Local $existing, $fext, $filelist, $find, $fixed, $flename, $foldpth, $former, $gambak, $get, $IDD, $idlink, $ids, $l
-	Local $language, $languages, $last, $lastgame, $latest, $loop, $mans, $method, $mpos, $nmb, $OPS, $orange, $orphans
-	Local $outline, $p, $patchfld, $pos, $prior, $proceed, $query, $red, $rep, $result, $retrieve, $savtxt, $sect, $sects
-	Local $serial, $skipped, $slugD, $tagtxt, $tested, $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
-	;
-	Local $amount, $finished, $hours, $mins, $secs, $started, $taken
+	Local $accept, $addto, $alias, $amount, $aqua, $arraytits, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4
+	Local $compall, $compone, $ctrl, $delay, $description, $destfld, $destfle, $dir, $disable, $display, $dll, $e, $error
+	Local $everything, $exist, $existing, $fext, $filelist, $find, $finished, $fixed, $flename, $foldpth, $former, $gambak
+	Local $get, $hours, $IDD, $idlink, $ids, $l, $language, $languages, $last, $lastgame, $latest, $loop, $mans, $method
+	Local $mins, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $patchfld, $pos, $prior, $proceed, $query, $red, $rep
+	Local $result, $retrieve, $savtxt, $secs, $sect, $sects, $serial, $skipped, $slugD, $started, $tagtxt, $taken, $tested
+	Local $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
 	;
 	If Not FileExists($blackjpg) Then
 		Local $hBitmap, $hGraphic, $hImage
@@ -5874,9 +5873,9 @@ Func MainGUI()
 				EndIf
 				If $allgames = 1 Then
 					If FileExists($alldown) Then
-						_FileReadToArray($alldown, $array, 1, "|")
+						_FileReadToArray($alldown, $arraytits, 1, "|")
 						If @error = 0 Then
-							$lastgame = $array[0][0]
+							$lastgame = $arraytits[0][0]
 							;MsgBox(262192, "All Games", "Count = " & $lastgame, 5, $GOGcliGUI)
 							;_GUICtrlListBox_SetCurSel($Listview_games, -1)
 							SetStateOfControls($GUI_DISABLE, "all")
@@ -5894,10 +5893,10 @@ Func MainGUI()
 							$processed = 0
 							$session = 1
 							For $a = 1 To $lastgame
-								$title = $array[$a][0]
-								$ID = $array[$a][1]
+								$title = $arraytits[$a][0]
+								$ID = $arraytits[$a][1]
 								$titleID = $title & "|" & $ID
-								$upd = $array[$a][2]
+								$upd = $arraytits[$a][2]
 								$titleIDup = $titleID & "|" & $upd
 								; Check to skip those already done. Count of processed is not increased.
 								If $upd = "DONE" Then ContinueLoop
