@@ -1,0 +1,2 @@
+
+I only provide the AU3 and EXE file her for posterity, as there is a program crashing bug in the DOWNLOAD ALL process, certainly for first time users, but maybe also beyond them.
