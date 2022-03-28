@@ -1,0 +1,3 @@
+
+(v1.1)
+Added an option to get ID(s) based on a full or partial game title.
