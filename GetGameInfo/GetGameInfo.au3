@@ -36,27 +36,46 @@ Global $defimage, $GameInfoGUI, $height, $icoI, $icoM, $icoX, $shell, $user32, $
 
 Global $boxart, $bytes, $cc, $check, $cnt, $cover, $d, $datafold, $date, $description, $developer, $dev, $devs, $dll
 Global $downone, $downtwo, $e, $entries, $entry, $f, $feature, $features, $fixed, $gameinfo, $genre, $GID, $handle
-Global $head, $high, $html, $htmltxt, $ID, $idlink, $image, $ind, $last, $line, $minimum, $mpos, $name, $names, $OS
-Global $ping, $playtype, $price, $publisher, $read, $release, $reload, $requires, $s, $size, $skip, $slug, $status
+Global $head, $high, $html, $htmltxt, $ID, $idlink, $image, $ind, $inifle, $last, $line, $minimum, $mpos, $name, $names
+Global $OS, $ping, $playtype, $price, $publisher, $read, $release, $reload, $requires, $s, $size, $skip, $slug, $status
 Global $supported, $sys, $system, $systems, $t, $tag, $tags, $tail, $text, $titfile, $title, $titles, $update, $URL
-Global $version, $versions, $wide, $xpos, $ypos
+Global $val, $version, $versions, $wide, $xpos, $ypos
 
 _Singleton("gog-game-info-timboli", 0)
 
-$cc = "AUD"
 $datafold = @ScriptDir & "\Data"
 $defimage = @ScriptDir & "\Black.jpg"
 $downone = @ScriptDir & "\Retrieved_1.txt"
 $downtwo = @ScriptDir & "\Retrieved_2.txt"
+$inifle = @ScriptDir & "\Settings.ini"
 $titfile = @ScriptDir & "\Titles.ini"
 $update = "March 2022"
-$version = "v1.1"
+$version = "v1.2"
 
 If Not FileExists($datafold) Then DirCreate($datafold)
 
-$skip = 0
-$ID = "1563735310"
-AddSomeGame()
+$cc = IniRead($inifle, "Price Query", "country_code", "")
+If $cc = "" Then
+	;$cc = "AUD"
+	$cc = "USD"
+	$val = InputBox("Country Code Query", "A 3-letter country code is required.", $cc, "", 230, 135, Default, Default)
+	If @error > 0 Or StringIsAlpha($val) = 0 Or StringLen($val) <> 3 Then
+		Exit
+	Else
+		$cc = StringUpper($val)
+	EndIf
+	IniWrite($inifle, "Price Query", "country_code", $cc)
+EndIf
+
+$skip = IniRead($inifle, "Query ID At Startup", "skip", "")
+If $skip = "" Then
+	$skip = 4
+	IniWrite($inifle, "Query ID At Startup", "skip", $skip)
+EndIf
+If $skip = 4 Then
+	$ID = "1563735310"
+	AddSomeGame()
+EndIf
 
 $width = 900
 $height = 700
@@ -178,7 +197,7 @@ While 1
 		EndIf
 	Case $msg = $Button_info
 		; Program Information
-		MsgBox(262208, "Program Information", _
+		$ans = MsgBox(262209 + 256, "Program Information", _
 			"Select a list entry to see details for that game title." & @LF & @LF & _
 			"Click the ADD button to add a new entry, via the Game" & @LF & _
 			"ID you provide, or to update the currently selected one." & @LF & _
@@ -188,9 +207,11 @@ While 1
 			"Click the cover image to see a large widescreen image" & @LF & _
 			"with your default image file viewer. NOTE - During the" & @LF & _
 			"ADD process two image files are downloaded (Box Art" & @LF & _
-			"& Widescreen)." & @LF & @LF & _
+			"& Widescreen), and stored in a 'Data' sub-folder." & @LF & @LF & _
 			"© March 2022 - created by Timboli." & @LF & _
-			"(" & $version & " update " & $update & ")", 0, $GameInfoGUI)
+			"(" & $version & " update " & $update & ")" & @LF & @LF & _
+			"OK = Open the program folder.", 0, $GameInfoGUI)
+		If $ans = 1 Then ShellExecute(@ScriptDir)
 	Case $msg = $Button_get
 		; Get Game ID via Title
 		$game = GUICtrlRead($Input_get)
@@ -464,267 +485,251 @@ EndFunc ;=> AddSomeGame
 
 Func GetGameDetail()
 	$gameinfo = $datafold & "\" & $ID & ".txt"
-	If $skip = 0 Then
-		$ping = Ping("gog.com", 4000)
-	EndIf
-	If $ping > 0 Or $skip > 0 Then
-		If $skip = 0 Then
-			SplashTextOn("", "Downloading Data!", 200, 120, Default, Default, 33)
-			$idlink = "https://api.gog.com/products/" & $ID & "?expand=downloads,description"
-			InetGet($idlink, $downone, 1, 0)
-		Else
-			SplashTextOn("", "Extracting Data!", 200, 120, Default, Default, 33)
-			Sleep(500)
-		EndIf
-		If $skip < 2 Then
-			$read = FileRead($downone)
-			If $read <> "" Then
-				; TITLE
-				$title = StringSplit($read, '"title":', 1)
-				If $title[0] > 1 Then
-					$title = $title[2]
-					$title = StringSplit($title, '",', 1)
-					$title = $title[1]
-					$title = StringReplace($title, '"', '')
-					$title = FixUnicode($title)
-					IniWrite($gameinfo, $ID, "title", $title)
-					$entry = IniRead($titfile, $title, "date", "")
-					If $entry = "" Then
-						IniWrite($titfile, $title, "title", $title)
-						IniWrite($titfile, $title, "id", $ID)
-						$date = _Now()
-						IniWrite($titfile, $title, "date", $date)
-						$reload = 1
+	$ping = Ping("gog.com", 4000)
+	If $ping > 0 Then
+		SplashTextOn("", "Downloading Data!", 200, 120, Default, Default, 33)
+		$idlink = "https://api.gog.com/products/" & $ID & "?expand=downloads,description"
+		InetGet($idlink, $downone, 1, 0)
+		$read = FileRead($downone)
+		If $read <> "" Then
+			; TITLE
+			$title = StringSplit($read, '"title":', 1)
+			If $title[0] > 1 Then
+				$title = $title[2]
+				$title = StringSplit($title, '",', 1)
+				$title = $title[1]
+				$title = StringReplace($title, '"', '')
+				$title = FixUnicode($title)
+				IniWrite($gameinfo, $ID, "title", $title)
+				$entry = IniRead($titfile, $title, "date", "")
+				If $entry = "" Then
+					IniWrite($titfile, $title, "title", $title)
+					IniWrite($titfile, $title, "id", $ID)
+					$date = _Now()
+					IniWrite($titfile, $title, "date", $date)
+					$reload = 1
+				EndIf
+				; SLUG
+				$slug = StringSplit($read, '"slug":', 1)
+				If $slug[0] > 1 Then
+					$slug = $slug[2]
+					$slug = StringSplit($slug, '",', 1)
+					$slug = $slug[1]
+					$slug = StringReplace($slug, '"', '')
+					IniWrite($gameinfo, $ID, "slug", $slug)
+					; WEB URL
+					$URL = StringSplit($read, '"product_card":', 1)
+					If $URL[0] > 1 Then
+						$URL = $URL[2]
+						$URL = StringSplit($URL, ',', 1)
+						$URL = $URL[1]
+						$URL = StringReplace($URL, "\/", "/")
+						$URL = StringReplace($URL, '"', '')
+						IniWrite($gameinfo, $ID, "url", $URL)
 					EndIf
-					; SLUG
-					$slug = StringSplit($read, '"slug":', 1)
-					If $slug[0] > 1 Then
-						$slug = $slug[2]
-						$slug = StringSplit($slug, '",', 1)
-						$slug = $slug[1]
-						$slug = StringReplace($slug, '"', '')
-						IniWrite($gameinfo, $ID, "slug", $slug)
-						; WEB URL
-						$URL = StringSplit($read, '"product_card":', 1)
-						If $URL[0] > 1 Then
-							$URL = $URL[2]
-							$URL = StringSplit($URL, ',', 1)
-							$URL = $URL[1]
-							$URL = StringReplace($URL, "\/", "/")
-							$URL = StringReplace($URL, '"', '')
-							IniWrite($gameinfo, $ID, "url", $URL)
-						EndIf
-						; TOTAL SIZE
-						$bytes = StringSplit($read, '"total_size":', 1)
-						If $bytes[0] > 1 Then
-							$bytes = $bytes[2]
-							$bytes = StringSplit($bytes, ',', 1)
-							$bytes = $bytes[1]
-							IniWrite($gameinfo, $ID, "bytes", $bytes)
-							If $bytes < 1024 Then
-								$size = $bytes & " bytes"
-							ElseIf $bytes < 1048576 Then
-								$size = Round($bytes / 1024, 0) & " Kb"
-							ElseIf $bytes < 1073741824 Then
-								$size = Round($bytes / 1048576, 0) & " Mb"
-							ElseIf $bytes < 1099511627776 Then
-								$size = Round($bytes / 1073741824, 2) & " Gb"
-							Else
-								$size = Round($bytes / 1099511627776, 3) & " Tb"
-							EndIf
-							IniWrite($gameinfo, $ID, "size", $size)
-						EndIf
-						; DESCRIPTION
-						$fixed = FixAllText($read)
-						$head = StringSplit($fixed, '"description":', 1)
-						$tail = $head[$head[0]]
-						$tail = StringSplit($tail, "description = ", 1)
-						$tail = $tail[$tail[0]]
-						$description = StringStripWS($tail, 3)
-						$description = StringReplace($description, @CRLF, "|")
-						$description = StringReplace($description, "full = |", "full = ")
-						IniWrite($gameinfo, $ID, "description", $description)
-						; RELEASE DATE
-						$release = StringSplit($read, '"release_date":"', 1)
-						If $release[0] > 1 Then
-							$release = $release[2]
-							$release = StringSplit($release, '",', 1)
-							$release = $release[1]
-							$release = StringLeft($release, 10)
-							IniWrite($gameinfo, $ID, "released", $release)
+					; TOTAL SIZE
+					$bytes = StringSplit($read, '"total_size":', 1)
+					If $bytes[0] > 1 Then
+						$bytes = $bytes[2]
+						$bytes = StringSplit($bytes, ',', 1)
+						$bytes = $bytes[1]
+						IniWrite($gameinfo, $ID, "bytes", $bytes)
+						If $bytes < 1024 Then
+							$size = $bytes & " bytes"
+						ElseIf $bytes < 1048576 Then
+							$size = Round($bytes / 1024, 0) & " Kb"
+						ElseIf $bytes < 1073741824 Then
+							$size = Round($bytes / 1048576, 0) & " Mb"
+						ElseIf $bytes < 1099511627776 Then
+							$size = Round($bytes / 1073741824, 2) & " Gb"
 						Else
-							$release = ""
+							$size = Round($bytes / 1099511627776, 3) & " Tb"
 						EndIf
-						; Also need to extract OS types and versions
-						; "content_system_compatibility":{"windows":true,"osx":true,"linux":false},"
-						; OS VERSIONS
-						$OS = ""
-						$systems = StringSplit($read, '"content_system_compatibility":{', 1)
-						If $systems[0] > 1 Then
-							$systems = $systems[2]
-							$systems = StringSplit($systems, '},', 1)
-							$systems = $systems[1]
-							$systems = StringSplit($systems, ',', 1)
-							For $s = 1 To $systems[0]
-								$system = $systems[$s]
-								$system = StringSplit($system, ":", 1)
-								$status = $system[2]
-								If $status = "true" Then
-									$system = $system[1]
-									$system = StringReplace($system, '"', '')
-									If $OS = "" Then
-										$OS = $system
-									Else
-										$OS = $OS & ", " & $system
-									EndIf
-								EndIf
-							Next
-							IniWrite($gameinfo, $ID, "os", $OS)
-						EndIf
+						IniWrite($gameinfo, $ID, "size", $size)
+					EndIf
+					; DESCRIPTION
+					$fixed = FixAllText($read)
+					$head = StringSplit($fixed, '"description":', 1)
+					$tail = $head[$head[0]]
+					$tail = StringSplit($tail, "description = ", 1)
+					$tail = $tail[$tail[0]]
+					$description = StringStripWS($tail, 3)
+					$description = StringReplace($description, @CRLF, "|")
+					$description = StringReplace($description, "full = |", "full = ")
+					IniWrite($gameinfo, $ID, "description", $description)
+					; RELEASE DATE
+					$release = StringSplit($read, '"release_date":"', 1)
+					If $release[0] > 1 Then
+						$release = $release[2]
+						$release = StringSplit($release, '",', 1)
+						$release = $release[1]
+						$release = StringLeft($release, 10)
+						IniWrite($gameinfo, $ID, "released", $release)
 					Else
-						MsgBox(262192, "Data Error", "Slug not found!", 0)
+						$release = ""
+					EndIf
+					; Also need to extract OS types and versions
+					; "content_system_compatibility":{"windows":true,"osx":true,"linux":false},"
+					; OS VERSIONS
+					$OS = ""
+					$systems = StringSplit($read, '"content_system_compatibility":{', 1)
+					If $systems[0] > 1 Then
+						$systems = $systems[2]
+						$systems = StringSplit($systems, '},', 1)
+						$systems = $systems[1]
+						$systems = StringSplit($systems, ',', 1)
+						For $s = 1 To $systems[0]
+							$system = $systems[$s]
+							$system = StringSplit($system, ":", 1)
+							$status = $system[2]
+							If $status = "true" Then
+								$system = $system[1]
+								$system = StringReplace($system, '"', '')
+								If $OS = "" Then
+									$OS = $system
+								Else
+									$OS = $OS & ", " & $system
+								EndIf
+							EndIf
+						Next
+						IniWrite($gameinfo, $ID, "os", $OS)
 					EndIf
 				Else
-					MsgBox(262192, "Data Error", "Title not found!", 0)
+					MsgBox(262192, "Data Error", "Slug not found!", 0, $GameInfoGUI)
 				EndIf
 			Else
-				MsgBox(262192, "Download Error", "No data retrieved!", 0)
+				MsgBox(262192, "Data Error", "Title not found!", 0, $GameInfoGUI)
 			EndIf
-			If $skip > 0 Then Exit
+		Else
+			MsgBox(262192, "Download Error", "No data retrieved!", 0, $GameInfoGUI)
 		EndIf
-		If $skip < 3 Then
-			If $skip = 0 Then
-				SplashTextOn("", "Downloading More!", 200, 120, Default, Default, 33)
-				$idlink = "https://api.gog.com/v2/games/" & $ID & "?locale=en-US"
-				InetGet($idlink, $downtwo, 1, 0)
-			EndIf
-			$read = FileRead($downtwo)
-			If $read <> "" Then
-				; PUBLISHER
-				$publisher = StringSplit($read, '"publisher":', 1)
+		SplashTextOn("", "Downloading More!", 200, 120, Default, Default, 33)
+		$idlink = "https://api.gog.com/v2/games/" & $ID & "?locale=en-US"
+		InetGet($idlink, $downtwo, 1, 0)
+		$read = FileRead($downtwo)
+		If $read <> "" Then
+			; PUBLISHER
+			$publisher = StringSplit($read, '"publisher":', 1)
+			If $publisher[0] > 1 Then
+				$publisher = $publisher[2]
+				$publisher = StringSplit($publisher, '},', 1)
+				$publisher = $publisher[1]
+				$publisher = StringSplit($publisher, '"name":', 1)
 				If $publisher[0] > 1 Then
 					$publisher = $publisher[2]
-					$publisher = StringSplit($publisher, '},', 1)
-					$publisher = $publisher[1]
-					$publisher = StringSplit($publisher, '"name":', 1)
-					If $publisher[0] > 1 Then
-						$publisher = $publisher[2]
-						$publisher = StringReplace($publisher, "\/", "/")
-						;MsgBox(262192, "$publisher", $publisher, 0)
-						$publisher = StringReplace($publisher, '"', '')
-						IniWrite($gameinfo, $ID, "publisher", $publisher)
-						; DEVELOPERS
-						$devs = StringSplit($read, '"developers":', 1)
-						If $devs[0] > 1 Then
-							$devs = $devs[2]
-							$devs = StringSplit($devs, '],', 1)
-							$devs = $devs[1]
-							$developer = ""
-							$devs = StringSplit($devs, '"name":"', 1)
-							For $d = 2 To $devs[0]
-								$dev = $devs[$d]
-								$dev = StringSplit($dev, '"', 1)
-								$dev = $dev[1]
-								If $dev <> "" Then
-									If $developer = "" Then
-										$developer = $dev
+					$publisher = StringReplace($publisher, "\/", "/")
+					;MsgBox(262192, "$publisher", $publisher, 0, $GameInfoGUI)
+					$publisher = StringReplace($publisher, '"', '')
+					IniWrite($gameinfo, $ID, "publisher", $publisher)
+					; DEVELOPERS
+					$devs = StringSplit($read, '"developers":', 1)
+					If $devs[0] > 1 Then
+						$devs = $devs[2]
+						$devs = StringSplit($devs, '],', 1)
+						$devs = $devs[1]
+						$developer = ""
+						$devs = StringSplit($devs, '"name":"', 1)
+						For $d = 2 To $devs[0]
+							$dev = $devs[$d]
+							$dev = StringSplit($dev, '"', 1)
+							$dev = $dev[1]
+							If $dev <> "" Then
+								If $developer = "" Then
+									$developer = $dev
+								Else
+									$developer = $developer & ", " & $dev
+								EndIf
+							EndIf
+						Next
+						If $developer = "" Then
+							MsgBox(262192, "Data Error", "Developer not found!", 0, $GameInfoGUI)
+						Else
+							IniWrite($gameinfo, $ID, "developer", $developer)
+						EndIf
+						; GENRE
+						$tags = StringSplit($read, '"tags":', 1)
+						If $tags[0] > 1 Then
+							$tags = $tags[2]
+							$tags = StringSplit($tags, '],', 1)
+							$tags = $tags[1]
+							$genre = ""
+							$tags = StringSplit($tags, '"name":"', 1)
+							For $t = 2 To $tags[0]
+								$tag = $tags[$t]
+								$tag = StringSplit($tag, '"', 1)
+								$tag = $tag[1]
+								If $tag <> "" Then
+									If $genre = "" Then
+										$genre = $tag
 									Else
-										$developer = $developer & ", " & $dev
+										$genre = $genre & ", " & $tag
 									EndIf
 								EndIf
 							Next
-							If $developer = "" Then
-								MsgBox(262192, "Data Error", "Developer not found!", 0)
+							If $genre = "" Then
+								MsgBox(262192, "Data Error", "Genre not found!", 0, $GameInfoGUI)
 							Else
-								IniWrite($gameinfo, $ID, "developer", $developer)
+								IniWrite($gameinfo, $ID, "genre", $genre)
 							EndIf
-							; GENRE
-							$tags = StringSplit($read, '"tags":', 1)
-							If $tags[0] > 1 Then
-								$tags = $tags[2]
-								$tags = StringSplit($tags, '],', 1)
-								$tags = $tags[1]
-								$genre = ""
-								$tags = StringSplit($tags, '"name":"', 1)
-								For $t = 2 To $tags[0]
-									$tag = $tags[$t]
-									$tag = StringSplit($tag, '"', 1)
-									$tag = $tag[1]
-									If $tag <> "" Then
-										If $genre = "" Then
-											$genre = $tag
-										Else
-											$genre = $genre & ", " & $tag
+							; PLAY TYPE
+							$features = StringSplit($read, '"features":', 1)
+							If $features[0] > 1 Then
+								$features = $features[2]
+								$features = StringSplit($features, '],', 1)
+								$features = $features[1]
+								$playtype = ""
+								$features = StringSplit($features, '"name":"', 1)
+								For $f = 2 To $features[0]
+									$feature = $features[$f]
+									$feature = StringSplit($feature, '"', 1)
+									$feature = $feature[1]
+									If $feature <> "" Then
+										If $feature = "Co-op" Or $feature = "Single-player" Or $feature = "Multi-player" Then
+											If $playtype = "" Then
+												$playtype = $feature
+											Else
+												$playtype = $playtype & ", " & $feature
+											EndIf
 										EndIf
 									EndIf
 								Next
-								If $genre = "" Then
-									MsgBox(262192, "Data Error", "Genre not found!", 0)
+								If $playtype = "" Then
+									MsgBox(262192, "Data Error", "Play Types not found!", 0, $GameInfoGUI)
 								Else
-									IniWrite($gameinfo, $ID, "genre", $genre)
+									IniWrite($gameinfo, $ID, "playtype", $playtype)
 								EndIf
-								; PLAY TYPE
-								$features = StringSplit($read, '"features":', 1)
-								If $features[0] > 1 Then
-									$features = $features[2]
-									$features = StringSplit($features, '],', 1)
-									$features = $features[1]
-									$playtype = ""
-									$features = StringSplit($features, '"name":"', 1)
-									For $f = 2 To $features[0]
-										$feature = $features[$f]
-										$feature = StringSplit($feature, '"', 1)
-										$feature = $feature[1]
-										If $feature <> "" Then
-											If $feature = "Co-op" Or $feature = "Single-player" Or $feature = "Multi-player" Then
-												If $playtype = "" Then
-													$playtype = $feature
-												Else
-													$playtype = $playtype & ", " & $feature
-												EndIf
-											EndIf
-										EndIf
-									Next
-									If $playtype = "" Then
-										MsgBox(262192, "Data Error", "Play Types not found!", 0)
-									Else
-										IniWrite($gameinfo, $ID, "playtype", $playtype)
-									EndIf
-									If $release = "" Then
-										; RELEASE DATE
-										$release = StringSplit($read, '"gogReleaseDate":"', 1)
-										If $release[0] > 1 Then
-											$release = $release[2]
-											$release = StringSplit($release, '",', 1)
-											$release = $release[1]
-											If $release = "" Then
-												MsgBox(262192, "Data Error", "Release Date not found!", 0)
-											Else
-												$release = StringLeft($release, 10)
-												IniWrite($gameinfo, $ID, "released", $release)
-											EndIf
+								If $release = "" Then
+									; RELEASE DATE
+									$release = StringSplit($read, '"gogReleaseDate":"', 1)
+									If $release[0] > 1 Then
+										$release = $release[2]
+										$release = StringSplit($release, '",', 1)
+										$release = $release[1]
+										If $release = "" Then
+											MsgBox(262192, "Data Error", "Release Date not found!", 0, $GameInfoGUI)
 										Else
-											MsgBox(262192, "Data Error", "Release Date issue!", 0)
+											$release = StringLeft($release, 10)
+											IniWrite($gameinfo, $ID, "released", $release)
 										EndIf
+									Else
+										MsgBox(262192, "Data Error", "Release Date issue!", 0, $GameInfoGUI)
 									EndIf
-									; BOX ART
-									; "boxArtImage": https:\\images.gog-statics.com\c3cf6ba751c3150b95f7bddb5f85a52b47aa3254fac1c81aa62a20c7b1200b6c.jpg
-									$boxart = StringSplit($read, '"boxArtImage":', 1)
-									If $boxart[0] > 1 Then
-										$boxart = $boxart[2]
-										$boxart = StringSplit($boxart, '"}', 1)
-										$boxart = $boxart[1]
-										$boxart = StringSplit($boxart, '"', 1)
-										$boxart = $boxart[$boxart[0]]
-										$boxart = StringReplace($boxart, "\/", "/")
-										IniWrite($gameinfo, $ID, "boxart", $boxart)
-										If $skip = 0 Then
-											$cover = $datafold & "\" & $ID & "_cover.jpg"
-											If Not FileExists($cover) Then
-												SplashTextOn("", "Downloading Cover!", 200, 120, Default, Default, 33)
-												InetGet($boxart, $cover, 1, 0)
-											EndIf
-										EndIf
+								EndIf
+								; BOX ART
+								; "boxArtImage": https:\\images.gog-statics.com\c3cf6ba751c3150b95f7bddb5f85a52b47aa3254fac1c81aa62a20c7b1200b6c.jpg
+								$boxart = StringSplit($read, '"boxArtImage":', 1)
+								If $boxart[0] > 1 Then
+									$boxart = $boxart[2]
+									$boxart = StringSplit($boxart, '"}', 1)
+									$boxart = $boxart[1]
+									$boxart = StringSplit($boxart, '"', 1)
+									$boxart = $boxart[$boxart[0]]
+									$boxart = StringReplace($boxart, "\/", "/")
+									IniWrite($gameinfo, $ID, "boxart", $boxart)
+									$cover = $datafold & "\" & $ID & "_cover.jpg"
+									If Not FileExists($cover) Then
+										SplashTextOn("", "Downloading Cover!", 200, 120, Default, Default, 33)
+										InetGet($boxart, $cover, 1, 0)
 									EndIf
 									; COVER IMAGE
 									; "image": https:\\images.gog-statics.com\8f99f51394923901e3ba92ac42cef5fe863d3aa33ef0e1ac84610a9ad7dd8f96.png
@@ -738,12 +743,10 @@ Func GetGameDetail()
 										$image = StringReplace($image, "\/", "/")
 										$image = StringReplace($image, "_{formatter}.png", ".png")
 										IniWrite($gameinfo, $ID, "cover", $image)
-										If $skip = 0 Then
-											$cover = $datafold & "\" & $ID & "_image.png"
-											If Not FileExists($cover) Then
-												SplashTextOn("", "Downloading Image!", 200, 120, Default, Default, 33)
-												InetGet($image, $cover, 1, 0)
-											EndIf
+										$cover = $datafold & "\" & $ID & "_image.png"
+										If Not FileExists($cover) Then
+											SplashTextOn("", "Downloading Image!", 200, 120, Default, Default, 33)
+											InetGet($image, $cover, 1, 0)
 										EndIf
 									EndIf
 									; SYSTEM & REQS
@@ -837,70 +840,70 @@ Func GetGameDetail()
 									EndIf
 									; Title is also available, but likely not needed.
 								Else
-									MsgBox(262192, "Data Error", "Play Types issue!", 0)
+									MsgBox(262192, "Data Error", "Play Types issue!", 0, $GameInfoGUI)
 								EndIf
 							Else
-								MsgBox(262192, "Data Error", "Genre issue!", 0)
+								MsgBox(262192, "Data Error", "Genre issue!", 0, $GameInfoGUI)
 							EndIf
 						Else
-							MsgBox(262192, "Data Error", "Developer issue!", 0)
+							MsgBox(262192, "Data Error", "Developer issue!", 0, $GameInfoGUI)
 						EndIf
 					Else
-						MsgBox(262192, "Data Error", "Publisher issue!", 0)
+						MsgBox(262192, "Data Error", "Publisher issue!", 0, $GameInfoGUI)
 					EndIf
 				Else
-					MsgBox(262192, "Data Error", "Publisher not found!", 0)
+					MsgBox(262192, "Data Error", "Publisher not found!", 0, $GameInfoGUI)
 				EndIf
 			Else
-				MsgBox(262192, "Download Error", "No data retrieved!", 0)
+				MsgBox(262192, "Download Error", "No data retrieved!", 0, $GameInfoGUI)
 			EndIf
-			If $skip = 0 Then
-				SplashTextOn("", "Getting Price!", 200, 120, Default, Default, 33)
-				$idlink = "https://api.gog.com/products/" & $ID & "/prices?countryCode=" & StringLeft($cc, 2)
-				$html = _INetGetSource($idlink)
-				If $html = "" Then
-					$price = ""
-				Else
-					$htmltxt = @ScriptDir & "\Html.txt"
-					FileWrite($htmltxt, $html)
-					$check = StringSplit($html, '{"code":"' & $cc & '"}', 1)
-					If $check[0] = 2 Then
+			SplashTextOn("", "Getting Price!", 200, 120, Default, Default, 33)
+			$idlink = "https://api.gog.com/products/" & $ID & "/prices?countryCode=" & StringLeft($cc, 2)
+			$html = _INetGetSource($idlink)
+			If $html = "" Then
+				$price = ""
+			Else
+				$htmltxt = @ScriptDir & "\Html.txt"
+				FileWrite($htmltxt, $html)
+				$check = StringSplit($html, '{"code":"' & $cc & '"}', 1)
+				If $check[0] = 2 Then
+					$check = $check[2]
+					$check = StringSplit($check, '"finalPrice":"', 1)
+					If $check[0] > 1 Then
 						$check = $check[2]
-						$check = StringSplit($check, '"finalPrice":"', 1)
-						If $check[0] > 1 Then
-							$check = $check[2]
-							$check = StringSplit($check, ' ' & $cc & '"', 1)
-							$check = $check[1]
-							$check = $check / 100
-							If StringInStr($check, ".") > 0 Then
-								$check = StringSplit($check, '.', 1)
-								If StringLen($check[2]) = 1 Then
-									$check = $check[1] & "." & $check[2] & "0"
-								Else
-									$check = $check[1] & "." & $check[2]
-								EndIf
+						$check = StringSplit($check, ' ' & $cc & '"', 1)
+						$check = $check[1]
+						$check = $check / 100
+						If StringInStr($check, ".") > 0 Then
+							$check = StringSplit($check, '.', 1)
+							If StringLen($check[2]) = 1 Then
+								$check = $check[1] & "." & $check[2] & "0"
 							Else
-								$check = $check & ".00"
+								$check = $check[1] & "." & $check[2]
 							EndIf
-							;If $altcur = 1 Then
-							;	$price = $csign & $check
-							;Else
-								$price = "$" & $check
-							;EndIf
 						Else
-							$price = ""
+							$check = $check & ".00"
 						EndIf
+						;If $altcur = 1 Then
+						;	$price = $csign & $check
+						;Else
+							$price = "$" & $check
+						;EndIf
 					Else
 						$price = ""
 					EndIf
+				Else
+					$price = ""
 				EndIf
-				IniWrite($gameinfo, $ID, "price", $price)
-				Sleep(250)
 			EndIf
+			IniWrite($gameinfo, $ID, "price", $price)
+			Sleep(250)
+		Else
+			MsgBox(262192, "Download Error 2", "No data retrieved!", 0, $GameInfoGUI)
 		EndIf
 		SplashOff()
 	Else
-		MsgBox(262192, "Web Error", "No connection detected!", 0)
+		MsgBox(262192, "Web Error", "No connection detected!", 0, $GameInfoGUI)
 	EndIf
 EndFunc ;=> GetGameDetail
 
@@ -957,7 +960,7 @@ Func FixText($text)
 EndFunc ;=> FixText
 
 Func FixUnicode($text)
-	Local $chunk, $hextxt, $split, $string, $val
+	Local $chunk, $hextxt, $split, $string
 	$split = StringSplit($text, "\u", 1)
 	$text = $split[1]
 	For $s = 2 To $split[0]
@@ -994,22 +997,6 @@ Func LoadTheList()
 				GUICtrlSetData($Group_games, "Game Titles  (" & $cnt & ")")
 			EndIf
 		EndIf
-	EndIf
-	If $ID <> "" Then
-	;~ GUICtrlSetData($Input_gametit, $title)
-	;~ GUICtrlSetData($Input_weburl, $URL)
-	;~ ;
-	;~ GUICtrlSetData($Input_price, $price)
-	;~ ;
-	;~ GUICtrlSetData($Input_series, $series)
-	;~ ;
-	;~ GUICtrlSetData($Input_genre, $genre)
-	;~ GUICtrlSetData($Input_size, $filesize)
-	;~ GUICtrlSetData($Input_date, $released)
-	;~ GUICtrlSetData($Input_devs, $company)
-	;~ GUICtrlSetData($Input_OS, $OS)
-	;~ GUICtrlSetData($Edit_sumry, $summary)
-	;~ GUICtrlSetData($Edit_reqs, $requires)
 	EndIf
 EndFunc ;=> LoadTheList
 
