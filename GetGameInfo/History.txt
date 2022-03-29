@@ -1,3 +1,6 @@
 
 (v1.1)
 Added an option to get ID(s) based on a full or partial game title.
+
+(v1.2)
+Added a query to set the required Country Code, plus a hidden setting to prevent the ID query at startup (see the 'Settings.ini' file entry ... skip=1 prevents). Option via the 'Program Information' dialog, to open the program folder. Other minor improvements.
