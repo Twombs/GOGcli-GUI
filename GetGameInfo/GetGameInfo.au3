@@ -37,9 +37,11 @@ Global $defimage, $GameInfoGUI, $height, $icoI, $icoM, $icoX, $shell, $user32, $
 Global $boxart, $bytes, $cc, $check, $cnt, $cover, $d, $datafold, $date, $description, $developer, $dev, $devs, $dll
 Global $downone, $downtwo, $e, $entries, $entry, $f, $feature, $features, $fixed, $gameinfo, $genre, $GID, $handle
 Global $head, $high, $html, $htmltxt, $ID, $idlink, $image, $ind, $inifle, $last, $line, $minimum, $mpos, $name, $names
-Global $OS, $ping, $playtype, $price, $publisher, $read, $release, $reload, $requires, $s, $size, $skip, $slug, $status
-Global $supported, $sys, $system, $systems, $t, $tag, $tags, $tail, $text, $titfile, $title, $titles, $update, $URL
-Global $val, $version, $versions, $wide, $xpos, $ypos
+Global $OS, $ping, $playtype, $price, $publisher, $read, $release, $reload, $requires, $s, $skip, $slug, $status, $supported
+Global $sys, $system, $systems, $t, $tag, $tags, $tail, $text, $titfile, $title, $titles, $total, $update, $updated, $URL
+Global $val, $versions, $wide, $xpos, $ypos
+
+Global $create, $downurl, $extra, $extras, $file, $i, $info, $installer, $installers, $lang, $manifest, $size, $type, $version
 
 _Singleton("gog-game-info-timboli", 0)
 
@@ -48,9 +50,10 @@ $defimage = @ScriptDir & "\Black.jpg"
 $downone = @ScriptDir & "\Retrieved_1.txt"
 $downtwo = @ScriptDir & "\Retrieved_2.txt"
 $inifle = @ScriptDir & "\Settings.ini"
+$manifest = @ScriptDir & "\Manifest.txt"
 $titfile = @ScriptDir & "\Titles.ini"
-$update = "March 2022"
-$version = "v1.2"
+$updated = "April 2022"
+$update = "v1.3"
 
 If Not FileExists($datafold) Then DirCreate($datafold)
 
@@ -75,6 +78,12 @@ EndIf
 If $skip = 4 Then
 	$ID = "1563735310"
 	AddSomeGame()
+ EndIf
+
+$create = IniRead($inifle, "Manifest Entry", "create", "")
+If $create = "" Then
+	$create = 4
+	IniWrite($inifle, "Manifest Entry", "create", $create)
 EndIf
 
 $width = 900
@@ -87,7 +96,7 @@ $Input_gametit = GuiCtrlCreateInput("", 20, 30, 400, 20)
 ;
 $Button_add = GuiCtrlCreateButton("ADD", 440, 15, 50, 45)
 GUICtrlSetFont($Button_add, 9, 600)
-GUICtrlSetTip($Button_add, "ADD a game!")
+GUICtrlSetTip($Button_add, "ADD a game or Update selected!")
 ;
 $Group_weburl = GuiCtrlCreateGroup("Web Page URL", 10, 70, 420, 50)
 $Input_weburl = GuiCtrlCreateInput("", 20, 90, 360, 20)
@@ -179,7 +188,76 @@ While 1
 	Case $msg = $Button_runurl
 		; Run the Web Page URL in default browser
 		$URL = GUICtrlRead($Input_weburl)
-		If $URL <> "" Then
+		If $URL = "" Then
+			$URL = InputBox("Get Game ID", "Please enter the URL for a GOG game page." & @LF _
+				& @LF & "NOTE - This requires a web connection.", $ID, "", 400, 160, Default, Default, 0, $GameInfoGUI)
+			If @error = 0 And StringLeft($URL, 20) = "https://www.gog.com/" Then
+				$ping = Ping("gog.com", 4000)
+				If $ping > 0 Then
+					SplashTextOn("", "Downloading Page!", 200, 120, Default, Default, 33)
+					$html = _INetGetSource($URL, True)
+					If @error = 0 Then
+						If $html = "" Then
+							MsgBox(262192, "Download Error", "The web page html wasn't returned!", 3, $GameInfoGUI)
+						EndIf
+					Else
+						MsgBox(262192, "Page Error", "The web page doesn't appear to exist!", 3, $GameInfoGUI)
+						$html = ""
+					EndIf
+					If $html <> "" Then
+						$ID = StringSplit($html, ' card-product="', 1)
+						If $ID[0] = 2 Then
+							$ID = $ID[2]
+							$ID = StringSplit($ID, '"', 1)
+							$ID = $ID[1]
+						Else
+							$ID = StringSplit($html, '"ProductCardCtrl"', 1)
+							If $ID[0] = 2 Then
+								$ID = $ID[2]
+								$ID = StringSplit($ID, 'gog-product="', 1)
+								If $ID[0] > 1 Then
+									$ID = $ID[2]
+									$ID = StringSplit($ID, '"', 1)
+									$ID = $ID[1]
+								Else
+									$ID = ""
+								EndIf
+							Else
+								$ID = ""
+							EndIf
+						EndIf
+						If $ID = "" Then
+							_FileCreate($htmltxt)
+							FileWrite($htmltxt, $html)
+							MsgBox(262192, "ID Error", "The Game ID could not be detected!" & @LF & "Possibly web page doesn't exist.", 5, $GameInfoGUI)
+						Else
+							$reload = ""
+							GetGameDetail()
+							If $ID <> "" Then
+								If $title <> "" Then
+									If $reload = 1 Then
+										GUICtrlSetData($List_games, "")
+										LoadTheList()
+										$ind = _GUICtrlListBox_FindString($List_games, $title, True)
+										_GUICtrlListBox_SetCurSel($List_games, $ind)
+									Else
+										$ind = _GUICtrlListBox_GetCurSel($List_games)
+									EndIf
+									If $ind > -1 Then
+										_GUICtrlListBox_ClickItem($List_games, $ind, "left", False, 1, 0)
+									EndIf
+								EndIf
+							Else
+								MsgBox(262192, "Extraction Error", "Game detail not discovered!", 0, $GameInfoGUI)
+							EndIf
+						EndIf
+					EndIf
+					SplashOff()
+				Else
+					MsgBox(262192, "Web Error", "No connection detected!", 0, $GameInfoGUI)
+				EndIf
+			EndIf
+		Else
 			ShellExecute($URL)
 		EndIf
 	Case $msg = $Button_move
@@ -204,12 +282,14 @@ While 1
 			"NOTE - A web connection is required for ADD to work." & @LF & @LF & _
 			"Alternatively, you can search for a Game ID using a full" & @LF & _
 			"or partial title, and then choose one returned entry." & @LF & @LF & _
+			"Another method, is to provide the URL for a GOG game" & @LF & _
+			"page. The URL field must be empty first, then click GO." & @LF & @LF & _
 			"Click the cover image to see a large widescreen image" & @LF & _
 			"with your default image file viewer. NOTE - During the" & @LF & _
 			"ADD process two image files are downloaded (Box Art" & @LF & _
 			"& Widescreen), and stored in a 'Data' sub-folder." & @LF & @LF & _
 			"© March 2022 - created by Timboli." & @LF & _
-			"(" & $version & " update " & $update & ")" & @LF & @LF & _
+			"(" & $update & " update " & $updated & ")" & @LF & @LF & _
 			"OK = Open the program folder.", 0, $GameInfoGUI)
 		If $ans = 1 Then ShellExecute(@ScriptDir)
 	Case $msg = $Button_get
@@ -226,6 +306,7 @@ While 1
 					$last = ""
 				Else
 					$htmltxt = @ScriptDir & "\Html.txt"
+					_FileCreate($htmltxt)
 					FileWrite($htmltxt, $html)
 					;
 					$last = $game
@@ -305,37 +386,43 @@ While 1
 		EndIf
 	Case $msg = $List_games
 		; List of games with details
+		$ID = ""
+		$URL = ""
+		$price = ""
+		$total = ""
+		$description = ""
+		$release = ""
+		$publisher = ""
+		$developer = ""
+		$entry = ""
+		$genre = ""
+		$playtype = ""
+		$requires = ""
+		$supported = ""
+		$image = ""
+		$cover = ""
 		$title = GUICtrlRead($List_games)
 		If $title <> "" Then
-			GUICtrlSetData($Input_gametit, $title)
 			$ID = IniRead($titfile, $title, "id", "")
-			GUICtrlSetData($Input_ID, $ID)
 			If $ID <> "" Then
 				;IniRead($titfile, $title, "date", $date)
 				$gameinfo = $datafold & "\" & $ID & ".txt"
 				If FileExists($gameinfo) Then
 					;IniRead($gameinfo, $ID, "slug", $slug)
 					$URL = IniRead($gameinfo, $ID, "url", "")
-					GUICtrlSetData($Input_weburl, $URL)
 					$price = IniRead($gameinfo, $ID, "price", "")
-					GUICtrlSetData($Input_price, $price)
 					;IniRead($gameinfo, $ID, "bytes", $bytes)
-					$size = IniRead($gameinfo, $ID, "size", "")
-					GUICtrlSetData($Input_size, $size)
+					$total = IniRead($gameinfo, $ID, "size", "")
 					$description = IniRead($gameinfo, $ID, "description", "")
 					$description = StringReplace($description, "|", @CRLF)
-					GUICtrlSetData($Edit_sumry, $description)
 					$release = IniRead($gameinfo, $ID, "released", "")
-					GUICtrlSetData($Input_date, $release)
 					;IniRead($gameinfo, $ID, "os", $OS)
 					;GUICtrlSetData($Input_OS, $OS)
 					$publisher = IniRead($gameinfo, $ID, "publisher", "")
 					$developer = IniRead($gameinfo, $ID, "developer", "")
-					GUICtrlSetData($Input_devs, $publisher & " / " & $developer)
+					$entry = $publisher & " / " & $developer
 					$genre = IniRead($gameinfo, $ID, "genre", "")
-					GUICtrlSetData($Input_genre, $genre)
 					$playtype = IniRead($gameinfo, $ID, "playtype", "")
-					GUICtrlSetData($Input_type, $playtype)
 					$requires = ""
 					$sys = "windows"
 					While 1
@@ -358,18 +445,33 @@ While 1
 						EndIf
 					WEnd
 					$requires = StringReplace($requires, "|", @CRLF)
-					GUICtrlSetData($Edit_reqs, $requires)
 					$supported = IniRead($gameinfo, $ID, "supported", "")
-					GUICtrlSetData($Input_OS, $supported)
 					;IniRead($gameinfo, $ID, "boxart", $boxart)
 					$image = IniRead($gameinfo, $ID, "cover", "")
-					GUICtrlSetData($Input_imgurl, $image)
 					$cover = $datafold & "\" & $ID & "_cover.jpg"
-					If FileExists($cover) Then
-						GUICtrlSetImage($Pic_cover, $cover)
+					If Not FileExists($cover) Then
+						$cover = ""
 					EndIf
 				EndIf
 			EndIf
+		EndIf
+		GUICtrlSetData($Input_gametit, $title)
+		GUICtrlSetData($Input_ID, $ID)
+		GUICtrlSetData($Input_weburl, $URL)
+		GUICtrlSetData($Input_price, $price)
+		GUICtrlSetData($Input_size, $total)
+		GUICtrlSetData($Edit_sumry, $description)
+		GUICtrlSetData($Input_date, $release)
+		GUICtrlSetData($Input_devs, $entry)
+		GUICtrlSetData($Input_genre, $genre)
+		GUICtrlSetData($Input_type, $playtype)
+		GUICtrlSetData($Edit_reqs, $requires)
+		GUICtrlSetData($Input_OS, $supported)
+		GUICtrlSetData($Input_imgurl, $image)
+		If $cover = "" Then
+			GUICtrlSetImage($Pic_cover, $defimage)
+		Else
+			GUICtrlSetImage($Pic_cover, $cover)
 		EndIf
 	Case $msg = $Pic_cover
 		; Click to see full image.
@@ -473,8 +575,8 @@ EndFunc ;=> IDResultsGUI
 
 
 Func AddSomeGame()
-	$ID = InputBox("Get Game Info", "Enter a GOG Game ID (to ADD it), or" & @LF & "just click CANCEL to see the Viewer." & @LF _
-		& @LF & "NOTE - ADD requires a web connection.", $ID, "", 230, 170, Default, Default, 0, $GameInfoGUI)
+	$ID = InputBox("Get Game Info", "Enter a GOG Game ID (to ADD it), or" & @LF & "to Update the selected (shown) entry," & @LF & "or just click CANCEL to see the Viewer." & @LF _
+		& @LF & "NOTE - ADD requires a web connection.", $ID, "", 230, 180, Default, Default, 0, $GameInfoGUI)
 	If @error > 0 Or StringIsDigit($ID) = 0 Then
 		$ID = ""
 		Return
@@ -490,6 +592,7 @@ Func GetGameDetail()
 		SplashTextOn("", "Downloading Data!", 200, 120, Default, Default, 33)
 		$idlink = "https://api.gog.com/products/" & $ID & "?expand=downloads,description"
 		InetGet($idlink, $downone, 1, 0)
+		$installers = ""
 		$read = FileRead($downone)
 		If $read <> "" Then
 			; TITLE
@@ -535,17 +638,32 @@ Func GetGameDetail()
 						$bytes = $bytes[1]
 						IniWrite($gameinfo, $ID, "bytes", $bytes)
 						If $bytes < 1024 Then
-							$size = $bytes & " bytes"
+							$total = $bytes & " bytes"
 						ElseIf $bytes < 1048576 Then
-							$size = Round($bytes / 1024, 0) & " Kb"
+							$total = Round($bytes / 1024, 0) & " Kb"
 						ElseIf $bytes < 1073741824 Then
-							$size = Round($bytes / 1048576, 0) & " Mb"
+							$total = Round($bytes / 1048576, 0) & " Mb"
 						ElseIf $bytes < 1099511627776 Then
-							$size = Round($bytes / 1073741824, 2) & " Gb"
+							$total = Round($bytes / 1073741824, 2) & " Gb"
 						Else
-							$size = Round($bytes / 1099511627776, 3) & " Tb"
+							$total = Round($bytes / 1099511627776, 3) & " Tb"
 						EndIf
-						IniWrite($gameinfo, $ID, "size", $size)
+						IniWrite($gameinfo, $ID, "size", $total)
+					EndIf
+					If $create = 1 Then
+						$installers = StringSplit($read, '"downloads":', 1)
+						If $installers[0] > 1 Then
+							$installers = $installers[2]
+							$installers = StringSplit($installers, '"description":', 1)
+							$installers = $installers[1]
+							$extras = StringSplit($installers, '"bonus_content":', 1)
+							If $extras[0] > 1 Then
+								$installers = $extras[1]
+								$extras = $extras[2]
+							Else
+								$extras = ""
+							EndIf
+						EndIf
 					EndIf
 					; DESCRIPTION
 					$fixed = FixAllText($read)
@@ -864,6 +982,7 @@ Func GetGameDetail()
 				$price = ""
 			Else
 				$htmltxt = @ScriptDir & "\Html.txt"
+				_FileCreate($htmltxt)
 				FileWrite($htmltxt, $html)
 				$check = StringSplit($html, '{"code":"' & $cc & '"}', 1)
 				If $check[0] = 2 Then
@@ -900,6 +1019,190 @@ Func GetGameDetail()
 			Sleep(250)
 		Else
 			MsgBox(262192, "Download Error 2", "No data retrieved!", 0, $GameInfoGUI)
+		EndIf
+		If $create = 1 Then
+			SplashTextOn("", "Creating Manifest!", 200, 120, Default, Default, 33)
+			Sleep(500)
+			_FileCreate($manifest)
+			$entry = '{' & @LF & '  "Games": [' & @LF & '    {' & @LF & '      "Id": ' & $ID & ',' & @LF & '      "Title": "' & $title & '",'
+			$entry = $entry & @LF & '      "CdKey": "",' & @LF & '      "Tags": [],' & @LF & '      "Installers": ['
+			If $installers <> "" Then
+				$downurl = ""
+				$installers = StringSplit($installers, '"downlink":', 1)
+				For $i = 1 To $installers[0]
+					$installer = $installers[$i]
+					If StringLeft($installer, 7) = '"https:' Then
+						$downurl = StringSplit($installer, '"', 1)
+						$downurl = $downurl[2]
+						$downurl = StringReplace($downurl, '\/', '/')
+						$downurl = StringSplit($downurl, '/', 1)
+						$downurl = $downurl[$downurl[0]]
+						$downurl = '/downloads/' & $slug & "/" & $downurl
+					Else
+						$lang = StringSplit($installer, '"language_full":', 1)
+						If $lang[0] > 1 Then
+							$lang = $lang[2]
+							$lang = StringSplit($lang, ',', 1)
+							$lang = $lang[1]
+							$lang = StringReplace($lang, '"', '')
+							$lang = StringLower($lang)
+						Else
+							$lang = ''
+						EndIf
+						$OS = StringSplit($installer, 'os":', 1)
+						If $OS[0] > 1 Then
+							$OS = $OS[2]
+							$OS = StringSplit($OS, ',', 1)
+							$OS = $OS[1]
+						Else
+							$OS = ''
+						EndIf
+						$name = StringSplit($installer, '"name":', 1)
+						If $name[0] > 1 Then
+							$name = $name[2]
+							$name = StringSplit($name, ',', 1)
+							$name = $name[1]
+						Else
+							$name = ''
+						EndIf
+						;
+						$file = ''
+						;
+						$version = StringSplit($installer, '"version":', 1)
+						If $version[0] > 1 Then
+							$version = $version[2]
+							$version = StringSplit($version, ',', 1)
+							$version = $version[1]
+						Else
+							$version = ''
+						EndIf
+						$bytes = StringSplit($installer, '"size":', 1)
+						If $bytes[0] > 1 Then
+							$bytes = $bytes[2]
+							$bytes = StringSplit($bytes, ',', 1)
+							$bytes = $bytes[1]
+							If $bytes < 1024 Then
+								$size = $bytes & " bytes"
+							ElseIf $bytes < 1048576 Then
+								$size = Round($bytes / 1024, 0) & " KB"
+							ElseIf $bytes < 1073741824 Then
+								$size = Round($bytes / 1048576, 0) & " MB"
+							ElseIf $bytes < 1099511627776 Then
+								$size = Round($bytes / 1073741824, 2) & " GB"
+							Else
+								$size = Round($bytes / 1099511627776, 3) & " TB"
+							EndIf
+						Else
+							$bytes = ''
+							$size = ''
+						EndIf
+					EndIf
+					If $downurl <> "" Then
+						If $i > 2 Then
+							$entry = $entry & @LF & '        },'
+						EndIf
+						$entry = $entry & @LF & '        {'
+						$entry = $entry & @LF & '          "Languages": [' & @LF & '            "' & $lang & '"'
+						$entry = $entry & @LF & '          ],' & @LF & '          "Os": ' & $OS & ','
+						$entry = $entry & @LF & '          "Url": "' & $downurl & '",'
+						$entry = $entry & @LF & '          "Title": ' & $name & ','
+						$entry = $entry & @LF & '          "Name": "' & $file & '",'
+						$entry = $entry & @LF & '          "Version": ' & $version & ','
+						$entry = $entry & @LF & '          "Date": "",'
+						$entry = $entry & @LF & '          "EstimatedSize": "' & $size & '",'
+						$entry = $entry & @LF & '          "VerifiedSize": ' & $bytes & ','
+						$entry = $entry & @LF & '          "Checksum": ""'
+						$downurl = ""
+					EndIf
+				Next
+				$entry = $entry & @LF & '        }' & @LF & '      ],'
+				; Extras go here
+				If $extras <> "" Then
+					$entry = $entry & @LF & '      "Extras": ['
+					$downurl = ""
+					$extras = StringSplit($extras, '"downlink":', 1)
+					For $i = 1 To $extras[0]
+						$extra = $extras[$i]
+						If StringLeft($extra, 7) = '"https:' Then
+							$downurl = StringSplit($extra, '"', 1)
+							$downurl = $downurl[2]
+							$downurl = StringReplace($downurl, '\/', '/')
+							$downurl = StringSplit($downurl, '/', 1)
+							$downurl = $downurl[$downurl[0]]
+							$downurl = '/downloads/' & $slug & "/" & $downurl
+						Else
+							$name = StringSplit($extra, '"name":', 1)
+							If $name[0] > 1 Then
+								$name = $name[2]
+								$name = StringSplit($name, ',', 1)
+								$name = $name[1]
+							Else
+								$name = ''
+							EndIf
+							;
+							$file = ''
+							;
+							$type = StringSplit($extra, '"type":', 1)
+							If $type[0] > 1 Then
+								$type = $type[2]
+								$type = StringSplit($type, ',', 1)
+								$type = $type[1]
+							Else
+								$type = ''
+							EndIf
+							$info = StringSplit($extra, '"count":', 1)
+							If $info[0] > 1 Then
+								$info = $info[2]
+								$info = StringSplit($info, ',', 1)
+								$info = $info[1]
+							Else
+								$info = ''
+							EndIf
+							$bytes = StringSplit($extra, '"size":', 1)
+							If $bytes[0] > 1 Then
+								$bytes = $bytes[2]
+								$bytes = StringSplit($bytes, ',', 1)
+								$bytes = $bytes[1]
+								If $bytes < 1024 Then
+									$size = $bytes & " bytes"
+								ElseIf $bytes < 1048576 Then
+									$size = Round($bytes / 1024, 0) & " KB"
+								ElseIf $bytes < 1073741824 Then
+									$size = Round($bytes / 1048576, 0) & " MB"
+								ElseIf $bytes < 1099511627776 Then
+									$size = Round($bytes / 1073741824, 2) & " GB"
+								Else
+									$size = Round($bytes / 1099511627776, 3) & " TB"
+								EndIf
+							Else
+								$bytes = ''
+								$size = ''
+							EndIf
+						EndIf
+						If $downurl <> "" Then
+							;If $i > 2 Then
+							;	$entry = $entry & @LF & '        },'
+							;EndIf
+							$entry = $entry & @LF & '        {'
+							$entry = $entry & @LF & '          "Url": "' & $downurl & '",'
+							$entry = $entry & @LF & '          "Title": ' & $name & ','
+							$entry = $entry & @LF & '          "Name": "' & $file & '",'
+							$entry = $entry & @LF & '          "Type": ' & $type & ','
+							$entry = $entry & @LF & '          "Info": ' & $info & ','
+							$entry = $entry & @LF & '          "EstimatedSize": "' & $size & '",'
+							$entry = $entry & @LF & '          "VerifiedSize": ' & $bytes & ','
+							$entry = $entry & @LF & '          "Checksum": ""'
+							$downurl = ""
+						EndIf
+					Next
+					$entry = $entry & @LF & '        }' & @LF & '      ],'
+				EndIf
+				$entry = $entry & @LF & '    }' & @LF & '  ],'
+				; Other details go here (Total Size estimated and verified, summary of all languages etc)
+			EndIf
+			;
+			$entry = $entry & @LF & '  }' & @LF & '}' & @LF
+			FileWrite($manifest, $entry)
 		EndIf
 		SplashOff()
 	Else
@@ -993,7 +1296,7 @@ Func LoadTheList()
 				EndIf
 			Next
 			If $cnt > 0 Then
-				GUICtrlSetData($List_games, $titles)
+				GUICtrlSetData($List_games, "||" & $titles)
 				GUICtrlSetData($Group_games, "Game Titles  (" & $cnt & ")")
 			EndIf
 		EndIf
