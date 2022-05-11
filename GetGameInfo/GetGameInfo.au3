@@ -9,8 +9,9 @@
 #ce ----------------------------------------------------------------------------
 
 ;FUNCTIONS
-; IDResultsGUI()
-; AddSomeGame(), FixAllText($text), FixText($text), FixUnicode($text), GetGameDetail(), RemoveHtml($text)
+; IDResultsGUI(), SettingsGUI()
+; AddSomeGame(), FixAllText($text), FixText($text), FixUnicode($text), GetExtras($section), GetGameDetail(), GetOthers($section)
+; RemoveHtml($text)
 
 #include <Constants.au3>
 #include <GUIConstantsEx.au3>
@@ -32,30 +33,36 @@ Global $Input_date, $Input_devs, $Input_gametit, $Input_genre, $Input_get, $Inpu
 Global $Input_price, $Input_size, $Input_type, $Input_weburl
 Global $List_games, $Pic_cover
 
-Global $defimage, $GameInfoGUI, $height, $icoI, $icoM, $icoX, $shell, $user32, $width
+Global $defimage, $GameInfoGUI, $height, $icoF, $icoI, $icoM, $icoX, $OptionsGUI, $pth, $shell, $user32, $width
 
 Global $boxart, $bytes, $cc, $check, $cnt, $cover, $d, $datafold, $date, $description, $developer, $dev, $devs, $dll
-Global $downone, $downtwo, $e, $entries, $entry, $f, $feature, $features, $fixed, $gameinfo, $genre, $GID, $handle
-Global $head, $high, $html, $htmltxt, $ID, $idlink, $image, $ind, $inifle, $last, $line, $minimum, $mpos, $name, $names
-Global $OS, $ping, $playtype, $price, $publisher, $read, $release, $reload, $requires, $s, $skip, $slug, $status, $supported
-Global $sys, $system, $systems, $t, $tag, $tags, $tail, $text, $titfile, $title, $titles, $total, $update, $updated, $URL
-Global $val, $versions, $wide, $xpos, $ypos
+Global $downone, $downtwo, $e, $editor, $entries, $entry, $f, $feature, $features, $fixed, $gameinfo, $genre, $GID
+Global $handle, $head, $hide, $high, $html, $htmltxt, $ID, $idlink, $image, $ind, $inifle, $last, $lastlang, $lastOS
+Global $line, $manfold, $minimize, $minimum, $mpos, $name, $names, $OS, $ping, $playtype, $price, $publisher, $read
+Global $release, $reload, $requires, $s, $show, $skip, $slug, $status, $supported, $sys, $system, $systems, $t, $tag
+Global $tags, $tail, $text, $titfile, $title, $titles, $total, $update, $updated, $URL, $val, $versions, $wide, $xpos
+Global $ypos
 
-Global $create, $downurl, $extra, $extras, $file, $i, $info, $installer, $installers, $lang, $manifest, $size, $type, $version
+Global $a, $array, $checksum, $cookie, $create, $downurl, $extra, $extras, $file, $fileinfo, $gogcli, $i, $info
+Global $installer, $installers, $lang, $manifest, $mass, $params, $section, $size, $type, $version
 
 _Singleton("gog-game-info-timboli", 0)
 
+$cookie = @ScriptDir & "\Cookie.txt"
 $datafold = @ScriptDir & "\Data"
 $defimage = @ScriptDir & "\Black.jpg"
 $downone = @ScriptDir & "\Retrieved_1.txt"
 $downtwo = @ScriptDir & "\Retrieved_2.txt"
-$inifle = @ScriptDir & "\Settings.ini"
-$manifest = @ScriptDir & "\Manifest.txt"
+$fileinfo = @ScriptDir & "\Fileinfo.txt"
+$gogcli = @ScriptDir & "\gogcli.exe"
+$inifle = @ScriptDir & "\Options.ini"
+$manfold = @ScriptDir & "\Manifests"
 $titfile = @ScriptDir & "\Titles.ini"
-$updated = "April 2022"
-$update = "v1.3"
+$updated = "May 2022"
+$update = "v1.8"
 
 If Not FileExists($datafold) Then DirCreate($datafold)
+If Not FileExists($manfold) Then DirCreate($manfold)
 
 $cc = IniRead($inifle, "Price Query", "country_code", "")
 If $cc = "" Then
@@ -84,6 +91,30 @@ $create = IniRead($inifle, "Manifest Entry", "create", "")
 If $create = "" Then
 	$create = 4
 	IniWrite($inifle, "Manifest Entry", "create", $create)
+EndIf
+
+$show = IniRead($inifle, "Manifest Entry", "show", "")
+If $show = "" Then
+	$show = 4
+	IniWrite($inifle, "Manifest Entry", "show", $show)
+EndIf
+
+$minimize = IniRead($inifle, "Main Window On ADD", "minimize", "")
+If $minimize = "" Then
+	$minimize = 4
+	IniWrite($inifle, "Main Window On ADD", "minimize", $minimize)
+EndIf
+
+$hide = IniRead($inifle, "Console Window On ADD", "hide", "")
+If $hide = "" Then
+	$hide = 4
+	IniWrite($inifle, "Console Window On ADD", "hide", $hide)
+EndIf
+
+$editor = IniRead($inifle, "Editor", "path", "")
+If $editor = "" Then
+	$editor = "none"
+	IniWrite($inifle, "Editor", "path", $editor)
 EndIf
 
 $width = 900
@@ -165,6 +196,7 @@ GUICtrlSetTip($Pic_cover, "Click to see full image!")
 ; OS_SETTINGS
 $shell = @SystemDir & "\shell32.dll"
 $user32 = @SystemDir & "\user32.dll"
+$icoF = -85
 $icoI = -5
 $icoM = -138
 $icoX = -28
@@ -275,7 +307,8 @@ While 1
 		EndIf
 	Case $msg = $Button_info
 		; Program Information
-		$ans = MsgBox(262209 + 256, "Program Information", _
+		;$ans = MsgBox(262209 + 256, "Program Information", _
+		$ans = MsgBox(262211 + 512, "Program Information", _
 			"Select a list entry to see details for that game title." & @LF & @LF & _
 			"Click the ADD button to add a new entry, via the Game" & @LF & _
 			"ID you provide, or to update the currently selected one." & @LF & _
@@ -288,10 +321,22 @@ While 1
 			"with your default image file viewer. NOTE - During the" & @LF & _
 			"ADD process two image files are downloaded (Box Art" & @LF & _
 			"& Widescreen), and stored in a 'Data' sub-folder." & @LF & @LF & _
+			"In 'Program Settings' you can elect to have a manifest" & @LF & _
+			"file created, suitable for using with gogcli.exe and my" & @LF & _
+			"GOGcli GUI program. NOTE - To get the required file" & @LF & _
+			"names and checksums etc, gogcli.exe and Cookie.txt" & @LF & _
+			"files need to be in the 'GetGameInfo' program folder." & @LF & @LF & _
 			"© March 2022 - created by Timboli." & @LF & _
 			"(" & $update & " update " & $updated & ")" & @LF & @LF & _
-			"OK = Open the program folder.", 0, $GameInfoGUI)
-		If $ans = 1 Then ShellExecute(@ScriptDir)
+			"YES = Program Settings." & @LF & _
+			"NO = Open the program folder.", 0, $GameInfoGUI)
+		;	"OK = Open the program folder.", 0, $GameInfoGUI)
+		;If $ans = 1 Then ShellExecute(@ScriptDir)
+		If $ans = 6 Then
+			SettingsGUI()
+		ElseIf $ans = 7 Then
+			ShellExecute(@ScriptDir)
+		EndIf
 	Case $msg = $Button_get
 		; Get Game ID via Title
 		$game = GUICtrlRead($Input_get)
@@ -368,6 +413,14 @@ While 1
 		; ADD a game
 		$reload = ""
 		$ID = GUICtrlRead($Input_ID)
+		GUICtrlSetState($Button_add, $GUI_DISABLE)
+		GUICtrlSetState($Button_runurl, $GUI_DISABLE)
+		GUICtrlSetState($Button_move, $GUI_DISABLE)
+		GUICtrlSetState($List_games, $GUI_DISABLE)
+		GUICtrlSetState($Button_get, $GUI_DISABLE)
+		GUICtrlSetState($Button_info, $GUI_DISABLE)
+		GUICtrlSetState($Button_exit, $GUI_DISABLE)
+		If $minimize = 1 Then GUISetState(@SW_MINIMIZE, $GameInfoGUI)
 		AddSomeGame()
 		If $ID <> "" Then
 			If $title <> "" Then
@@ -384,6 +437,14 @@ While 1
 				EndIf
 			EndIf
 		EndIf
+		If $minimize = 1 And $show = 4 Then GUISetState(@SW_RESTORE, $GameInfoGUI)
+		GUICtrlSetState($Button_add, $GUI_ENABLE)
+		GUICtrlSetState($Button_runurl, $GUI_ENABLE)
+		GUICtrlSetState($Button_move, $GUI_ENABLE)
+		GUICtrlSetState($List_games, $GUI_ENABLE)
+		GUICtrlSetState($Button_get, $GUI_ENABLE)
+		GUICtrlSetState($Button_info, $GUI_ENABLE)
+		GUICtrlSetState($Button_exit, $GUI_ENABLE)
 	Case $msg = $List_games
 		; List of games with details
 		$ID = ""
@@ -573,6 +634,142 @@ Func IDResultsGUI()
 	WEnd
 EndFunc ;=> IDResultsGUI
 
+Func SettingsGUI()
+	Local $Button_close, $Button_path, $Checkbox_hide, $Checkbox_man, $Checkbox_min, $Checkbox_show, $Checkbox_skip
+	Local $Input_code, $Input_path, $Label_code, $Label_path
+	;
+	$OptionsGUI = GuiCreate("Program Settings", 360, 125, Default, Default, $WS_OVERLAPPED + $WS_CAPTION + $WS_SYSMENU _
+														+ $WS_VISIBLE + $WS_CLIPSIBLINGS, $WS_EX_TOPMOST, $GameInfoGUI)
+	; CONTROLS
+	$Label_code = GUICtrlCreateLabel("Country Code", 10, 10, 80, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_code, $COLOR_GREEN)
+	GUICtrlSetColor($Label_code, $COLOR_YELLOW)
+	$Input_code = GUICtrlCreateInput("", 90, 10, 35, 20)
+	GUICtrlSetTip($Input_code, "Country Code to use!")
+	;
+	$Checkbox_skip = GUICtrlCreateCheckbox("Skip the ID query at startup", 135, 10, 150, 20)
+	GUICtrlSetTip($Checkbox_skip, "Skip the ID query at startup!")
+	;
+	$Checkbox_man = GUICtrlCreateCheckbox("Create a manifest file", 10, 40, 120, 20)
+	GUICtrlSetTip($Checkbox_man, "Create a manifest file!")
+	$Checkbox_show = GUICtrlCreateCheckbox("Show the manifest file after", 135, 40, 145, 20)
+	GUICtrlSetTip($Checkbox_show, "Show the manifest file after creation!")
+	;
+	$Button_close = GuiCtrlCreateButton("EXIT", 300, 10, 50, 50, $BS_ICON)
+	GUICtrlSetTip($Button_close, "Quit, Close or Exit window!")
+	;
+	$Checkbox_min = GUICtrlCreateCheckbox("Minimize program window on ADD", 10, 68, 180, 20)
+	GUICtrlSetTip($Checkbox_min, "Minimize the program window on ADD!")
+	;
+	$Checkbox_hide = GUICtrlCreateCheckbox("Hide DOS console windows", 200, 68, 160, 20, $BS_AUTO3STATE)
+	GUICtrlSetTip($Checkbox_hide, "Hide each DOS console window during ADD!")
+	;
+	$Label_path = GUICtrlCreateLabel("Editor", 10, 95, 45, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_path, $COLOR_BLUE)
+	GUICtrlSetColor($Label_path, $COLOR_YELLOW)
+	$Input_path = GUICtrlCreateInput("", 55, 95, 270, 20)
+	GUICtrlSetTip($Input_path, "Path of Editor to use!")
+	$Button_path = GuiCtrlCreateButton("B", 330, 95, 20, 20, $BS_ICON)
+	GUICtrlSetTip($Button_path, "Browse to set the Editor path!")
+	;
+	; SETTINGS
+	GUICtrlSetImage($Button_close, $shell, $icoX, 1)
+	GUICtrlSetImage($Button_path, $shell, $icoF, 0)
+	;
+	GUICtrlSetData($Input_code, $cc)
+	;
+	GUICtrlSetState($Checkbox_skip, $skip)
+	;
+	GUICtrlSetState($Checkbox_man, $create)
+	GUICtrlSetState($Checkbox_show, $show)
+	If $create = 4 Then
+		GUICtrlSetState($Checkbox_show, $GUI_DISABLE)
+	EndIf
+	;
+	GUICtrlSetState($Checkbox_min, $minimize)
+	GUICtrlSetState($Checkbox_hide, $hide)
+	;
+	If $editor <> "none" Then
+		GUICtrlSetData($Input_path, $editor)
+	EndIf
+
+	GuiSetState()
+	While 1
+		$msg = GuiGetMsg()
+		Select
+		Case $msg = $GUI_EVENT_CLOSE Or $msg = $Button_close
+			; Quit, Close or Exit window
+			$cc = GUICtrlRead($Input_code)
+			If $cc <> "" Then
+				IniWrite($inifle, "Price Query", "country_code", $cc)
+			EndIf
+			GUIDelete($OptionsGUI)
+			ExitLoop
+		Case $msg = $Button_path
+			; Browse to set the Editor path
+			If $editor = "none" Then
+				$pth = ""
+			Else
+				$pth = $editor
+			EndIf
+			$pth = FileOpenDialog("Browse to set the Editor path.", @ProgramFilesDir, "Program files (*.exe)", 3, $pth, $OptionsGUI)
+			If @error = 0 And StringMid($pth, 2, 2) = ":\" Then
+				$editor = $pth
+				IniWrite($inifle, "Editor", "path", $editor)
+				GUICtrlSetData($Input_path, $editor)
+			EndIf
+		Case $msg = $Checkbox_skip
+			; Skip the ID query at startup
+			If GUICtrlRead($Checkbox_skip) = $GUI_CHECKED Then
+				$skip = 1
+			Else
+				$skip = 4
+			EndIf
+			IniWrite($inifle, "Query ID At Startup", "skip", $skip)
+		Case $msg = $Checkbox_show
+			; Show the manifest file after creation
+			If GUICtrlRead($Checkbox_show) = $GUI_CHECKED Then
+				$show = 1
+			Else
+				$show = 4
+			EndIf
+			IniWrite($inifle, "Manifest Entry", "show", $show)
+		Case $msg = $Checkbox_min
+			; Minimize the program window on ADD
+			If GUICtrlRead($Checkbox_min) = $GUI_CHECKED Then
+				$minimize = 1
+			Else
+				$minimize = 4
+			EndIf
+			IniWrite($inifle, "Main Window On ADD", "minimize", $minimize)
+		Case $msg = $Checkbox_man
+			; Create a manifest file
+			If GUICtrlRead($Checkbox_man) = $GUI_CHECKED Then
+				$create = 1
+				GUICtrlSetState($Checkbox_show, $GUI_ENABLE)
+			Else
+				$create = 4
+				GUICtrlSetState($Checkbox_show, $GUI_DISABLE)
+			EndIf
+			IniWrite($inifle, "Manifest Entry", "create", $create)
+		Case $msg = $Checkbox_hide
+			; Hide each DOS console window during ADD
+			;If GUICtrlRead($Checkbox_hide) = $GUI_CHECKED Then
+			;	$hide = 1
+			;ElseIf GUICtrlRead($Checkbox_hide) = $GUI_UNCHECKED Then
+			;	$hide = 4
+			;Else
+			;	$hide = 2
+			;EndIf
+			$hide = GUICtrlRead($Checkbox_hide)
+			IniWrite($inifle, "Console Window On ADD", "hide", $hide)
+			;MsgBox(262192, "Checkbox State", $hide, 0, $OptionsGUI)
+		Case Else
+			;;;
+		EndSelect
+	WEnd
+EndFunc ;=> SettingsGUI
+
 
 Func AddSomeGame()
 	$ID = InputBox("Get Game Info", "Enter a GOG Game ID (to ADD it), or" & @LF & "to Update the selected (shown) entry," & @LF & "or just click CANCEL to see the Viewer." & @LF _
@@ -585,7 +782,75 @@ Func AddSomeGame()
 	EndIf
 EndFunc ;=> AddSomeGame
 
+Func FixAllText($text)
+	$text = FixText($text)
+	$text = RemoveHtml($text)
+	Return $text
+EndFunc ;=> FixAllText
+
+Func FixText($text)
+	$text = StringReplace($text, '{"id":', 'ID = ')
+	$text = StringReplace($text, '\u010desk\u00fd', 'czech')
+	$text = StringReplace($text, 'T\u00fcrkce', 'turkish')
+	$text = StringReplace($text, 'portugu\u00eas', 'portuguese')
+	$text = StringReplace($text, '\u4e2d\u6587(\u7b80\u4f53)', 'chinese')
+	$text = StringReplace($text, '\u65e5\u672c\u8a9e', 'japanese')
+	$text = StringReplace($text, '\ud55c\uad6d\uc5b4', 'korean')
+	$text = FixUnicode($text)
+	$text = StringReplace($text, '{"lead":', '')
+	$text = StringReplace($text, '[],"', '"' & @CRLF)
+	$text = StringReplace($text, '[],', @CRLF)
+	$text = StringReplace($text, '":"', ' = ')
+	$text = StringReplace($text, '":{"', @CRLF)
+	$text = StringReplace($text, '":', ' = ')
+	$text = StringReplace($text, '","', @CRLF)
+	$text = StringReplace($text, '"},"', @CRLF)
+	$text = StringReplace($text, '},"', @CRLF)
+	$text = StringReplace($text, ',"', @CRLF)
+	$text = StringReplace($text, '\/\/', '//')
+	$text = StringReplace($text, '\/', '/')
+	$text = StringReplace($text, '"}}', '')
+	$text = StringReplace($text, '"}', '')
+	$text = StringReplace($text, '\n', @CRLF)
+	$text = StringReplace($text, ']},{"', @CRLF)
+	$text = StringReplace($text, ',{"', @CRLF)
+	$text = StringReplace($text, ' = [{"', @CRLF)
+	$text = StringReplace($text, ' = [', @CRLF)
+	$text = StringReplace($text, ']}]', '')
+	$text = StringReplace($text, '}}]', '')
+	$text = StringReplace($text, ']},', @CRLF)
+	$text = StringReplace($text, ' = "', ' = ')
+	$text = StringReplace($text, ',ID = ', @CRLF & 'ID = ')
+	$text = StringReplace($text, 'youtube]', 'youtube')
+	$text = StringReplace($text, 'null}', 'null')
+	$text = StringReplace($text, '-amp;', '&')
+	$text = StringReplace($text, '-quot;', '"')
+	$text = StringReplace($text, '%2C', ',')
+	$text = StringReplace($text, '   /', '')
+	$text = StringReplace($text, ']' & @CRLF, @CRLF)
+	$text = StringReplace($text, "<br><br>", @CRLF)
+	$text = StringReplace($text, "<br>", @CRLF)
+	;$text = StringStripWS($text, 4)
+	Return $text
+EndFunc ;=> FixText
+
+Func FixUnicode($text)
+	Local $chunk, $hextxt, $split, $string
+	$split = StringSplit($text, "\u", 1)
+	$text = $split[1]
+	For $s = 2 To $split[0]
+		$chunk = $split[$s]
+		$string = StringMid($chunk, 5)
+		$hextxt = StringLeft($chunk, 4)
+		$val = Dec($hextxt)
+		$val = ChrW($val)
+		$text = $text & $val & $string
+	Next
+	Return $text
+EndFunc ;=> FixUnicode
+
 Func GetGameDetail()
+	Local $flag
 	$gameinfo = $datafold & "\" & $ID & ".txt"
 	$ping = Ping("gog.com", 4000)
 	If $ping > 0 Then
@@ -711,6 +976,18 @@ Func GetGameDetail()
 							EndIf
 						Next
 						IniWrite($gameinfo, $ID, "os", $OS)
+					EndIf
+					; GAME TYPE
+					;"game_type":"dlc",
+					$type = StringSplit($read, '"game_type":', 1)
+					If $type[0] > 1 Then
+						$type = $type[2]
+						$type = StringSplit($type, ',', 1)
+						$type = $type[1]
+						$type = StringReplace($type, '"', '')
+						IniWrite($gameinfo, $ID, "type", $type)
+					Else
+						$type = ""
 					EndIf
 				Else
 					MsgBox(262192, "Data Error", "Slug not found!", 0, $GameInfoGUI)
@@ -1023,105 +1300,117 @@ Func GetGameDetail()
 		If $create = 1 Then
 			SplashTextOn("", "Creating Manifest!", 200, 120, Default, Default, 33)
 			Sleep(500)
+			$manifest = $manfold & "\" & $slug & "_manifest.txt"
 			_FileCreate($manifest)
 			$entry = '{' & @LF & '  "Games": [' & @LF & '    {' & @LF & '      "Id": ' & $ID & ',' & @LF & '      "Title": "' & $title & '",'
-			$entry = $entry & @LF & '      "CdKey": "",' & @LF & '      "Tags": [],' & @LF & '      "Installers": ['
+			$entry = $entry & @LF & '      "Type": "' & $type & '",' & @LF & '      "CdKey": "",' & @LF & '      "Tags": [],' & @LF & '      "Installers": ['
 			If $installers <> "" Then
 				$downurl = ""
+				$lastlang = ""
+				$lastOS = ""
+				If $hide = 1 Then
+					$flag = @SW_HIDE
+				ElseIf $hide = 2 Then
+					$flag = @SW_MINIMIZE
+				Else
+					$flag = @SW_SHOW
+				EndIf
+				;Local $details = @ScriptDir & "\Details.txt"
+				;FileChangeDir(@ScriptDir)
+				;$params = "-c Cookie.txt gog-api game-details -i " & $ID
+				;RunWait(@ComSpec & ' /c gogcli.exe ' & $params & ' >"' & $details & '"', @ScriptDir, $flag)
+				;Sleep(1000)
 				$installers = StringSplit($installers, '"downlink":', 1)
-				For $i = 1 To $installers[0]
+				For $i = 2 To $installers[0]
 					$installer = $installers[$i]
 					If StringLeft($installer, 7) = '"https:' Then
+						; $i = 2, 3, etc
 						$downurl = StringSplit($installer, '"', 1)
 						$downurl = $downurl[2]
 						$downurl = StringReplace($downurl, '\/', '/')
 						$downurl = StringSplit($downurl, '/', 1)
 						$downurl = $downurl[$downurl[0]]
 						$downurl = '/downloads/' & $slug & "/" & $downurl
-					Else
-						$lang = StringSplit($installer, '"language_full":', 1)
-						If $lang[0] > 1 Then
-							$lang = $lang[2]
-							$lang = StringSplit($lang, ',', 1)
-							$lang = $lang[1]
-							$lang = StringReplace($lang, '"', '')
-							$lang = StringLower($lang)
-						Else
-							$lang = ''
-						EndIf
-						$OS = StringSplit($installer, 'os":', 1)
-						If $OS[0] > 1 Then
-							$OS = $OS[2]
-							$OS = StringSplit($OS, ',', 1)
-							$OS = $OS[1]
-						Else
-							$OS = ''
-						EndIf
-						$name = StringSplit($installer, '"name":', 1)
-						If $name[0] > 1 Then
-							$name = $name[2]
-							$name = StringSplit($name, ',', 1)
-							$name = $name[1]
-						Else
-							$name = ''
-						EndIf
 						;
-						$file = ''
+						$installer = $installers[$i - 1]
+						GetOthers($installer)
 						;
-						$version = StringSplit($installer, '"version":', 1)
-						If $version[0] > 1 Then
-							$version = $version[2]
-							$version = StringSplit($version, ',', 1)
-							$version = $version[1]
-						Else
-							$version = ''
-						EndIf
-						$bytes = StringSplit($installer, '"size":', 1)
-						If $bytes[0] > 1 Then
-							$bytes = $bytes[2]
-							$bytes = StringSplit($bytes, ',', 1)
-							$bytes = $bytes[1]
-							If $bytes < 1024 Then
-								$size = $bytes & " bytes"
-							ElseIf $bytes < 1048576 Then
-								$size = Round($bytes / 1024, 0) & " KB"
-							ElseIf $bytes < 1073741824 Then
-								$size = Round($bytes / 1048576, 0) & " MB"
-							ElseIf $bytes < 1099511627776 Then
-								$size = Round($bytes / 1073741824, 2) & " GB"
-							Else
-								$size = Round($bytes / 1099511627776, 3) & " TB"
+						$file = ""
+						$checksum = ""
+						$mass = ""
+						If $downurl <> "" Then
+							If FileExists($gogcli) Then
+								If FileExists($cookie) Then
+									FileDelete($fileinfo)
+									FileChangeDir(@ScriptDir)
+									$params = "-c Cookie.txt gog-api url-path-info -p " & $downurl
+									RunWait(@ComSpec & ' /c gogcli.exe ' & $params & ' >"' & $fileinfo & '"', @ScriptDir, $flag)
+									Sleep(1000)
+									If FileExists($fileinfo) Then
+										_FileReadToArray($fileinfo, $array)
+										For $a = 1 To $array[0]
+											$line = $array[$a]
+											If StringInStr($line, "File Name:") > 0 Then
+												$file = StringSplit($line, "File Name:", 1)
+												$file = $file[2]
+												$file = StringStripWS($file, 3)
+											ElseIf StringInStr($line, "Checksum:") > 0 Then
+												$checksum = StringSplit($line, "Checksum:", 1)
+												$checksum = $checksum[2]
+												$checksum = StringStripWS($checksum, 3)
+											ElseIf StringInStr($line, "Size:") > 0 Then
+												$mass = StringSplit($line, "Size:", 1)
+												$mass = $mass[2]
+												$mass = StringStripWS($mass, 3)
+												If $mass <> "" Then
+													If $mass <> $bytes And $bytes = "" Then
+														$bytes = $mass
+													EndIf
+												EndIf
+											EndIf
+										Next
+									EndIf
+								EndIf
 							EndIf
-						Else
-							$bytes = ''
-							$size = ''
+							If $i > 2 Then
+								$entry = $entry & @LF & '        },'
+							EndIf
+							If $name = "" Then
+								If $file <> "" Then
+									If StringRight($file, 4) = ".bin" Then
+										$name = StringTrimRight($file, 4)
+										$name = StringSplit($name, "-", 1)
+										$name = $name[$name[0]]
+										$name = $name + 1
+										$name = '"' & $title & ' - Part ' & $name & '"'
+									EndIf
+								EndIf
+							EndIf
+							$entry = $entry & @LF & '        {'
+							$entry = $entry & @LF & '          "Languages": [' & @LF & '            "' & $lang & '"'
+							$entry = $entry & @LF & '          ],' & @LF & '          "Os": ' & $OS & ','
+							$entry = $entry & @LF & '          "Url": "' & $downurl & '",'
+							$entry = $entry & @LF & '          "Title": ' & $name & ','
+							$entry = $entry & @LF & '          "Slug": ' & $slug & ','
+							$entry = $entry & @LF & '          "Name": "' & $file & '",'
+							$entry = $entry & @LF & '          "Version": ' & $version & ','
+							$entry = $entry & @LF & '          "Date": "",'
+							$entry = $entry & @LF & '          "EstimatedSize": "' & $size & '",'
+							$entry = $entry & @LF & '          "VerifiedSize": ' & $bytes & ','
+							$entry = $entry & @LF & '          "Checksum": "' & $checksum & '"'
+							$downurl = ""
 						EndIf
-					EndIf
-					If $downurl <> "" Then
-						If $i > 2 Then
-							$entry = $entry & @LF & '        },'
-						EndIf
-						$entry = $entry & @LF & '        {'
-						$entry = $entry & @LF & '          "Languages": [' & @LF & '            "' & $lang & '"'
-						$entry = $entry & @LF & '          ],' & @LF & '          "Os": ' & $OS & ','
-						$entry = $entry & @LF & '          "Url": "' & $downurl & '",'
-						$entry = $entry & @LF & '          "Title": ' & $name & ','
-						$entry = $entry & @LF & '          "Name": "' & $file & '",'
-						$entry = $entry & @LF & '          "Version": ' & $version & ','
-						$entry = $entry & @LF & '          "Date": "",'
-						$entry = $entry & @LF & '          "EstimatedSize": "' & $size & '",'
-						$entry = $entry & @LF & '          "VerifiedSize": ' & $bytes & ','
-						$entry = $entry & @LF & '          "Checksum": ""'
-						$downurl = ""
 					EndIf
 				Next
 				$entry = $entry & @LF & '        }' & @LF & '      ],'
+				;
 				; Extras go here
 				If $extras <> "" Then
 					$entry = $entry & @LF & '      "Extras": ['
 					$downurl = ""
+					$file = ""
 					$extras = StringSplit($extras, '"downlink":', 1)
-					For $i = 1 To $extras[0]
+					For $i = 2 To $extras[0]
 						$extra = $extras[$i]
 						If StringLeft($extra, 7) = '"https:' Then
 							$downurl = StringSplit($extra, '"', 1)
@@ -1130,69 +1419,61 @@ Func GetGameDetail()
 							$downurl = StringSplit($downurl, '/', 1)
 							$downurl = $downurl[$downurl[0]]
 							$downurl = '/downloads/' & $slug & "/" & $downurl
-						Else
-							$name = StringSplit($extra, '"name":', 1)
-							If $name[0] > 1 Then
-								$name = $name[2]
-								$name = StringSplit($name, ',', 1)
-								$name = $name[1]
-							Else
-								$name = ''
-							EndIf
 							;
-							$file = ''
+							$extra = $extras[$i - 1]
+							GetExtras($extra)
 							;
-							$type = StringSplit($extra, '"type":', 1)
-							If $type[0] > 1 Then
-								$type = $type[2]
-								$type = StringSplit($type, ',', 1)
-								$type = $type[1]
-							Else
-								$type = ''
-							EndIf
-							$info = StringSplit($extra, '"count":', 1)
-							If $info[0] > 1 Then
-								$info = $info[2]
-								$info = StringSplit($info, ',', 1)
-								$info = $info[1]
-							Else
-								$info = ''
-							EndIf
-							$bytes = StringSplit($extra, '"size":', 1)
-							If $bytes[0] > 1 Then
-								$bytes = $bytes[2]
-								$bytes = StringSplit($bytes, ',', 1)
-								$bytes = $bytes[1]
-								If $bytes < 1024 Then
-									$size = $bytes & " bytes"
-								ElseIf $bytes < 1048576 Then
-									$size = Round($bytes / 1024, 0) & " KB"
-								ElseIf $bytes < 1073741824 Then
-									$size = Round($bytes / 1048576, 0) & " MB"
-								ElseIf $bytes < 1099511627776 Then
-									$size = Round($bytes / 1073741824, 2) & " GB"
-								Else
-									$size = Round($bytes / 1099511627776, 3) & " TB"
+							$file = ""
+							$checksum = ""
+							$mass = ""
+							If $downurl <> "" Then
+								If FileExists($gogcli) Then
+									If FileExists($cookie) Then
+										FileDelete($fileinfo)
+										FileChangeDir(@ScriptDir)
+										$params = "-c Cookie.txt gog-api url-path-info -p " & $downurl
+										RunWait(@ComSpec & ' /c gogcli.exe ' & $params & ' >"' & $fileinfo & '"', @ScriptDir, $flag)
+										Sleep(1000)
+										If FileExists($fileinfo) Then
+											_FileReadToArray($fileinfo, $array)
+											For $a = 1 To $array[0]
+												$line = $array[$a]
+												If StringInStr($line, "File Name:") > 0 Then
+													$file = StringSplit($line, "File Name:", 1)
+													$file = $file[2]
+													$file = StringStripWS($file, 3)
+												ElseIf StringInStr($line, "Checksum:") > 0 Then
+													$checksum = StringSplit($line, "Checksum:", 1)
+													$checksum = $checksum[2]
+													$checksum = StringStripWS($checksum, 3)
+												ElseIf StringInStr($line, "Size:") > 0 Then
+													$mass = StringSplit($line, "Size:", 1)
+													$mass = $mass[2]
+													$mass = StringStripWS($mass, 3)
+													If $mass <> "" Then
+														If $mass <> $bytes And $bytes = "" Then
+															$bytes = $mass
+														EndIf
+													EndIf
+												EndIf
+											Next
+										EndIf
+									EndIf
 								EndIf
-							Else
-								$bytes = ''
-								$size = ''
+								;If $i > 2 Then
+								;	$entry = $entry & @LF & '        },'
+								;EndIf
+								$entry = $entry & @LF & '        {'
+								$entry = $entry & @LF & '          "Url": "' & $downurl & '",'
+								$entry = $entry & @LF & '          "Title": ' & $name & ','
+								$entry = $entry & @LF & '          "Name": "' & $file & '",'
+								$entry = $entry & @LF & '          "Type": ' & $type & ','
+								$entry = $entry & @LF & '          "Info": ' & $info & ','
+								$entry = $entry & @LF & '          "EstimatedSize": "' & $size & '",'
+								$entry = $entry & @LF & '          "VerifiedSize": ' & $bytes & ','
+								$entry = $entry & @LF & '          "Checksum": "' & $checksum & '"'
+								$downurl = ""
 							EndIf
-						EndIf
-						If $downurl <> "" Then
-							;If $i > 2 Then
-							;	$entry = $entry & @LF & '        },'
-							;EndIf
-							$entry = $entry & @LF & '        {'
-							$entry = $entry & @LF & '          "Url": "' & $downurl & '",'
-							$entry = $entry & @LF & '          "Title": ' & $name & ','
-							$entry = $entry & @LF & '          "Name": "' & $file & '",'
-							$entry = $entry & @LF & '          "Type": ' & $type & ','
-							$entry = $entry & @LF & '          "Info": ' & $info & ','
-							$entry = $entry & @LF & '          "EstimatedSize": "' & $size & '",'
-							$entry = $entry & @LF & '          "VerifiedSize": ' & $bytes & ','
-							$entry = $entry & @LF & '          "Checksum": ""'
-							$downurl = ""
 						EndIf
 					Next
 					$entry = $entry & @LF & '        }' & @LF & '      ],'
@@ -1203,6 +1484,13 @@ Func GetGameDetail()
 			;
 			$entry = $entry & @LF & '  }' & @LF & '}' & @LF
 			FileWrite($manifest, $entry)
+			If $show = 1 Then
+				If $editor = "none" Then
+					ShellExecute($manifest)
+				Else
+					Run($editor & ' "' & $manifest & '"')
+				EndIf
+			EndIf
 		EndIf
 		SplashOff()
 	Else
@@ -1210,72 +1498,139 @@ Func GetGameDetail()
 	EndIf
 EndFunc ;=> GetGameDetail
 
-Func FixAllText($text)
-	$text = FixText($text)
-	$text = RemoveHtml($text)
-	Return $text
-EndFunc ;=> FixAllText
+Func GetExtras($section)
+	$name = StringSplit($section, '"name":', 1)
+	If $name[0] > 1 Then
+		$name = $name[2]
+		$name = StringSplit($name, '",', 1)
+		$name = $name[1]
+		$name = StringReplace($name, '"', '')
+		$name = StringStripWS($name, 3)
+		$name = FixUnicode($name)
+		$name = '"' & $name & '"'
+	Else
+		$name = ''
+	EndIf
+	;
+	$file = ''
+	;
+	$type = StringSplit($section, '"type":', 1)
+	If $type[0] > 1 Then
+		$type = $type[2]
+		$type = StringSplit($type, ',', 1)
+		$type = $type[1]
+		$type = StringReplace($type, '"', '')
+		$type = StringStripWS($type, 3)
+		$type = FixUnicode($type)
+		$type = '"' & $type & '"'
+	Else
+		$type = ''
+	EndIf
+	$info = StringSplit($section, '"count":', 1)
+	If $info[0] > 1 Then
+		$info = $info[2]
+		$info = StringSplit($info, ',', 1)
+		$info = $info[1]
+	Else
+		$info = ''
+	EndIf
+	$bytes = StringSplit($section, '"size":', 1)
+	If $bytes[0] > 1 Then
+		$bytes = $bytes[2]
+		$bytes = StringSplit($bytes, ',', 1)
+		$bytes = $bytes[1]
+		If $bytes < 1024 Then
+			$size = $bytes & " bytes"
+		ElseIf $bytes < 1048576 Then
+			$size = Round($bytes / 1024, 0) & " KB"
+		ElseIf $bytes < 1073741824 Then
+			$size = Round($bytes / 1048576, 0) & " MB"
+		ElseIf $bytes < 1099511627776 Then
+			$size = Round($bytes / 1073741824, 2) & " GB"
+		Else
+			$size = Round($bytes / 1099511627776, 3) & " TB"
+		EndIf
+	Else
+		$bytes = ''
+		$size = ''
+	EndIf
+EndFunc ;=> GetExtras
 
-Func FixText($text)
-	$text = StringReplace($text, '{"id":', 'ID = ')
-	$text = StringReplace($text, '\u010desk\u00fd', 'czech')
-	$text = StringReplace($text, 'T\u00fcrkce', 'turkish')
-	$text = StringReplace($text, 'portugu\u00eas', 'portuguese')
-	$text = StringReplace($text, '\u4e2d\u6587(\u7b80\u4f53)', 'chinese')
-	$text = StringReplace($text, '\u65e5\u672c\u8a9e', 'japanese')
-	$text = StringReplace($text, '\ud55c\uad6d\uc5b4', 'korean')
-	$text = FixUnicode($text)
-	$text = StringReplace($text, '{"lead":', '')
-	$text = StringReplace($text, '[],"', '"' & @CRLF)
-	$text = StringReplace($text, '[],', @CRLF)
-	$text = StringReplace($text, '":"', ' = ')
-	$text = StringReplace($text, '":{"', @CRLF)
-	$text = StringReplace($text, '":', ' = ')
-	$text = StringReplace($text, '","', @CRLF)
-	$text = StringReplace($text, '"},"', @CRLF)
-	$text = StringReplace($text, '},"', @CRLF)
-	$text = StringReplace($text, ',"', @CRLF)
-	$text = StringReplace($text, '\/\/', '//')
-	$text = StringReplace($text, '\/', '/')
-	$text = StringReplace($text, '"}}', '')
-	$text = StringReplace($text, '"}', '')
-	$text = StringReplace($text, '\n', @CRLF)
-	$text = StringReplace($text, ']},{"', @CRLF)
-	$text = StringReplace($text, ',{"', @CRLF)
-	$text = StringReplace($text, ' = [{"', @CRLF)
-	$text = StringReplace($text, ' = [', @CRLF)
-	$text = StringReplace($text, ']}]', '')
-	$text = StringReplace($text, '}}]', '')
-	$text = StringReplace($text, ']},', @CRLF)
-	$text = StringReplace($text, ' = "', ' = ')
-	$text = StringReplace($text, ',ID = ', @CRLF & 'ID = ')
-	$text = StringReplace($text, 'youtube]', 'youtube')
-	$text = StringReplace($text, 'null}', 'null')
-	$text = StringReplace($text, '-amp;', '&')
-	$text = StringReplace($text, '-quot;', '"')
-	$text = StringReplace($text, '%2C', ',')
-	$text = StringReplace($text, '   /', '')
-	$text = StringReplace($text, ']' & @CRLF, @CRLF)
-	$text = StringReplace($text, "<br><br>", @CRLF)
-	$text = StringReplace($text, "<br>", @CRLF)
-	;$text = StringStripWS($text, 4)
-	Return $text
-EndFunc ;=> FixText
-
-Func FixUnicode($text)
-	Local $chunk, $hextxt, $split, $string
-	$split = StringSplit($text, "\u", 1)
-	$text = $split[1]
-	For $s = 2 To $split[0]
-		$chunk = $split[$s]
-		$string = StringMid($chunk, 5)
-		$hextxt = StringLeft($chunk, 4)
-		$val = Dec($hextxt)
-		$val = ChrW($val)
-		$text = $text & $val & $string
-	Next
-	Return $text
-EndFunc ;=> FixUnicode
+Func GetOthers($section)
+	$lang = StringSplit($section, '"language_full":', 1)
+	If $lang[0] > 1 Then
+		$lang = $lang[2]
+		$lang = StringSplit($lang, ',', 1)
+		$lang = $lang[1]
+		$lang = StringReplace($lang, '"', '')
+		$lang = StringStripWS($lang, 3)
+		$lang = FixUnicode($lang)
+		$lang = StringLower($lang)
+		$lastlang = $lang
+	Else
+		If $lastlang = "" Then
+			$lang = ''
+		Else
+			$lang = $lastlang
+		EndIf
+	EndIf
+	$OS = StringSplit($section, 'os":', 1)
+	If $OS[0] > 1 Then
+		$OS = $OS[2]
+		$OS = StringSplit($OS, ',', 1)
+		$OS = $OS[1]
+		$lastOS = $OS
+	Else
+		If $lastOS = "" Then
+			$OS = ''
+		Else
+			$OS = $lastOS
+		EndIf
+	EndIf
+	$name = StringSplit($section, '"name":', 1)
+	If $name[0] > 1 Then
+		$name = $name[2]
+		$name = StringSplit($name, '",', 1)
+		$name = $name[1]
+		$name = StringReplace($name, '"', '')
+		$name = StringStripWS($name, 3)
+		$name = FixUnicode($name)
+		$name = '"' & $name & '"'
+	Else
+		$name = ''
+	EndIf
+	;
+	$file = ''
+	;
+	$version = StringSplit($section, '"version":', 1)
+	If $version[0] > 1 Then
+		$version = $version[2]
+		$version = StringSplit($version, ',', 1)
+		$version = $version[1]
+	Else
+		$version = ''
+	EndIf
+	$bytes = StringSplit($section, '"size":', 1)
+	If $bytes[0] > 1 Then
+		$bytes = $bytes[2]
+		$bytes = StringSplit($bytes, ',', 1)
+		$bytes = $bytes[1]
+		If $bytes < 1024 Then
+			$size = $bytes & " bytes"
+		ElseIf $bytes < 1048576 Then
+			$size = Round($bytes / 1024, 0) & " KB"
+		ElseIf $bytes < 1073741824 Then
+			$size = Round($bytes / 1048576, 0) & " MB"
+		ElseIf $bytes < 1099511627776 Then
+			$size = Round($bytes / 1073741824, 2) & " GB"
+		Else
+			$size = Round($bytes / 1099511627776, 3) & " TB"
+		EndIf
+	Else
+		$bytes = ''
+		$size = ''
+	EndIf
+EndFunc ;=> GetOthers
 
 Func LoadTheList()
 	$titles = ""

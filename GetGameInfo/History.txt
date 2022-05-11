@@ -7,3 +7,18 @@ Added a query to set the required Country Code, plus a hidden setting to prevent
 
 (v1.3)
 Top list entry is now blank for a quick way to clear all fields when selected. If the URL field is empty and the GO button is clicked, an input query appears for using a GOG game web page URL to get the Game ID. NOTE - There is now an experimental option to create a manifest entry for a game (disabled by default, but enabled in the 'Settings.ini' file ... change create=4 to create=1). BUGFIX - The black image now displays for any game without a cover image.
+
+(v1.4)
+Bugfix for installer file values in manifest. Program uses gogcli.exe and Cookie.txt files if found, to get file names and checksums for manifest entry.
+
+(v1.5)
+Bugfix for unicode in Type for manifest. Controls disabled while ADDing. Extended use of gogcli.exe etc for Extras.
+
+(v1.6)
+Added a 'Program Settings' window, accessed via 'Program Information' dialog. Manifest file name is now based on the game 'slug' (i.e. 15_days_manifest.txt). Slug title is now added to the manifest. NOTE - These changes add support for an adaption to my 'GOGcli GUI' program for independent downloading.
+
+(v1.7)
+Bugfix for OS for additional installer files in the manifest, same for Language and file Title.
+
+(v1.8)
+Program window can now be minimized during ADD, and DOS like Console windows can be hidden or minimized during ADD. The 'Settings.ini' file has been renamed to 'Options.ini', primarily so that the program can also work in the 'GOGcli GUI' folder, if you wish (NOTE - prior users will need to manually rename the 'Settings.ini' file). A 'Manifests' folder for created manifests is now created at startup if missing. Other minor improvements. Created manifest file can now be shown after ADD using either Notepad or a specified editor.
