@@ -18,7 +18,6 @@
 #include <WindowsConstants.au3>
 #include <ButtonConstants.au3>
 #include <EditConstants.au3>
-#include <InetConstants.au3>
 #include <StaticConstants.au3>
 #include <Misc.au3>
 #include <File.au3>
@@ -27,22 +26,22 @@
 #include <GuiListBox.au3>
 #include <GDIPlus.au3>
 
-Global $Button_add, $Button_exit, $Button_get, $Button_info, $Button_move, $Button_ontop, $Button_replace, $Button_runurl
-Global $Edit_reqs, $Edit_sumry, $Group_cover, $Group_date, $Group_devs, $Group_games, $Group_gametit, $Group_genre
-Global $Group_ID, $Group_imgurl, $Group_OS, $Group_price, $Group_size, $Group_sumry, $Group_type, $Group_weburl
+Global $Button_add, $Button_exit, $Button_get, $Button_info, $Button_move, $Button_replace, $Button_runurl, $Edit_reqs
+Global $Edit_sumry, $Group_cover, $Group_date, $Group_devs, $Group_games, $Group_gametit, $Group_genre, $Group_ID
+Global $Group_imgurl, $Group_OS, $Group_price, $Group_size, $Group_sumry, $Group_type, $Group_weburl
 Global $Input_date, $Input_devs, $Input_gametit, $Input_genre, $Input_get, $Input_ID, $Input_imgurl, $Input_OS
 Global $Input_price, $Input_size, $Input_type, $Input_weburl
 Global $List_games, $Pic_cover
 
 Global $defimage, $GameInfoGUI, $height, $icoF, $icoI, $icoM, $icoX, $OptionsGUI, $pth, $shell, $user32, $width
 
-Global $boxart, $bytes, $cc, $check, $cliptxt, $cnt, $cover, $d, $datafold, $date, $description, $developer, $dev, $devs
-Global $dll, $downone, $downtwo, $e, $editor, $entries, $entry, $f, $feature, $features, $fixed, $gameinfo, $genre, $GID
+Global $boxart, $bytes, $cc, $check, $cnt, $cover, $d, $datafold, $date, $description, $developer, $dev, $devs, $dll
+Global $downone, $downtwo, $e, $editor, $entries, $entry, $f, $feature, $features, $fixed, $gameinfo, $genre, $GID
 Global $handle, $head, $hide, $high, $html, $htmltxt, $ID, $idlink, $image, $ind, $inifle, $last, $lastlang, $lastOS
-Global $line, $manfold, $minimize, $minimum, $mpos, $name, $names, $ontop, $OS, $ping, $playtype, $price, $publisher
-Global $read, $release, $reload, $requires, $s, $show, $skip, $slug, $status, $success, $supported, $sys, $system, $systems
-Global $t, $tag, $tags, $tail, $text, $titfile, $title, $titles, $total, $update, $updated, $URL, $val, $versions, $wide
-Global $xpos, $ypos
+Global $line, $manfold, $minimize, $minimum, $mpos, $name, $names, $OS, $ping, $playtype, $price, $publisher, $read
+Global $release, $reload, $requires, $s, $show, $skip, $slug, $status, $supported, $sys, $system, $systems, $t, $tag
+Global $tags, $tail, $text, $titfile, $title, $titles, $total, $update, $updated, $URL, $val, $versions, $wide, $xpos
+Global $ypos
 
 Global $a, $array, $checksum, $cookie, $create, $downurl, $extra, $extras, $file, $fileinfo, $gogcli, $i, $info
 Global $installer, $installers, $lang, $manifest, $mass, $params, $section, $size, $type, $version
@@ -60,7 +59,7 @@ $inifle = @ScriptDir & "\Options.ini"
 $manfold = @ScriptDir & "\Manifests"
 $titfile = @ScriptDir & "\Titles.ini"
 $updated = "May 2022"
-$update = "v2.0"
+$update = "v1.9"
 
 If Not FileExists($datafold) Then DirCreate($datafold)
 If Not FileExists($manfold) Then DirCreate($manfold)
@@ -187,10 +186,6 @@ $Group_games = GuiCtrlCreateGroup("Game Titles", 500, 10, 390, 180)
 $List_games = GUICtrlCreateList("", 510, 30, 370, 160)
 GUICtrlSetTip($List_games, "List of games with details!")
 ;
-$Button_ontop = GUICtrlCreateCheckbox("On Top", 820, 5, 60, 20, $BS_PUSHLIKE)
-GUICtrlSetFont($Button_ontop, 7, 600, 0, "Small Fonts")
-GUICtrlSetTip($Button_ontop, "Toggle the program window on top setting!")
-;
 $Input_get = GuiCtrlCreateInput("", 500, 200, 300, 20)
 ;GUICtrlSetFont($Input_get, 8, 400, 0, "Small Fonts")
 $Button_get = GuiCtrlCreateButton("Get Game ID", 805, 199, 85, 22)
@@ -213,16 +208,6 @@ GUICtrlSetImage($Button_info, $user32, $icoI, 1)
 GUICtrlSetImage($Button_exit, $shell, $icoX, 1)
 ;
 ; SETTINGS
-$ontop = IniRead($inifle, "Main Window", "ontop", "")
-If $ontop = "" Then
-	$ontop = 1
-	IniWrite($inifle, "Main Window", "ontop", $ontop)
-EndIf
-If $ontop = 4 Then
-	WinSetOnTop($GameInfoGUI, "", 0)
-EndIf
-GUICtrlSetState($Button_ontop, $ontop)
-
 LoadTheList()
 ;
 $last = ""
@@ -239,22 +224,9 @@ While 1
 		; Run the Web Page URL in default browser
 		$URL = GUICtrlRead($Input_weburl)
 		If $URL = "" Then
-			$cliptxt = ClipGet()
-			If StringLeft($cliptxt, 20) = "https://www.gog.com/" Then
-				$URL = $cliptxt
-			EndIf
 			$URL = InputBox("Get Game ID", "Please enter the URL for a GOG game page." & @LF _
-				& @LF & "NOTE - This requires a web connection.", $URL, "", 450, 160, Default, Default, 0, $GameInfoGUI)
+				& @LF & "NOTE - This requires a web connection.", $ID, "", 400, 160, Default, Default, 0, $GameInfoGUI)
 			If @error = 0 And StringLeft($URL, 20) = "https://www.gog.com/" Then
-				GUICtrlSetState($Button_add, $GUI_DISABLE)
-				GUICtrlSetState($Button_runurl, $GUI_DISABLE)
-				GUICtrlSetState($Button_move, $GUI_DISABLE)
-				GUICtrlSetState($Button_replace, $GUI_DISABLE)
-				GUICtrlSetState($List_games, $GUI_DISABLE)
-				GUICtrlSetState($Button_get, $GUI_DISABLE)
-				GUICtrlSetState($Button_info, $GUI_DISABLE)
-				GUICtrlSetState($Button_exit, $GUI_DISABLE)
-				If $minimize = 1 Then GUISetState(@SW_MINIMIZE, $GameInfoGUI)
 				$ping = Ping("gog.com", 4000)
 				If $ping > 0 Then
 					SplashTextOn("", "Downloading Page!", 200, 120, Default, Default, 33)
@@ -306,8 +278,7 @@ While 1
 									Else
 										$ind = _GUICtrlListBox_GetCurSel($List_games)
 									EndIf
-									If $ind > -1 And $minimize = 4 Then
-										GUISetState(@SW_SHOWNORMAL, $GameInfoGUI)
+									If $ind > -1 Then
 										_GUICtrlListBox_ClickItem($List_games, $ind, "left", False, 1, 0)
 									EndIf
 								EndIf
@@ -320,15 +291,6 @@ While 1
 				Else
 					MsgBox(262192, "Web Error", "No connection detected!", 0, $GameInfoGUI)
 				EndIf
-				If $minimize = 1 And $show = 4 Then GUISetState(@SW_RESTORE, $GameInfoGUI)
-				GUICtrlSetState($Button_add, $GUI_ENABLE)
-				GUICtrlSetState($Button_runurl, $GUI_ENABLE)
-				GUICtrlSetState($Button_move, $GUI_ENABLE)
-				GUICtrlSetState($Button_replace, $GUI_ENABLE)
-				GUICtrlSetState($List_games, $GUI_ENABLE)
-				GUICtrlSetState($Button_get, $GUI_ENABLE)
-				GUICtrlSetState($Button_info, $GUI_ENABLE)
-				GUICtrlSetState($Button_exit, $GUI_ENABLE)
 			EndIf
 		Else
 			ShellExecute($URL)
@@ -389,31 +351,11 @@ While 1
 					If $image <> "" Then
 						SplashTextOn("", "Downloading Cover!", 200, 120, Default, Default, 33)
 						InetGet($image, $cover, 1, 0)
-						;Local $loop = 0
-						;While 1
-						;	$success = InetGet($image, $cover, 1, 1)
-						;	Do
-						;		Sleep(250)
-						;	Until InetGetInfo($success, $INET_DOWNLOADCOMPLETE)
-						;	If InetGetInfo($success, $INET_DOWNLOADERROR) = 0 Then ExitLoop
-						;	$loop = $loop + 1
-						;	If $loop = 5 Then ExitLoop
-						;WEnd
 						SplashOff()
 					EndIf
 				EndIf
 			EndIf
 		EndIf
-	Case $msg = $Button_ontop
-		; Toggle the program window on top setting
-		If GUICtrlRead($Button_ontop) = $GUI_CHECKED Then
-			$ontop = 1
-			WinSetOnTop($GameInfoGUI, "", 1)
-		Else
-			$ontop = 4
-			WinSetOnTop($GameInfoGUI, "", 0)
-		EndIf
-		IniWrite($inifle, "Main Window", "ontop", $ontop)
 	Case $msg = $Button_move
 		; Move program window
 		If GUICtrlRead($Button_move) = "Move" Then
@@ -465,15 +407,6 @@ While 1
 		If $game <> "" Then
 			;$game = StringReplace($game, " ", "")
 			SplashTextOn("", "Getting ID(s)!", 200, 120, Default, Default, 33)
-			GUICtrlSetState($Button_add, $GUI_DISABLE)
-			GUICtrlSetState($Button_runurl, $GUI_DISABLE)
-			GUICtrlSetState($Button_move, $GUI_DISABLE)
-			GUICtrlSetState($Button_replace, $GUI_DISABLE)
-			GUICtrlSetState($List_games, $GUI_DISABLE)
-			GUICtrlSetState($Button_get, $GUI_DISABLE)
-			GUICtrlSetState($Button_info, $GUI_DISABLE)
-			GUICtrlSetState($Button_exit, $GUI_DISABLE)
-			If $minimize = 1 Then GUISetState(@SW_MINIMIZE, $GameInfoGUI)
 			If $game <> $last Then
 				$idlink = "https://embed.gog.com/games/ajax/filtered?mediaType=game&search=" & $game
 				$html = _INetGetSource($idlink)
@@ -530,11 +463,6 @@ While 1
 								$ind = _GUICtrlListBox_GetCurSel($List_games)
 							EndIf
 							If $ind > -1 Then
-								If $minimize = 1 Then
-									GUISetState(@SW_SHOWMINIMIZED, $GameInfoGUI)
-								Else
-									GUISetState(@SW_SHOWNORMAL, $GameInfoGUI)
-								EndIf
 								_GUICtrlListBox_ClickItem($List_games, $ind, "left", False, 1, 0)
 							EndIf
 						EndIf
@@ -543,15 +471,6 @@ While 1
 			Else
 				MsgBox(262192, "ID Error", "No Results!", 0, $GameInfoGUI)
 			EndIf
-			If $minimize = 1 And $show = 4 Then GUISetState(@SW_RESTORE, $GameInfoGUI)
-			GUICtrlSetState($Button_add, $GUI_ENABLE)
-			GUICtrlSetState($Button_runurl, $GUI_ENABLE)
-			GUICtrlSetState($Button_move, $GUI_ENABLE)
-			GUICtrlSetState($Button_replace, $GUI_ENABLE)
-			GUICtrlSetState($List_games, $GUI_ENABLE)
-			GUICtrlSetState($Button_get, $GUI_ENABLE)
-			GUICtrlSetState($Button_info, $GUI_ENABLE)
-			GUICtrlSetState($Button_exit, $GUI_ENABLE)
 			SplashOff()
 		EndIf
 	Case $msg = $Button_add
@@ -579,11 +498,6 @@ While 1
 					$ind = _GUICtrlListBox_GetCurSel($List_games)
 				EndIf
 				If $ind > -1 Then
-					If $minimize = 1 Then
-						GUISetState(@SW_SHOWMINIMIZED, $GameInfoGUI)
-					Else
-						GUISetState(@SW_SHOWNORMAL, $GameInfoGUI)
-					EndIf
 					_GUICtrlListBox_ClickItem($List_games, $ind, "left", False, 1, 0)
 				EndIf
 			EndIf
@@ -1130,6 +1044,7 @@ Func GetGameDetail()
 						IniWrite($gameinfo, $ID, "os", $OS)
 					EndIf
 					; GAME TYPE
+					;"game_type":"dlc",
 					$type = StringSplit($read, '"game_type":', 1)
 					If $type[0] > 1 Then
 						$type = $type[2]
@@ -1603,7 +1518,7 @@ Func GetGameDetail()
 													$mass = $mass[2]
 													$mass = StringStripWS($mass, 3)
 													If $mass <> "" Then
-														If $mass <> $bytes Then
+														If $mass <> $bytes And $bytes = "" Then
 															$bytes = $mass
 														EndIf
 													EndIf

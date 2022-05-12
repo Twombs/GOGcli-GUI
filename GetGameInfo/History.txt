@@ -25,3 +25,6 @@ Program window can now be minimized during ADD, and DOS like Console windows can
 
 (v1.9)
 Bugfix for bytes in the manifest, with the gogcli.exe query value taking priority. Added a 'Replace' button for game images (Boxart & Cover), so that corrupted downloads can more easily be replaced.
+
+(v2.0)
+Added an 'On Top' button for main program window. Extended window minimize and disabling of controls to the 'GO' and 'Get Game ID' button processes. If a GOG URL exists on the clipboard, it is now automatically copied to the floating input box field. The input box has been widened. Bugfix for bytes for Extras in manifest. Etc.
