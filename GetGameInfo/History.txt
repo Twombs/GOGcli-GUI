@@ -22,3 +22,6 @@ Bugfix for OS for additional installer files in the manifest, same for Language 
 
 (v1.8)
 Program window can now be minimized during ADD, and DOS like Console windows can be hidden or minimized during ADD. The 'Settings.ini' file has been renamed to 'Options.ini', primarily so that the program can also work in the 'GOGcli GUI' folder, if you wish (NOTE - prior users will need to manually rename the 'Settings.ini' file). A 'Manifests' folder for created manifests is now created at startup if missing. Other minor improvements. Created manifest file can now be shown after ADD using either Notepad or a specified editor.
+
+(v1.9)
+Bugfix for bytes in the manifest, with the gogcli.exe query value taking priority. Added a 'Replace' button for game images (Boxart & Cover), so that corrupted downloads can more easily be replaced.

@@ -26,9 +26,9 @@
 #include <GuiListBox.au3>
 #include <GDIPlus.au3>
 
-Global $Button_add, $Button_exit, $Button_get, $Button_info, $Button_move, $Button_runurl, $Edit_reqs, $Edit_sumry
-Global $Group_cover, $Group_date, $Group_devs, $Group_games, $Group_gametit, $Group_genre, $Group_ID, $Group_imgurl
-Global $Group_OS, $Group_price, $Group_size, $Group_sumry, $Group_type, $Group_weburl
+Global $Button_add, $Button_exit, $Button_get, $Button_info, $Button_move, $Button_replace, $Button_runurl, $Edit_reqs
+Global $Edit_sumry, $Group_cover, $Group_date, $Group_devs, $Group_games, $Group_gametit, $Group_genre, $Group_ID
+Global $Group_imgurl, $Group_OS, $Group_price, $Group_size, $Group_sumry, $Group_type, $Group_weburl
 Global $Input_date, $Input_devs, $Input_gametit, $Input_genre, $Input_get, $Input_ID, $Input_imgurl, $Input_OS
 Global $Input_price, $Input_size, $Input_type, $Input_weburl
 Global $List_games, $Pic_cover
@@ -59,7 +59,7 @@ $inifle = @ScriptDir & "\Options.ini"
 $manfold = @ScriptDir & "\Manifests"
 $titfile = @ScriptDir & "\Titles.ini"
 $updated = "May 2022"
-$update = "v1.8"
+$update = "v1.9"
 
 If Not FileExists($datafold) Then DirCreate($datafold)
 If Not FileExists($manfold) Then DirCreate($manfold)
@@ -140,7 +140,10 @@ GUICtrlSetFont($Button_move, 7, 600, 0, "Small Fonts")
 GUICtrlSetTip($Button_move, "Move program window to right!")
 ;
 $Group_imgurl = GuiCtrlCreateGroup("Image URL", 10, 130, 400, 50)
-$Input_imgurl = GuiCtrlCreateInput("", 20, 150, 380, 20)
+$Input_imgurl = GuiCtrlCreateInput("", 20, 150, 315, 20)
+$Button_replace = GuiCtrlCreateButton("Replace", 340, 149, 60, 22)
+GUICtrlSetFont($Button_replace, 7, 600, 0, "Small Fonts")
+GUICtrlSetTip($Button_replace, "Replace one or both images!")
 ;
 $Group_price = GuiCtrlCreateGroup("Price", 420, 130, 70, 50)
 $Input_price = GuiCtrlCreateInput("", 430, 150, 50, 20)
@@ -292,6 +295,67 @@ While 1
 		Else
 			ShellExecute($URL)
 		EndIf
+	Case $msg = $Button_replace
+		; Replace one or both images
+		$ID = GUICtrlRead($Input_ID)
+		If $ID <> "" Then
+			$ans = MsgBox(262179 + 256, "Replace Query", _
+				"Replace both images (Boxart & Cover)?" & @LF & @LF & _
+				"YES = Replace both." & @LF & _
+				"NO = Select which to replace." & @LF & _
+				"CANCEL = Abort any replacements.", 0, $GameInfoGUI)
+			If $ans = 6 Then
+				$cover = $datafold & "\" & $ID & "_cover.jpg"
+				If FileExists($cover) Then
+					FileDelete($cover)
+					GUICtrlSetImage($Pic_cover, $defimage)
+				EndIf
+				$cover = $datafold & "\" & $ID & "_image.png"
+				If FileExists($cover) Then FileDelete($cover)
+				$boxart = IniRead($gameinfo, $ID, "boxart", "")
+				If $boxart <> "" Then
+					SplashTextOn("", "Downloading Boxart!", 200, 120, Default, Default, 33)
+					InetGet($boxart, $cover, 1, 0)
+					SplashOff()
+					GUICtrlSetImage($Pic_cover, $cover)
+				EndIf
+				$image = IniRead($gameinfo, $ID, "cover", "")
+				If $image <> "" Then
+					SplashTextOn("", "Downloading Cover!", 200, 120, Default, Default, 33)
+					InetGet($image, $cover, 1, 0)
+					SplashOff()
+				EndIf
+			ElseIf $ans = 7 Then
+				$ans = MsgBox(262179 + 256, "Replace Query", _
+					"Select an image file to replace." & @LF & @LF & _
+					"YES = Replace Boxart." & @LF & _
+					"NO = Replace Cover." & @LF & _
+					"CANCEL = Abort any replacements.", 0, $GameInfoGUI)
+				If $ans = 6 Then
+					$cover = $datafold & "\" & $ID & "_cover.jpg"
+					If FileExists($cover) Then
+						FileDelete($cover)
+						GUICtrlSetImage($Pic_cover, $defimage)
+					EndIf
+					$boxart = IniRead($gameinfo, $ID, "boxart", "")
+					If $boxart <> "" Then
+						SplashTextOn("", "Downloading Boxart!", 200, 120, Default, Default, 33)
+						InetGet($boxart, $cover, 1, 0)
+						SplashOff()
+						GUICtrlSetImage($Pic_cover, $cover)
+					EndIf
+				ElseIf $ans = 7 Then
+					$cover = $datafold & "\" & $ID & "_image.png"
+					If FileExists($cover) Then FileDelete($cover)
+					$image = IniRead($gameinfo, $ID, "cover", "")
+					If $image <> "" Then
+						SplashTextOn("", "Downloading Cover!", 200, 120, Default, Default, 33)
+						InetGet($image, $cover, 1, 0)
+						SplashOff()
+					EndIf
+				EndIf
+			EndIf
+		EndIf
 	Case $msg = $Button_move
 		; Move program window
 		If GUICtrlRead($Button_move) = "Move" Then
@@ -416,6 +480,7 @@ While 1
 		GUICtrlSetState($Button_add, $GUI_DISABLE)
 		GUICtrlSetState($Button_runurl, $GUI_DISABLE)
 		GUICtrlSetState($Button_move, $GUI_DISABLE)
+		GUICtrlSetState($Button_replace, $GUI_DISABLE)
 		GUICtrlSetState($List_games, $GUI_DISABLE)
 		GUICtrlSetState($Button_get, $GUI_DISABLE)
 		GUICtrlSetState($Button_info, $GUI_DISABLE)
@@ -441,6 +506,7 @@ While 1
 		GUICtrlSetState($Button_add, $GUI_ENABLE)
 		GUICtrlSetState($Button_runurl, $GUI_ENABLE)
 		GUICtrlSetState($Button_move, $GUI_ENABLE)
+		GUICtrlSetState($Button_replace, $GUI_ENABLE)
 		GUICtrlSetState($List_games, $GUI_ENABLE)
 		GUICtrlSetState($Button_get, $GUI_ENABLE)
 		GUICtrlSetState($Button_info, $GUI_ENABLE)
@@ -1363,7 +1429,8 @@ Func GetGameDetail()
 												$mass = $mass[2]
 												$mass = StringStripWS($mass, 3)
 												If $mass <> "" Then
-													If $mass <> $bytes And $bytes = "" Then
+													;If $mass <> $bytes And $bytes = "" Then
+													If $mass <> $bytes Then
 														$bytes = $mass
 													EndIf
 												EndIf
