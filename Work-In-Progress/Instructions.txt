@@ -1,0 +1,16 @@
+
+1. Create a manifest file with my GetGameInfo program.
+
+2. Load that manifest file into GOGcli GUI using the following steps.
+
+(a) Start GOGcli GUI.
+(b) Select any game on the list.
+(c) Hold down the SHIFT key while clicking the DOWNLOAD button.
+(d) With the DOWNLOAD button renamed to DOWNLOAD OTHER, click it and do the following.
+(e) Browse to the created external manifest file, which should be in a folder called Manifests, where my GetGameInfo program resides.
+(f) If all is well, the 'Game Files Selector' window should open and any files suitable for downloading should populate it.
+(g) Select the one(s) to download and click the DOWNLOAD button to start that process.
+
+3. Files, including the cover, should eventually appear in the download location.
+
+WARNING - Only tested so far with single file (per game) downloads. Multiple should work, and I will be testing that soon.

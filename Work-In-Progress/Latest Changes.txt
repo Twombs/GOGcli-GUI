@@ -1,0 +1,2 @@
+
+GOGcli GUI v2.9 update adds support for using some external manifest files, those containing entries for only one game. NOTE - Not all such manifest files have been tested, with the focus just being on manifest files created by my GetGameInfo program. I have not yet looked at manifest files created by versions of gogrepo.py.
