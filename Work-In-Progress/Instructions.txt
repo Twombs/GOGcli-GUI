@@ -7,10 +7,10 @@
 (b) Select any game on the list.
 (c) Hold down the SHIFT key while clicking the DOWNLOAD button.
 (d) With the DOWNLOAD button renamed to DOWNLOAD OTHER, click it and do the following.
-(e) Browse to the created external manifest file, which should be in a folder called Manifests, where my GetGameInfo program resides.
+(e) Browse to the created external manifest file, which should be in a folder called Manifests, where my GetGameInfo program resides. NOTE - Multiple manifest files can now be selected in one go.
 (f) If all is well, the 'Game Files Selector' window should open and any files suitable for downloading should populate it.
 (g) Select the one(s) to download and click the DOWNLOAD button to start that process.
 
 3. Files, including the cover, should eventually appear in the download location.
 
-WARNING - Only tested so far with single file (per game) downloads. Multiple should work, and I will be testing that soon.
+NOTE - The program can now stay in DOWNLOAD OTHER mode, until you cancel via the query, or you hold down SHIFT and click the DOWNLOAD OTHER button again (toggles the mode setting).
