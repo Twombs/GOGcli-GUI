@@ -28,8 +28,8 @@
 #include <GDIPlus.au3>
 
 Global $Button_add, $Button_exit, $Button_get, $Button_info, $Button_move, $Button_ontop, $Button_replace, $Button_runurl
-Global $Edit_reqs, $Edit_sumry, $Group_cover, $Group_date, $Group_devs, $Group_games, $Group_gametit, $Group_genre
-Global $Group_ID, $Group_imgurl, $Group_OS, $Group_price, $Group_size, $Group_sumry, $Group_type, $Group_weburl
+Global $Checkbox_remove, $Edit_reqs, $Edit_sumry, $Group_cover, $Group_date, $Group_devs, $Group_games, $Group_gametit
+Global $Group_genre, $Group_ID, $Group_imgurl, $Group_OS, $Group_price, $Group_size, $Group_sumry, $Group_type, $Group_weburl
 Global $Input_date, $Input_devs, $Input_gametit, $Input_genre, $Input_get, $Input_ID, $Input_imgurl, $Input_OS
 Global $Input_price, $Input_size, $Input_type, $Input_weburl
 Global $List_games, $Pic_cover
@@ -39,7 +39,7 @@ Global $defimage, $GameInfoGUI, $height, $icoF, $icoI, $icoM, $icoX, $OptionsGUI
 Global $boxart, $bytes, $cc, $check, $cliptxt, $cnt, $cover, $d, $datafold, $date, $description, $developer, $dev, $devs
 Global $dll, $downone, $downtwo, $e, $editor, $entries, $entry, $f, $feature, $features, $fixed, $gameinfo, $genre, $GID
 Global $handle, $head, $hide, $high, $html, $htmltxt, $ID, $idlink, $image, $ind, $inifle, $last, $lastlang, $lastOS
-Global $line, $manfold, $minimize, $minimum, $mpos, $name, $names, $ontop, $OS, $ping, $playtype, $price, $publisher
+Global $line, $logfle, $manfold, $minimize, $minimum, $mpos, $name, $names, $ontop, $OS, $ping, $playtype, $price, $publisher
 Global $read, $release, $reload, $requires, $s, $show, $skip, $slug, $status, $success, $supported, $sys, $system, $systems
 Global $t, $tag, $tags, $tail, $text, $titfile, $title, $titles, $total, $update, $updated, $URL, $val, $versions, $wide
 Global $xpos, $ypos
@@ -57,10 +57,11 @@ $downtwo = @ScriptDir & "\Retrieved_2.txt"
 $fileinfo = @ScriptDir & "\Fileinfo.txt"
 $gogcli = @ScriptDir & "\gogcli.exe"
 $inifle = @ScriptDir & "\Options.ini"
+$logfle = @ScriptDir & "\Info.log"
 $manfold = @ScriptDir & "\Manifests"
 $titfile = @ScriptDir & "\Titles.ini"
 $updated = "May 2022"
-$update = "v2.0"
+$update = "v2.1"
 
 If Not FileExists($datafold) Then DirCreate($datafold)
 If Not FileExists($manfold) Then DirCreate($manfold)
@@ -124,7 +125,10 @@ $GameInfoGUI = GuiCreate("Get Game Info", $width, $height, 10, Default, $WS_OVER
 											+ $WS_VISIBLE + $WS_CLIPSIBLINGS + $WS_MINIMIZEBOX, $WS_EX_TOPMOST)
 ; CONTROLS
 $Group_gametit = GuiCtrlCreateGroup("Game Title", 10, 10, 420, 50)
-$Input_gametit = GuiCtrlCreateInput("", 20, 30, 400, 20)
+$Input_gametit = GuiCtrlCreateInput("", 20, 30, 380, 20)
+GUICtrlSetTip($Input_gametit, "Game or DLC Title!")
+$Checkbox_remove = GUICtrlCreateCheckbox("", 405, 30, 15, 20)
+GUICtrlSetTip($Checkbox_remove, "Enable removal!")
 ;
 $Button_add = GuiCtrlCreateButton("ADD", 440, 15, 50, 45)
 GUICtrlSetFont($Button_add, 9, 600)
@@ -295,9 +299,11 @@ While 1
 							MsgBox(262192, "ID Error", "The Game ID could not be detected!" & @LF & "Possibly web page doesn't exist.", 5, $GameInfoGUI)
 						Else
 							$reload = ""
+							_FileWriteLog($logfle, "ADDED = " & $title, -1)
 							GetGameDetail()
 							If $ID <> "" Then
 								If $title <> "" Then
+									FileWriteLine($logfle, "")
 									If $reload = 1 Then
 										GUICtrlSetData($List_games, "")
 										LoadTheList()
@@ -518,9 +524,11 @@ While 1
 				IDResultsGUI()
 				If $ID <> "" Then
 					$reload = ""
+					_FileWriteLog($logfle, "ADDED = " & $title, -1)
 					GetGameDetail()
 					If $ID <> "" Then
 						If $title <> "" Then
+							FileWriteLine($logfle, "")
 							If $reload = 1 Then
 								GUICtrlSetData($List_games, "")
 								LoadTheList()
@@ -556,7 +564,6 @@ While 1
 		EndIf
 	Case $msg = $Button_add
 		; ADD a game
-		$reload = ""
 		$ID = GUICtrlRead($Input_ID)
 		GUICtrlSetState($Button_add, $GUI_DISABLE)
 		GUICtrlSetState($Button_runurl, $GUI_DISABLE)
@@ -566,29 +573,79 @@ While 1
 		GUICtrlSetState($Button_get, $GUI_DISABLE)
 		GUICtrlSetState($Button_info, $GUI_DISABLE)
 		GUICtrlSetState($Button_exit, $GUI_DISABLE)
-		If $minimize = 1 Then GUISetState(@SW_MINIMIZE, $GameInfoGUI)
-		AddSomeGame()
-		If $ID <> "" Then
-			If $title <> "" Then
-				If $reload = 1 Then
-					GUICtrlSetData($List_games, "")
-					LoadTheList()
-					$ind = _GUICtrlListBox_FindString($List_games, $title, True)
-					_GUICtrlListBox_SetCurSel($List_games, $ind)
-				Else
-					$ind = _GUICtrlListBox_GetCurSel($List_games)
-				EndIf
-				If $ind > -1 Then
-					If $minimize = 1 Then
-						GUISetState(@SW_SHOWMINIMIZED, $GameInfoGUI)
+		If GUICtrlRead($Button_add) = "ADD" Then
+			$reload = ""
+			If $minimize = 1 Then GUISetState(@SW_MINIMIZE, $GameInfoGUI)
+			_FileWriteLog($logfle, "ADDED = " & $title, -1)
+			AddSomeGame()
+			If $ID <> "" Then
+				If $title <> "" Then
+					FileWriteLine($logfle, "")
+					If $reload = 1 Then
+						GUICtrlSetData($List_games, "")
+						LoadTheList()
+						$ind = _GUICtrlListBox_FindString($List_games, $title, True)
+						_GUICtrlListBox_SetCurSel($List_games, $ind)
 					Else
-						GUISetState(@SW_SHOWNORMAL, $GameInfoGUI)
+						$ind = _GUICtrlListBox_GetCurSel($List_games)
 					EndIf
-					_GUICtrlListBox_ClickItem($List_games, $ind, "left", False, 1, 0)
+					If $ind > -1 Then
+						If $minimize = 1 Then
+							GUISetState(@SW_SHOWMINIMIZED, $GameInfoGUI)
+						Else
+							GUISetState(@SW_SHOWNORMAL, $GameInfoGUI)
+						EndIf
+						_GUICtrlListBox_ClickItem($List_games, $ind, "left", False, 1, 0)
+					EndIf
 				EndIf
 			EndIf
+			If $minimize = 1 And $show = 4 Then GUISetState(@SW_RESTORE, $GameInfoGUI)
+		ElseIf GUICtrlRead($Button_add) = "CUT" Then
+			$title = GUICtrlRead($Input_gametit)
+			If $title <> "" Then
+				$ans = MsgBox(262177 + 256, "Removal Query", _
+					"Remove the selected game & related files?" & @LF & @LF & _
+					"OK = Remove them." & @LF & _
+					"CANCEL = Abort any removal.", 0, $GameInfoGUI)
+				If $ans = 1 Then
+					$ind = _GUICtrlListBox_GetCurSel($List_games)
+					GUICtrlSetData($List_games, "")
+					GUICtrlSetData($Input_gametit, "")
+					GUICtrlSetData($Input_ID, "")
+					GUICtrlSetData($Input_weburl, "")
+					GUICtrlSetData($Input_price, "")
+					GUICtrlSetData($Input_size, "")
+					GUICtrlSetData($Edit_sumry, "")
+					GUICtrlSetData($Input_date, "")
+					GUICtrlSetData($Input_devs, "")
+					GUICtrlSetData($Input_genre, "")
+					GUICtrlSetData($Input_type, "")
+					GUICtrlSetData($Edit_reqs, "")
+					GUICtrlSetData($Input_OS, "")
+					GUICtrlSetData($Input_imgurl, "")
+					GUICtrlSetImage($Pic_cover, $defimage)
+					IniDelete($titfile, $title)
+					$gameinfo = $datafold & "\" & $ID & ".txt"
+					If FileExists($gameinfo) Then
+						$slug = IniRead($gameinfo, $ID, "slug", "")
+						If $slug <> "" Then
+							$manifest = $manfold & "\" & $slug & "_manifest.txt"
+							FileDelete($manifest)
+						EndIf
+					EndIf
+					FileDelete($datafold & "\" & $ID & "*.*")
+					_FileWriteLog($logfle, "REMOVED = " & $title, -1)
+					FileWriteLine($logfle, "")
+					LoadTheList()
+					$ind = $ind - 1
+					_GUICtrlListBox_SetCurSel($List_games, $ind)
+					GUICtrlSetState($List_games, $GUI_FOCUS)
+					_GUICtrlListBox_ClickItem($List_games, $ind, "left", False, 1, 0)
+				EndIf
+			Else
+				MsgBox(262192, "Selection Error", "Nothing to remove!", 0, $GameInfoGUI)
+			EndIf
 		EndIf
-		If $minimize = 1 And $show = 4 Then GUISetState(@SW_RESTORE, $GameInfoGUI)
 		GUICtrlSetState($Button_add, $GUI_ENABLE)
 		GUICtrlSetState($Button_runurl, $GUI_ENABLE)
 		GUICtrlSetState($Button_move, $GUI_ENABLE)
@@ -597,6 +654,16 @@ While 1
 		GUICtrlSetState($Button_get, $GUI_ENABLE)
 		GUICtrlSetState($Button_info, $GUI_ENABLE)
 		GUICtrlSetState($Button_exit, $GUI_ENABLE)
+		GUICtrlSetState($List_games, $GUI_FOCUS)
+	Case $msg = $Checkbox_remove
+		; Enable removal
+		If GUICtrlRead($Checkbox_remove) = $GUI_CHECKED Then
+			GUICtrlSetData($Button_add, "CUT")
+			GUICtrlSetTip($Button_add, "Remove selected game from list!")
+		Else
+			GUICtrlSetData($Button_add, "ADD")
+			GUICtrlSetTip($Button_add, "ADD a game or Update selected!")
+		EndIf
 	Case $msg = $List_games
 		; List of games with details
 		$ID = ""
@@ -787,7 +854,7 @@ Func IDResultsGUI()
 EndFunc ;=> IDResultsGUI
 
 Func SettingsGUI()
-	Local $Button_close, $Button_path, $Checkbox_hide, $Checkbox_man, $Checkbox_min, $Checkbox_show, $Checkbox_skip
+	Local $Button_log, $Button_path, $Checkbox_hide, $Checkbox_man, $Checkbox_min, $Checkbox_show, $Checkbox_skip
 	Local $Input_code, $Input_path, $Label_code, $Label_path
 	;
 	$OptionsGUI = GuiCreate("Program Settings", 360, 125, Default, Default, $WS_OVERLAPPED + $WS_CAPTION + $WS_SYSMENU _
@@ -807,8 +874,9 @@ Func SettingsGUI()
 	$Checkbox_show = GUICtrlCreateCheckbox("Show the manifest file after", 135, 40, 145, 20)
 	GUICtrlSetTip($Checkbox_show, "Show the manifest file after creation!")
 	;
-	$Button_close = GuiCtrlCreateButton("EXIT", 300, 10, 50, 50, $BS_ICON)
-	GUICtrlSetTip($Button_close, "Quit, Close or Exit window!")
+	$Button_log = GuiCtrlCreateButton("LOG", 295, 10, 55, 50)
+	GUICtrlSetFont($Button_log, 9, 600)
+	GUICtrlSetTip($Button_log, "View the Log file!")
 	;
 	$Checkbox_min = GUICtrlCreateCheckbox("Minimize program window on ADD", 10, 68, 180, 20)
 	GUICtrlSetTip($Checkbox_min, "Minimize the program window on ADD!")
@@ -825,7 +893,6 @@ Func SettingsGUI()
 	GUICtrlSetTip($Button_path, "Browse to set the Editor path!")
 	;
 	; SETTINGS
-	GUICtrlSetImage($Button_close, $shell, $icoX, 1)
 	GUICtrlSetImage($Button_path, $shell, $icoF, 0)
 	;
 	GUICtrlSetData($Input_code, $cc)
@@ -849,7 +916,7 @@ Func SettingsGUI()
 	While 1
 		$msg = GuiGetMsg()
 		Select
-		Case $msg = $GUI_EVENT_CLOSE Or $msg = $Button_close
+		Case $msg = $GUI_EVENT_CLOSE
 			; Quit, Close or Exit window
 			$cc = GUICtrlRead($Input_code)
 			If $cc <> "" Then
@@ -870,6 +937,9 @@ Func SettingsGUI()
 				IniWrite($inifle, "Editor", "path", $editor)
 				GUICtrlSetData($Input_path, $editor)
 			EndIf
+		Case $msg = $Button_log
+			; View the Log file
+			If FileExists($logfle) Then ShellExecute($logfle)
 		Case $msg = $Checkbox_skip
 			; Skip the ID query at startup
 			If GUICtrlRead($Checkbox_skip) = $GUI_CHECKED Then
@@ -1493,9 +1563,11 @@ Func GetGameDetail()
 							If FileExists($gogcli) Then
 								If FileExists($cookie) Then
 									FileDelete($fileinfo)
+									Sleep(500)
+									_FileWriteLog($logfle, "MANIFEST DOWNLOAD = " & $downurl, -1)
 									FileChangeDir(@ScriptDir)
 									$params = "-c Cookie.txt gog-api url-path-info -p " & $downurl
-									RunWait(@ComSpec & ' /c gogcli.exe ' & $params & ' >"' & $fileinfo & '"', @ScriptDir, $flag)
+									RunWait(@ComSpec & ' /c echo ' & $downurl & ' && gogcli.exe ' & $params & ' >"' & $fileinfo & '"', @ScriptDir, $flag)
 									Sleep(1000)
 									If FileExists($fileinfo) Then
 										_FileReadToArray($fileinfo, $array)
@@ -1582,9 +1654,11 @@ Func GetGameDetail()
 								If FileExists($gogcli) Then
 									If FileExists($cookie) Then
 										FileDelete($fileinfo)
+										Sleep(500)
+										_FileWriteLog($logfle, "MANIFEST DOWNLOAD = " & $downurl, -1)
 										FileChangeDir(@ScriptDir)
 										$params = "-c Cookie.txt gog-api url-path-info -p " & $downurl
-										RunWait(@ComSpec & ' /c gogcli.exe ' & $params & ' >"' & $fileinfo & '"', @ScriptDir, $flag)
+										RunWait(@ComSpec & ' /c echo ' & $downurl & ' && gogcli.exe ' & $params & ' >"' & $fileinfo & '"', @ScriptDir, $flag)
 										Sleep(1000)
 										If FileExists($fileinfo) Then
 											_FileReadToArray($fileinfo, $array)

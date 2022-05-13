@@ -28,3 +28,6 @@ Bugfix for bytes in the manifest, with the gogcli.exe query value taking priorit
 
 (v2.0)
 Added an 'On Top' button for main program window. Extended window minimize and disabling of controls to the 'GO' and 'Get Game ID' button processes. If a GOG URL exists on the clipboard, it is now automatically copied to the floating input box field. The input box has been widened. Bugfix for bytes for Extras in manifest. Etc.
+
+(v2.1)
+Added a remove checkbox, that enables the ADD button as a CUT button, to remove a listed game and all related files. Added writing to a Log file (Info.log). Each file download URL is now echoed to the console window during manifest creation.
