@@ -31,8 +31,8 @@ Global $Button_add, $Button_exit, $Button_get, $Button_info, $Button_move, $Butt
 Global $Checkbox_remove, $Edit_reqs, $Edit_sumry, $Group_cover, $Group_date, $Group_devs, $Group_games, $Group_gametit
 Global $Group_genre, $Group_ID, $Group_imgurl, $Group_OS, $Group_price, $Group_size, $Group_sumry, $Group_type, $Group_weburl
 Global $Input_date, $Input_devs, $Input_gametit, $Input_genre, $Input_get, $Input_ID, $Input_imgurl, $Input_OS
-Global $Input_price, $Input_size, $Input_type, $Input_weburl, $Item_list_manifest
-Global $List_games, $Menu_list, $Pic_cover
+Global $Input_price, $Input_size, $Input_type, $Input_weburl
+Global $List_games, $Pic_cover
 
 Global $defimage, $GameInfoGUI, $height, $icoF, $icoI, $icoM, $icoX, $OptionsGUI, $pth, $shell, $user32, $width
 
@@ -61,7 +61,7 @@ $logfle = @ScriptDir & "\Info.log"
 $manfold = @ScriptDir & "\Manifests"
 $titfile = @ScriptDir & "\Titles.ini"
 $updated = "May 2022"
-$update = "v2.2"
+$update = "v2.1"
 
 If Not FileExists($datafold) Then DirCreate($datafold)
 If Not FileExists($manfold) Then DirCreate($manfold)
@@ -204,10 +204,6 @@ GUICtrlSetTip($Button_get, "Get Game ID via Title!")
 $Group_cover = GuiCtrlCreateGroup("Cover Image", 500, 225, 390, 465)
 $Pic_cover = GuiCtrlCreatePic($defimage, 510, 245, 370, 435, $SS_NOTIFY)
 GUICtrlSetTip($Pic_cover, "Click to see full image!")
-;
-; CONTEXT MENU
-$Menu_list = GUICtrlCreateContextMenu($List_games)
-$Item_list_manifest = GUICtrlCreateMenuItem("View Manifest", $Menu_list)
 ;
 ; OS_SETTINGS
 $shell = @SystemDir & "\shell32.dll"
@@ -805,34 +801,6 @@ While 1
 		Else
 			MsgBox(262192, "View Error", "No entry selected!", 2, $GameInfoGUI)
 		EndIf
-	Case $msg = $Item_list_manifest
-		; View Manifest
-		$title = GUICtrlRead($Input_gametit)
-		If $title <> "" Then
-			$ID = GUICtrlRead($Input_ID)
-			$gameinfo = $datafold & "\" & $ID & ".txt"
-			If FileExists($gameinfo) Then
-				$slug = IniRead($gameinfo, $ID, "slug", "")
-				If $slug <> "" Then
-					$manifest = $manfold & "\" & $slug & "_manifest.txt"
-					If FileExists($manifest) Then
-						If $editor = "none" Then
-							ShellExecute($manifest)
-						Else
-							Run($editor & ' "' & $manifest & '"')
-						EndIf
-					Else
-						MsgBox(262192, "File Error", "No manifest file found for selected game!", 2, $GameInfoGUI)
-					EndIf
-				Else
-					MsgBox(262192, "Slug Error", "No slug title found for selected game!", 2, $GameInfoGUI)
-				EndIf
-			Else
-				MsgBox(262192, "File Error", "No game info file found for selected entry!", 2, $GameInfoGUI)
-			EndIf
-		Else
-			MsgBox(262192, "View Error", "No entry selected!", 2, $GameInfoGUI)
-		EndIf
 	Case Else
 		;;;
 	EndSelect
@@ -1104,7 +1072,7 @@ Func FixUnicode($text)
 EndFunc ;=> FixUnicode
 
 Func GetGameDetail()
-	Local $bakfile, $errors, $flag, $logerr, $timestamp
+	Local $flag
 	$gameinfo = $datafold & "\" & $ID & ".txt"
 	$ping = Ping("gog.com", 4000)
 	If $ping > 0 Then
@@ -1554,31 +1522,11 @@ Func GetGameDetail()
 			SplashTextOn("", "Creating Manifest!", 200, 120, Default, Default, 33)
 			Sleep(500)
 			$manifest = $manfold & "\" & $slug & "_manifest.txt"
-			If FileExists($manifest) Then
-				$ans = MsgBox(262179 + 256, "Replace Query", _
-					"Manifest for this game already exists." & @LF & @LF & _
-					"Do you want to replace with a new one?" & @LF & @LF & _
-					"YES = Replace." & @LF & _
-					"NO = Backup & Replace." & @LF & _
-					"CANCEL = Abort any replacement.", 0, $GameInfoGUI)
-				If $ans = 2 Then
-					SplashOff()
-					Return
-				ElseIf $ans = 7 Then
-					$timestamp = _Now()
-					$timestamp = StringReplace($timestamp, "/", "")
-					$timestamp = StringReplace($timestamp, ":", "")
-					$timestamp = StringReplace($timestamp, " ", "")
-					$bakfile = StringTrimRight($manifest, 4) & "_" & $timestamp & ".txt"
-					FileMove($manifest, $bakfile)
-				EndIf
-			EndIf
 			_FileCreate($manifest)
 			$entry = '{' & @LF & '  "Games": [' & @LF & '    {' & @LF & '      "Id": ' & $ID & ',' & @LF & '      "Title": "' & $title & '",'
 			$entry = $entry & @LF & '      "Type": "' & $type & '",' & @LF & '      "CdKey": "",' & @LF & '      "Tags": [],' & @LF & '      "Installers": ['
 			If $installers <> "" Then
 				$downurl = ""
-				$errors = 0
 				$lastlang = ""
 				$lastOS = ""
 				If $hide = 1 Then
@@ -1622,7 +1570,6 @@ Func GetGameDetail()
 									RunWait(@ComSpec & ' /c echo ' & $downurl & ' && gogcli.exe ' & $params & ' >"' & $fileinfo & '"', @ScriptDir, $flag)
 									Sleep(1000)
 									If FileExists($fileinfo) Then
-										$logerr = ""
 										_FileReadToArray($fileinfo, $array)
 										For $a = 1 To $array[0]
 											$line = $array[$a]
@@ -1646,36 +1593,8 @@ Func GetGameDetail()
 												EndIf
 											EndIf
 										Next
-										$fext = StringRight($file, 4)
-										If $file = "" Then
-											$logerr = "File Name"
-										EndIf
-										If $checksum = "" And ($fext = ".exe" Or $fext= ".bin" Or $fext = "") Then
-											If $logerr = "" Then
-												$logerr = "Checksum"
-											Else
-												$logerr = $logerr & ", Checksum"
-											EndIf
-										EndIf
-										If $mass = "" Then
-											If $logerr = "" Then
-												$logerr = "File Size"
-											Else
-												$logerr = $logerr & ", File Size"
-											EndIf
-										EndIf
-										If $logerr <> "" Then
-											$errors = $errors + 1
-											_FileWriteLog($logfle, "Missing download file information - " & $logerr & ".", -1)
-										EndIf
-									Else
-										_FileWriteLog($logfle, "Required Fileinfo.txt file not found.", -1)
 									EndIf
-								Else
-									_FileWriteLog($logfle, "Required Cookie.txt file not found.", -1)
 								EndIf
-							Else
-								_FileWriteLog($logfle, "Required program gogcli.exe not found.", -1)
 							EndIf
 							If $i > 2 Then
 								$entry = $entry & @LF & '        },'
@@ -1704,8 +1623,6 @@ Func GetGameDetail()
 							$entry = $entry & @LF & '          "VerifiedSize": ' & $bytes & ','
 							$entry = $entry & @LF & '          "Checksum": "' & $checksum & '"'
 							$downurl = ""
-						Else
-							_FileWriteLog($logfle, "No download URL found.", -1)
 						EndIf
 					EndIf
 				Next
@@ -1744,7 +1661,6 @@ Func GetGameDetail()
 										RunWait(@ComSpec & ' /c echo ' & $downurl & ' && gogcli.exe ' & $params & ' >"' & $fileinfo & '"', @ScriptDir, $flag)
 										Sleep(1000)
 										If FileExists($fileinfo) Then
-											$logerr = ""
 											_FileReadToArray($fileinfo, $array)
 											For $a = 1 To $array[0]
 												$line = $array[$a]
@@ -1767,36 +1683,8 @@ Func GetGameDetail()
 													EndIf
 												EndIf
 											Next
-											$fext = StringRight($file, 4)
-											If $file = "" Then
-												$logerr = "File Name"
-											EndIf
-											If $checksum = "" And ($fext = ".exe" Or $fext= ".bin" Or $fext = "") Then
-												If $logerr = "" Then
-													$logerr = "Checksum"
-												Else
-													$logerr = $logerr & ", Checksum"
-												EndIf
-											EndIf
-											If $mass = "" Then
-												If $logerr = "" Then
-													$logerr = "File Size"
-												Else
-													$logerr = $logerr & ", File Size"
-												EndIf
-											EndIf
-											If $logerr <> "" Then
-												$errors = $errors + 1
-												_FileWriteLog($logfle, "Missing download file information - " & $logerr & ".", -1)
-											EndIf
-										Else
-											_FileWriteLog($logfle, "Required Fileinfo.txt file not found.", -1)
 										EndIf
-									Else
-										_FileWriteLog($logfle, "Required Cookie.txt file not found.", -1)
 									EndIf
-								Else
-									_FileWriteLog($logfle, "Required program gogcli.exe not found.", -1)
 								EndIf
 								;If $i > 2 Then
 								;	$entry = $entry & @LF & '        },'
@@ -1811,8 +1699,6 @@ Func GetGameDetail()
 								$entry = $entry & @LF & '          "VerifiedSize": ' & $bytes & ','
 								$entry = $entry & @LF & '          "Checksum": "' & $checksum & '"'
 								$downurl = ""
-							Else
-								_FileWriteLog($logfle, "No download URL found for extras.", -1)
 							EndIf
 						EndIf
 					Next
@@ -1820,8 +1706,6 @@ Func GetGameDetail()
 				EndIf
 				$entry = $entry & @LF & '    }' & @LF & '  ],'
 				; Other details go here (Total Size estimated and verified, summary of all languages etc)
-			Else
-				_FileWriteLog($logfle, "No installers found.", -1)
 			EndIf
 			;
 			$entry = $entry & @LF & '  }' & @LF & '}' & @LF
@@ -1832,9 +1716,6 @@ Func GetGameDetail()
 				Else
 					Run($editor & ' "' & $manifest & '"')
 				EndIf
-			EndIf
-			If $errors > 0 Then
-				MsgBox(262192, "Errors Occurred", "Check the Log file for details!", 0, $GameInfoGUI)
 			EndIf
 		EndIf
 		SplashOff()
