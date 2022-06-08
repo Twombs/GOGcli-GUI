@@ -47,8 +47,8 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $update, $version
 
-$update = "Updated in January 2022."
-$version = "v2.8"
+$update = "Updated in June 2022."
+$version = "v3.0"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -85,19 +85,19 @@ Global $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
 Global $7zip, $a, $addlist, $alert, $alerts, $alf, $alldetail, $alldown, $allgames, $allkeys, $alpha, $ans, $array, $backups, $bigcover
 Global $bigpic, $blackjpg, $blurb, $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $cease, $changelogs, $check, $checksum, $checkval
-Global $cnt, $compare, $completed, $cookie, $cookies, $cover, $covers, $covimg, $DBfile, $declare, $descript, $descriptions, $dest, $details
-Global $DetailsGUI, $DLC, $dlcfile, $done, $downfiles, $downlist, $download, $downloads, $downlog, $drv, $endgame, $entries, $entry
-Global $erred, $existDB, $exists, $extbin, $extdmg, $extexe, $extpkg, $extsh, $extzip, $f, $file, $fileinfo, $filepth, $files, $filesize
-Global $final, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini, $gametxt, $gams, $getlatest
-Global $gmefold, $gmesfld, $gogcli, $GOGcliGUI, $hash, $head, $height, $histfile, $history, $htmlfle, $i, $icoD, $icoF, $icoI, $icoS
-Global $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $include, $ind, $inifle, $json, $keep, $key, $lang, $left, $line, $lines
-Global $link, $list, $listed, $listview, $log, $logfle, $lowid, $manall, $m, $manifest, $manifests, $manlist, $md5check, $mini, $minimize
-Global $model, $n, $name, $num, $numb, $offline, $OP, $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping
-Global $pinged, $processed, $progress, $pth, $purge, $r, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $rest, $results, $ret
-Global $return, $row, $s, $same, $savkeys, $savlog, $second, $selector, $session, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld
-Global $space, $splash, $state, $stop, $style, $subfold, $SYS, $tag, $tagfle, $tail, $text, $title, $titleF, $titleID, $titleIDup, $titlist
-Global $top, $type, $types, $typs, $updated, $updates, $URL, $user, $validate, $valhistory, $verify, $warn, $web, $which, $width, $winpos
-Global $z, $zipcheck, $zipfile, $zippath
+Global $cnt, $compare, $completed, $cookie, $cookies, $cover, $covers, $covimg, $datafold, $DBfile, $declare, $descript, $descriptions
+Global $dest, $details, $DetailsGUI, $DLC, $dlcfile, $done, $down, $downfiles, $downlist, $download, $downloads, $downlog, $drv, $endgame
+Global $entries, $entry, $erred, $existDB, $exists, $extbin, $extdmg, $extexe, $extpkg, $extsh, $extzip, $f, $file, $fileinfo, $filepth
+Global $files, $filesize, $final, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini
+Global $gametxt, $gams, $getlatest, $gmefold, $gmesfld, $gogcli, $GOGcliGUI, $hash, $head, $height, $histfile, $history, $htmlfle, $i
+Global $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $include, $ind, $inifle, $json, $keep
+Global $key, $lang, $left, $line, $lines, $link, $list, $listed, $listview, $log, $logfle, $lowid, $m, $manall, $manalt, $manifest
+Global $manifests, $manlist, $md5check, $mini, $minimize, $model, $n, $name, $num, $numb, $offline, $OP, $open, $OS, $OSes, $outfold
+Global $overlook, $params, $part, $parts, $percent, $ping, $pinged, $processed, $progress, $pth, $purge, $r, $rat, $ratify, $read
+Global $record, $relax, $reportexe, $res, $rest, $results, $ret, $return, $row, $s, $same, $savkeys, $savlog, $second, $selector
+Global $session, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $state, $stop, $style, $subfold, $SYS, $tag
+Global $tagfle, $tail, $text, $title, $titleF, $titleID, $titleIDup, $titlist, $top, $type, $types, $typs, $updated, $updates, $URL
+Global $user, $valhistory, $validate, $verify, $warn, $web, $which, $width, $winpos, $xtra, $z, $zipcheck, $zipfile, $zippath
 ;, $foldzip, $resultfle
 
 $addlist = @ScriptDir & "\Added.txt"
@@ -1174,10 +1174,10 @@ Func MainGUI()
 	Local $accept, $addto, $alias, $amount, $aqua, $arraytits, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4
 	Local $compall, $compone, $ctrl, $delay, $description, $destfld, $destfle, $dir, $disable, $display, $dll, $e, $error
 	Local $everything, $exist, $existing, $fext, $filelist, $find, $finished, $fixed, $flename, $foldpth, $former, $gambak
-	Local $get, $hours, $IDD, $idlink, $ids, $l, $language, $languages, $last, $lastgame, $latest, $loop, $mans, $method
-	Local $mins, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $patchfld, $pos, $prior, $proceed, $query, $red, $rep
-	Local $result, $retrieve, $savtxt, $secs, $sect, $sects, $serial, $skipped, $slugD, $started, $tagtxt, $taken, $tested
-	Local $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
+	Local $get, $hours, $IDD, $idlink, $ids, $l, $language, $languages, $last, $lastgame, $latest, $loop, $manfold, $mans
+	Local $method, $mins, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $patchfld, $paths, $pos, $prior, $proceed
+	Local $query, $red, $rep, $result, $retrieve, $savtxt, $secs, $sect, $sects, $serial, $shift, $skipped, $slugD, $started
+	Local $tagtxt, $taken, $tested, $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
 	;
 	If Not FileExists($blackjpg) Then
 		Local $hBitmap, $hGraphic, $hImage
@@ -1972,6 +1972,7 @@ Func MainGUI()
 	;
 	$compall = 4
 	$compone = 4
+	$down = ""
 	$existing = ""
 	$find = ""
 	$last = ""
@@ -3522,11 +3523,15 @@ Func MainGUI()
 			If $title = "" And ($buttxt = "DOWNLOAD" Or $buttxt = "VALIDATE" & @LF & "GAME" Or $buttxt = "VALIDATE" & @LF & "FILE") Then
 				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
 			Else
+				$shift = False
 				$ctrl = _IsPressed("11")
-				If $buttxt = "DOWNLOAD" & @LF & "ALL" And $valnow = "" Then
+				If $ctrl = False Then
+					$shift = _IsPressed("10")
+				EndIf
+				If $buttxt = "DOWNLOAD" & @LF & "ALL" And $valnow = "" And $down = "" Then
 					$allgames = 1
 					ContinueLoop
-				ElseIf $ctrl = True And ($buttxt <> "VALIDATE" & @LF & "GAME" And $buttxt <> "VALIDATE" & @LF & "FILE") And $valnow = "" Then
+				ElseIf $ctrl = True And $down = "" And ($buttxt <> "VALIDATE" & @LF & "GAME" And $buttxt <> "VALIDATE" & @LF & "FILE") And $valnow = "" Then
 					; Build a download list of games.
 					$cnt = _FileCountLines($downlist)
 					If $cnt < 20 Then
@@ -3581,10 +3586,31 @@ Func MainGUI()
 					Else
 						MsgBox(262192, "Add Error", "Limit of 15 games has been reached!", 2, $GOGcliGUI)
 					EndIf
-				ElseIf $ctrl = True And $valnow = "" Then
+				ElseIf $ctrl = True And $valnow = "" And $down = "" Then
 					; Abort adding to or building a download list of games.
 					MsgBox(262192, "Download ADD Error", "A validate option is enabled!", 0, $GOGcliGUI)
-				ElseIf $buttxt = "DOWNLOAD" & @LF & "LIST" And $valnow = "" Then
+				ElseIf $shift = True And $valnow = "" And ($buttxt = "DOWNLOAD" Or $buttxt = "DOWNLOAD" & @LF & "OTHER") Then
+					; Set for downloading a single game using an alternate manifest source.
+					If $down = "other" Then
+						GUICtrlSetData($Button_down, "DOWNLOAD")
+						GUICtrlSetTip($Button_down, "Download the selected game!")
+						GUICtrlSetState($Item_verify_file, $GUI_ENABLE)
+						GUICtrlSetState($Item_verify_game, $GUI_ENABLE)
+						GUICtrlSetState($Item_verify_now, $GUI_DISABLE)
+						GUICtrlSetState($Listview_games, $GUI_FOCUS)
+						$down = ""
+						ContinueLoop
+					Else
+						GUICtrlSetStyle($Button_down, $BS_MULTILINE)
+						GUICtrlSetData($Button_down, "DOWNLOAD" & @LF & "OTHER")
+						GUICtrlSetTip($Button_down, "Download a game via another manifest!")
+						GUICtrlSetState($Item_verify_file, $GUI_DISABLE)
+						GUICtrlSetState($Item_verify_game, $GUI_DISABLE)
+						GUICtrlSetState($Item_verify_now, $GUI_DISABLE)
+						GUICtrlSetState($Listview_games, $GUI_FOCUS)
+						$down = "other"
+					EndIf
+				ElseIf $buttxt = "DOWNLOAD" & @LF & "LIST" And $valnow = "" And $down = "" And $shift = False Then
 					; Downloads from a list of games.
 					;MsgBox(262192, "Download Error", "This feature is not yet supported!", 2, $GOGcliGUI)
 					;Local $e, $IDD, $paramsD, $titleD
@@ -3723,6 +3749,8 @@ Func MainGUI()
 												$line = $line[2]
 												$line = StringSplit($line, '",', 1)
 												$col4 = $line[1]
+												$col4 = StringReplace($col4, "[", "{")
+												$col4 = StringReplace($col4, "]", "}")
 												$fext = StringRight($col4, 4)
 												; Excluded File Types check.
 												If $extbin = 1 Then
@@ -3806,20 +3834,22 @@ Func MainGUI()
 												If $proceed > 0 Then
 													; Check to skip duplicates.
 													If IniRead($downfiles, $col4, "file", "") <> $col4 Then
-														IniWrite($downfiles, $col4, "game", $titleD)
-														IniWrite($downfiles, $col4, "slug", $slugD)
-														IniWrite($downfiles, $col4, "ID", $IDD)
-														IniWrite($downfiles, $col4, "file", $col4)
-														IniWrite($downfiles, $col4, "language", $language)
-														IniWrite($downfiles, $col4, "languages", $languages)
-														IniWrite($downfiles, $col4, "OS", $OPS)
-														IniWrite($downfiles, $col4, "URL", $URL)
-														IniWrite($downfiles, $col4, "title", $alias)
-														IniWrite($downfiles, $col4, "bytes", $filesize)
-														IniWrite($downfiles, $col4, "size", $col3)
-														IniWrite($downfiles, $col4, "checksum", $checksum)
-														IniWrite($downfiles, $col4, "type", $col2)
-														If $proceed = 2 Then IniWrite($downfiles, $col4, "missing", "checksum")
+														If $IDD <> "" And $titleD <> "" And $URL <> "" Then
+															IniWrite($downfiles, $col4, "game", $titleD)
+															IniWrite($downfiles, $col4, "slug", $slugD)
+															IniWrite($downfiles, $col4, "ID", $IDD)
+															IniWrite($downfiles, $col4, "file", $col4)
+															IniWrite($downfiles, $col4, "language", $language)
+															IniWrite($downfiles, $col4, "languages", $languages)
+															IniWrite($downfiles, $col4, "OS", $OPS)
+															IniWrite($downfiles, $col4, "URL", $URL)
+															IniWrite($downfiles, $col4, "title", $alias)
+															IniWrite($downfiles, $col4, "bytes", $filesize)
+															IniWrite($downfiles, $col4, "size", $col3)
+															IniWrite($downfiles, $col4, "checksum", $checksum)
+															IniWrite($downfiles, $col4, "type", $col2)
+															If $proceed = 2 Then IniWrite($downfiles, $col4, "missing", "checksum")
+														EndIf
 													EndIf
 												EndIf
 												$alias = ""
@@ -3884,7 +3914,98 @@ Func MainGUI()
 					If $alert = 0 Then
 						If $ind > -1 Then _GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
 					EndIf
-				Else
+				ElseIf $buttxt = "DOWNLOAD" & @LF & "OTHER" Then
+					; Select another manifest with a single game and download it.
+					$manfold = IniRead($inifle, "Alternate Manifest", "path", "")
+					If $manfold = "" Then $manfold = @ScriptDir
+					SetStateOfControls($GUI_DISABLE, "all")
+					GUICtrlSetImage($Pic_cover, $blackjpg)
+					;$pth = FileOpenDialog("Select another manifest file to download with.", $manfold, "Manifest file (*.txt)", 7, "", $GOGcliGUI)
+					$pth = FileOpenDialog("Select one or more other manifest files to download with.", $manfold, "Manifest file (*.txt)", 7, "", $GOGcliGUI)
+					If @error = 0 Then
+						$manalt = $pth
+						If StringInStr($pth, "|") > 0 Then
+							$paths = StringSplit($pth, "|", 1)
+							$manfold = $paths[1]
+							$caption = "Download Other"
+							;MsgBox(262192, "Manifest Folder", $manfold, 0, $GOGcliGUI)
+						Else
+							$pos = StringInStr($pth, "\", 0, -1)
+							$manfold = StringLeft($pth, $pos - 1)
+							GUICtrlSetData($Label_mid, "Extracting Game File Data")
+							$game = FileRead($manalt)
+							If $game <> "" Then
+								If StringInStr($game, '"Id": ') > 0 Then
+									$ID = StringSplit($game, '"Id": ', 1)
+									If $ID[0] = 2 Then
+										$ID = $ID[2]
+										$title = StringSplit($ID, '"Title": "', 1)
+										$title = $title[2]
+										$title = StringSplit($title, '",', 1)
+										$title = $title[1]
+										$title = StringStripWS($title, 3)
+										$ID = StringSplit($ID, ',', 1)
+										$ID = $ID[1]
+										$ID = StringStripWS($ID, 3)
+										$identry = '"Id": ' & $ID & ','
+										$slug = StringSplit($game, '"Slug": ', 1)
+										If $slug[0] = 2 Then
+											$slug = $slug[2]
+											$slug = StringSplit($slug, ',', 1)
+											$slug = $slug[1]
+											$slug = StringReplace($slug, '"', '')
+											$slug = StringStripWS($slug, 3)
+										Else
+											$slug = StringSplit($game, '"Url": ', 1)
+											$slug = $slug[2]
+											$slug = StringSplit($slug, '/', 1)
+											$slug = $slug[3]
+										EndIf
+									Else
+										MsgBox(262192, "Game Error", "Manifest file appears to contain more than one game!", 0, $GOGcliGUI)
+									EndIf
+								Else
+									MsgBox(262192, "File Error", "Does not appear to be a manifest file (or unsuitable)!", 0, $GOGcliGUI)
+								EndIf
+							Else
+								MsgBox(262192, "Read Error", "The manifest file appears to be empty!", 0, $GOGcliGUI)
+							EndIf
+							$caption = $title
+						EndIf
+						IniWrite($inifle, "Alternate Manifest", "path", $manfold)
+						$pos = StringInStr($manfold, "\", 0, -1)
+						$datafold = StringLeft($manfold, $pos)
+						$datafold = $datafold & "Data"
+						If Not FileExists($datafold) Then $datafold = ""
+						; Download
+						If $selector = 1 Then
+							GUICtrlSetData($Label_mid, "Game Files Selector")
+							;GuiSetState(@SW_MINIMIZE, $GOGcliGUI)
+							;GuiSetState(@SW_DISABLE, $GOGcliGUI)
+							$mini = 4
+							FileSelectorGUI()
+							;GuiSetState(@SW_ENABLE, $GOGcliGUI)
+							;GuiSetState(@SW_RESTORE, $GOGcliGUI)
+						Else
+							MsgBox(262192, "Download Error", "This feature is not yet supported!", 0, $GOGcliGUI)
+						EndIf
+					EndIf
+					;
+					$ans = MsgBox(262209 + 256, "Restore Query", "Clear the 'DOWNLOAD OTHER' mode?", 0, $GOGcliGUI)
+					If $ans = 1 Then
+						GUICtrlSetData($Button_down, "DOWNLOAD")
+						GUICtrlSetTip($Button_down, "Download the selected game!")
+						GUICtrlSetState($Item_verify_file, $GUI_ENABLE)
+						GUICtrlSetState($Item_verify_game, $GUI_ENABLE)
+						GUICtrlSetState($Item_verify_now, $GUI_DISABLE)
+						$down = ""
+					EndIf
+					GUICtrlSetData($Label_top, "")
+					GUICtrlSetData($Label_mid, "")
+					GUICtrlSetData($Label_bed, "")
+					SetStateOfControls($GUI_ENABLE, "all")
+					GUICtrlSetState($Listview_games, $GUI_FOCUS)
+				ElseIf $shift = False Then
 					; Download one game or Validate.
 					; Retrieve (download or extract) details for just one game.
 					SetStateOfControls($GUI_DISABLE, "all")
@@ -4863,50 +4984,56 @@ Func MainGUI()
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Item_verify_now
 			; Validate Game now
-			If $title = "" Then
-				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
-			Else
-				$ans = MsgBox(262177 + 256, "Validate Now Query", _
-					"Validate will occur immediately, after" & @LF & _
-					"the selection of required options." & @LF & @LF & _
-					"This is for the currently selected game." & @LF & @LF & _
-					$title & @LF & @LF & _
-					"OK = Validate a Game or File." & @LF & _
-					"CANCEL = Abort any Validate." & @LF & @LF & _
-					"WARNING - It is important that the correct" & @LF & _
-					"title has been selected on the 'Games' list.", 0, $GOGcliGUI)
-				If $ans = 1 Then
-					$valnow = 1
+			If $down = "" Then
+				If $title = "" Then
+					MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+				Else
+					$ans = MsgBox(262177 + 256, "Validate Now Query", _
+						"Validate will occur immediately, after" & @LF & _
+						"the selection of required options." & @LF & @LF & _
+						"This is for the currently selected game." & @LF & @LF & _
+						$title & @LF & @LF & _
+						"OK = Validate a Game or File." & @LF & _
+						"CANCEL = Abort any Validate." & @LF & @LF & _
+						"WARNING - It is important that the correct" & @LF & _
+						"title has been selected on the 'Games' list.", 0, $GOGcliGUI)
+					If $ans = 1 Then
+						$valnow = 1
+					EndIf
 				EndIf
 			EndIf
 		Case $msg = $Item_verify_game
 			; Validate Game for DOWNLOAD button
-			If $verify = 4 Then
-				$verify = 1
-				GUICtrlSetData($Button_down, "VALIDATE" & @LF & "GAME")
-				If $ratify = 1 Then
-					$ratify = 4
-					GUICtrlSetState($Item_verify_file, $ratify)
+			If $down = "" Then
+				If $verify = 4 Then
+					$verify = 1
+					GUICtrlSetData($Button_down, "VALIDATE" & @LF & "GAME")
+					If $ratify = 1 Then
+						$ratify = 4
+						GUICtrlSetState($Item_verify_file, $ratify)
+					EndIf
+				Else
+					$verify = 4
+					GUICtrlSetData($Button_down, "DOWNLOAD")
 				EndIf
-			Else
-				$verify = 4
-				GUICtrlSetData($Button_down, "DOWNLOAD")
+				GUICtrlSetState($Item_verify_game, $verify)
 			EndIf
-			GUICtrlSetState($Item_verify_game, $verify)
 		Case $msg = $Item_verify_file
 			; Validate File for DOWNLOAD button
-			If $ratify = 4 Then
-				$ratify = 1
-				GUICtrlSetData($Button_down, "VALIDATE" & @LF & "FILE")
-				If $verify = 1 Then
-					$verify = 4
-					GUICtrlSetState($Item_verify_game, $verify)
+			If $down = "" Then
+				If $ratify = 4 Then
+					$ratify = 1
+					GUICtrlSetData($Button_down, "VALIDATE" & @LF & "FILE")
+					If $verify = 1 Then
+						$verify = 4
+						GUICtrlSetState($Item_verify_game, $verify)
+					EndIf
+				Else
+					$ratify = 4
+					GUICtrlSetData($Button_down, "DOWNLOAD")
 				EndIf
-			Else
-				$ratify = 4
-				GUICtrlSetData($Button_down, "DOWNLOAD")
+				GUICtrlSetState($Item_verify_file, $ratify)
 			EndIf
-			GUICtrlSetState($Item_verify_file, $ratify)
 		Case $msg = $Item_validate_history
 			; Validations - History Viewer
 			If FileExists($valhistory) Then
@@ -6985,14 +7112,15 @@ Func FileSelectorGUI()
 ;~ 	$caption = "Download ALL - The Interactive Adventures of Dog Mendonça and Pizzaboy®"
 ;~ 	$caption = "Download ALL - Wallace and Gromit's Episode 1 Fright of the Bumblebees"
 	Local $Button_download, $Button_dwn, $Button_quit, $Button_uncheck, $Button_up, $Checkbox_cancel, $Checkbox_mini, $Checkbox_relax, $Checkbox_skip
-	Local $Combo_OSfle, $Combo_shutdown, $Group_exist, $Group_files, $Group_OS, $Group_select, $Label_done, $Label_percent, $Label_shut, $Label_speed
-	Local $Label_warn, $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
-	Local $Menu_list, $Sub_menu_remove, $Item_remove_ext, $Item_remove_lin, $Item_remove_mac, $Item_remove_sel, $Item_remove_win
+	Local $Combo_OSfle, $Combo_shutdown, $Group_exist, $Group_files, $Group_OS, $Group_select, $Label_done, $Label_game, $Label_percent, $Label_shut
+	Local $Label_speed, $Label_title, $Label_URL, $Label_warn, $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat
+	Local $Radio_selset, $Menu_list, $Sub_menu_remove, $Item_remove_ext, $Item_remove_lin, $Item_remove_mac, $Item_remove_sel, $Item_remove_win
 	;
-	Local $amount, $began, $begin, $begun, $cancel, $changelog, $checked, $code, $col1, $col2, $col3, $col4, $color, $description, $dllcall, $downloading
-	Local $dwn, $dwnfle, $edge, $ents, $exist, $fext, $finish, $gotten, $hours, $icoDwn, $icofle, $icoUp, $IDD, $idlink, $idx, $imageD, $lastid, $listing
-	Local $mins, $missing, $movdwn, $movup, $osfle, $prior, $removed, $saved, $savtxt, $secs, $sect, $sections, $SelectorGUI, $serial, $shutdown, $sizecheck
-	Local $skip, $slugD, $speed, $start, $styles, $sum, $taken, $theme, $titleD, $tmpman, $up, $upfle, $val, $valfile, $valid, $visible, $wide
+	Local $amount, $began, $begin, $begun, $cancel, $changelog, $checked, $code, $col1, $col2, $col3, $col4, $color, $datapic, $description, $dllcall
+	Local $downloading, $dwn, $dwnfle, $edge, $ents, $exist, $fext, $filetit, $finish, $gotten, $hours, $icoDwn, $icofle, $icoUp, $IDD, $idlink, $idx
+	Local $imageD, $lastid, $listing, $manfold, $mins, $missing, $movdwn, $movup, $osfle, $paths, $prior, $removed, $saved, $savtxt, $secs, $sect
+	Local $sections, $SelectorGUI, $serial, $shutdown, $sizecheck, $skip, $slugD, $speed, $start, $styles, $sum, $taken, $theme, $titleD, $tmpman
+	Local $up, $upfle, $val, $valfile, $valid, $visible, $wide
 	;
 	;$mini = 1
 	$styles = $WS_OVERLAPPED + $WS_CAPTION + $WS_MINIMIZEBOX + $WS_SIZEBOX + $WS_VISIBLE ; + $WS_POPUP
@@ -7003,10 +7131,24 @@ Func FileSelectorGUI()
 	; CONTROLS
 	$Group_files = GuiCtrlCreateGroup("Files To Download", 10, 10, $width - 25, 302)
 	GUICtrlSetResizing($Group_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
-	$ListView_files = GUICtrlCreateListView("||||", 20, 30, $width - 45, 270, $LVS_SHOWSELALWAYS + $LVS_SINGLESEL + $LVS_REPORT + $LVS_NOCOLUMNHEADER, _
+	$ListView_files = GUICtrlCreateListView("||||", 20, 30, $width - 45, 250, $LVS_SHOWSELALWAYS + $LVS_SINGLESEL + $LVS_REPORT + $LVS_NOCOLUMNHEADER, _
 																						$LVS_EX_FULLROWSELECT + $LVS_EX_GRIDLINES + $LVS_EX_CHECKBOXES)
 	GUICtrlSetBkColor($ListView_files, 0xF0D0F0)
 	GUICtrlSetResizing($ListView_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
+	$Label_title = GuiCtrlCreateLabel("", 20, 282, 160, 18, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_title, $COLOR_GREEN)
+	GUICtrlSetColor($Label_title, $COLOR_WHITE)
+	GUICtrlSetResizing($Label_title, $GUI_DOCKAUTO)
+	GUICtrlSetTip($Label_title, "File Title!")
+	$Label_URL = GuiCtrlCreateLabel("", 182, 282, 221, 18, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_URL, 0xFFBB77)
+	GUICtrlSetResizing($Label_URL, $GUI_DOCKAUTO)
+	GUICtrlSetTip($Label_URL, "Download URL!")
+	$Label_game = GuiCtrlCreateLabel("", 405, 282, 160, 18, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_game, $COLOR_GREEN)
+	GUICtrlSetColor($Label_game, $COLOR_WHITE)
+	GUICtrlSetResizing($Label_game, $GUI_DOCKAUTO)
+	GUICtrlSetTip($Label_game, "Game Title!")
 	;
 	$Label_shut = GuiCtrlCreateLabel("SHUTDOWN", $width - 325, 5, 76, 21, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetResizing($Label_shut, $GUI_DOCKRIGHT + $GUI_DOCKAUTO + $GUI_DOCKSIZE)
@@ -7304,6 +7446,80 @@ Func FileSelectorGUI()
 		SplashOff()
 		$ents = _GUICtrlListView_GetItemCount($ListView_files)
 		GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")")
+	ElseIf $caption = "Download Other" Then
+		_FileCreate($downfiles)
+		$xtra = 0
+		$paths = StringSplit($manalt, "|", 1)
+		$manfold = $paths[1]
+		For $a = 2 To $paths[0]
+			$manalt = $manfold & "\" & $paths[$a]
+			;MsgBox(262192, "Manifest", $manalt, 0, $GOGcliGUI)
+			$game = FileRead($manalt)
+			If $game <> "" Then
+				If StringInStr($game, '"Id": ') > 0 Then
+					$ID = StringSplit($game, '"Id": ', 1)
+					If $ID[0] = 2 Then
+						$ID = $ID[2]
+						$title = StringSplit($ID, '"Title": "', 1)
+						$title = $title[2]
+						$title = StringSplit($title, '",', 1)
+						$title = $title[1]
+						$title = StringStripWS($title, 3)
+						$ID = StringSplit($ID, ',', 1)
+						$ID = $ID[1]
+						$ID = StringStripWS($ID, 3)
+						$identry = '"Id": ' & $ID & ','
+						$slug = StringSplit($game, '"Slug": ', 1)
+						If $slug[0] = 2 Then
+							$slug = $slug[2]
+							$slug = StringSplit($slug, ',', 1)
+							$slug = $slug[1]
+							$slug = StringReplace($slug, '"', '')
+							$slug = StringStripWS($slug, 3)
+						Else
+							$slug = StringSplit($game, '"Url": ', 1)
+							$slug = $slug[2]
+							$slug = StringSplit($slug, '/', 1)
+							$slug = $slug[3]
+						EndIf
+						GUICtrlSetData($Label_mid, "Extracting Game File Data")
+						GetFileDownloadDetails($ListView_files)
+					Else
+						MsgBox(262192, "Game Error", "Manifest file appears to contain more than one game!", 0, $GOGcliGUI)
+					EndIf
+				Else
+					MsgBox(262192, "File Error", "Does not appear to be a manifest file (or unsuitable)!", 0, $GOGcliGUI)
+				EndIf
+			Else
+				MsgBox(262192, "Read Error", "The manifest file appears to be empty!", 0, $GOGcliGUI)
+			EndIf
+		Next
+		$ents = _GUICtrlListView_GetItemCount($ListView_files)
+		GUICtrlSetData($Group_files, "Files To Download (" & $ents & ")")
+		GUICtrlSetData($Combo_shutdown, "none|Hibernate|Logoff|Powerdown|Reboot|Shutdown|Standby", "none")
+		GUICtrlSetState($Checkbox_mini, $GUI_DISABLE)
+		; Color lines based on game title differences.
+		$prior = ""
+		For $a = 0 To $ents - 1
+			$entry = _GUICtrlListView_GetItemText($ListView_files, $a, 3)
+			$title = IniRead($downfiles, $entry, "game", "")
+			If $prior = "" Then
+				$prior = $title
+				$color = 0xB9FFFF
+			ElseIf $prior <> $title Then
+				$prior = $title
+				If $color = 0xB9FFFF Then
+					$color = 0xFFFFB0
+				Else
+					$color = 0xB9FFFF
+				EndIf
+			EndIf
+			_GUICtrlListView_SetItemSelected($ListView_files, $a, True, True)
+			$row = $lastid + $a + 1
+			GUICtrlSetBkColor($row, $color)
+		Next
+		; Testing only
+		;Return
 	Else
 		GetFileDownloadDetails($ListView_files)
 		$ents = _GUICtrlListView_GetItemCount($ListView_files)
@@ -7449,6 +7665,7 @@ Func FileSelectorGUI()
 				$edge = @DesktopWidth - $wide - 20
 			ElseIf $wide < $width Then
 				$wide = $width + 10
+				$edge = $left
 			Else
 				$edge = $left
 			EndIf
@@ -7912,46 +8129,63 @@ Func FileSelectorGUI()
 															EndIf
 														EndIf
 													EndIf
-													If $gamepic <> "" Then
-														; Download Game Cover Image File
-														If Not FileExists($gamepic) Then
-															Sleep(1000)
-															GUICtrlSetData($Label_percent, "cover")
-															$imageD = IniRead($gamesini, $IDD, "image", "")
-															$link = "https:" & $imageD & ".jpg"
-															InetGet($link, $gamepic, 1, 0)
-															If Not FileExists($gamepic) Then
-																InetGet($link, $gamepic, 0, 0)
+													If $down = "other" Then
+														; Using an external manifest file.
+														If $datafold <> "" Then
+															$datapic = $datafold & "\" & $IDD & "_image.png"
+															If FileExists($datapic) Then
+																$gamepic = $gamefold & "\Folder.png"
 																If Not FileExists($gamepic) Then
-																	InetGet($link, $gamepic, 0, 1)
+																	Sleep(1000)
+																	GUICtrlSetData($Label_percent, "cover")
+																	FileCopy($datapic, $gamepic)
+																	_FileWriteLog($logfle, "Copied cover.", -1)
 																EndIf
 															EndIf
-															_FileWriteLog($logfle, "Download cover.", -1)
 														EndIf
-													EndIf
-													If $serial <> "" Then
-														; Save the CDkey or Serial to file
-														$saved = IniRead($inifle, "Last Serial", "saved", "")
-														If Not FileExists($serial) Or $saved <> $titleD Then
-															$cdkey = IniRead($cdkeys, $IDD, "keycode", "")
-															If $cdkey <> "" Then
+													Else
+														; Not using an external manifest file.
+														If $gamepic <> "" Then
+															; Download Game Cover Image File
+															If Not FileExists($gamepic) Then
 																Sleep(1000)
-																GUICtrlSetData($Label_percent, "serial")
-																$text = FixUnicode($cdkey)
-																If $text <> $cdkey Then
-																	$text = StringStripWS($text, 8)
-																	$text = StringReplace($text, "<span>", "")
-																	$text = StringReplace($text, "</span>", @CRLF)
-																	$text = StringReplace($text, "<br>\t", " ", 0, 1)
-																	$text = StringReplace($text, "\t<br>", @CRLF, 0, 1)
-																	$text = StringReplace($text, "<br>", " ")
-																	$text = StringReplace($text, ":", ": ")
-																	$text = StringReplace($text, "  ", " ")
-																	$cdkey = $cdkey & @CRLF & @CRLF & "(Converted)" & @CRLF & $text
+																GUICtrlSetData($Label_percent, "cover")
+																$imageD = IniRead($gamesini, $IDD, "image", "")
+																$link = "https:" & $imageD & ".jpg"
+																InetGet($link, $gamepic, 1, 0)
+																If Not FileExists($gamepic) Then
+																	InetGet($link, $gamepic, 0, 0)
+																	If Not FileExists($gamepic) Then
+																		InetGet($link, $gamepic, 0, 1)
+																	EndIf
 																EndIf
-																FileWriteLine($serial, $title & @CRLF & $cdkey)
-																_FileWriteLog($logfle, "Saved cdkey or serial.", -1)
-																IniWrite($inifle, "Last Serial", "saved", $titleD)
+																_FileWriteLog($logfle, "Download cover.", -1)
+															EndIf
+														EndIf
+														If $serial <> "" Then
+															; Save the CDkey or Serial to file
+															$saved = IniRead($inifle, "Last Serial", "saved", "")
+															If Not FileExists($serial) Or $saved <> $titleD Then
+																$cdkey = IniRead($cdkeys, $IDD, "keycode", "")
+																If $cdkey <> "" Then
+																	Sleep(1000)
+																	GUICtrlSetData($Label_percent, "serial")
+																	$text = FixUnicode($cdkey)
+																	If $text <> $cdkey Then
+																		$text = StringStripWS($text, 8)
+																		$text = StringReplace($text, "<span>", "")
+																		$text = StringReplace($text, "</span>", @CRLF)
+																		$text = StringReplace($text, "<br>\t", " ", 0, 1)
+																		$text = StringReplace($text, "\t<br>", @CRLF, 0, 1)
+																		$text = StringReplace($text, "<br>", " ")
+																		$text = StringReplace($text, ":", ": ")
+																		$text = StringReplace($text, "  ", " ")
+																		$cdkey = $cdkey & @CRLF & @CRLF & "(Converted)" & @CRLF & $text
+																	EndIf
+																	FileWriteLine($serial, $title & @CRLF & $cdkey)
+																	_FileWriteLog($logfle, "Saved cdkey or serial.", -1)
+																	IniWrite($inifle, "Last Serial", "saved", $titleD)
+																EndIf
 															EndIf
 														EndIf
 													EndIf
@@ -9004,6 +9238,13 @@ Func FileSelectorGUI()
 						GUICtrlSetState($Button_dwn, $GUI_ENABLE)
 						GUICtrlSetState($Button_up, $GUI_ENABLE)
 					EndIf
+					$entry = _GUICtrlListView_GetItemText($ListView_files, $idx, 3)
+					$filetit = IniRead($downfiles, $entry, "title", "")
+					GUICtrlSetData($Label_title, $filetit)
+					$URL = IniRead($downfiles, $entry, "URL", "")
+					GUICtrlSetData($Label_URL, $URL)
+					$titleD = IniRead($downfiles, $entry, "game", "")
+					GUICtrlSetData($Label_game, $titleD)
 				EndIf
 			EndIf
 		Case $msg = $Radio_selset
@@ -9504,13 +9745,13 @@ Func FileSelectorGUI()
 EndFunc ;=> FileSelectorGUI
 
 Func GameDetailsGUI()
-	Local $Button_all, $Button_cdkey, $Button_changelog, $Button_close, $Button_descript, $Button_general, $Button_manifest
-	Local $Checkbox_changelog, $Checkbox_descript, $Checkbox_game, $Checkbox_games, $Checkbox_local, $Checkbox_purge
-	Local $Group_changelog, $Group_descript, $Group_save
+	Local $Button_all, $Button_cdkey, $Button_changelog, $Button_close, $Button_descript, $Button_general, $Button_ID, $Button_manifest
+	Local $Button_URL, $Checkbox_changelog, $Checkbox_descript, $Checkbox_game, $Checkbox_games, $Checkbox_local, $Checkbox_purge
+	Local $Group_changelog, $Group_descript, $Group_save, $Input_ID, $Input_URL, $Label_ID, $Label_URL
 	Local $above, $high, $side, $wide
 	;
 	$wide = 268
-	$high = 255
+	$high = 310
 	$side = IniRead($inifle, "Details Window", "left", $left)
 	$above = IniRead($inifle, "Details Window", "top", $top)
 	$DetailsGUI = GuiCreate("Game Details - View & Save", $wide, $high, $side, $above, $WS_OVERLAPPED + $WS_CAPTION + $WS_SYSMENU _
@@ -9518,50 +9759,68 @@ Func GameDetailsGUI()
 	GUISetBkColor(0xFFBB77, $DetailsGUI)
 	;
 	; CONTROLS
-	$Button_descript = GuiCtrlCreateButton("DESCRIPTION", 10, 10, 120, 47)
+	$Label_ID = GUICtrlCreateLabel("Game ID", 10, 10, 60, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_ID, $COLOR_BLACK)
+	GUICtrlSetColor($Label_ID, $COLOR_WHITE)
+	$Input_ID = GUICtrlCreateInput("", 70, 10, 137, 20, $ES_READONLY)
+	GUICtrlSetTip($Input_ID, "GOG Game ID!")
+	$Button_ID = GuiCtrlCreateButton("COPY", 207, 9, 53, 23)
+	GUICtrlSetFont($Button_ID, 7, 600, 0, "Small Fonts")
+	GUICtrlSetTip($Button_ID, "Copy the Game ID to clipboard!")
+	;
+	$Label_URL = GUICtrlCreateLabel("URL", 10, 35, 38, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_URL, $COLOR_BLUE)
+	GUICtrlSetColor($Label_URL, $COLOR_WHITE)
+	$Input_URL = GUICtrlCreateInput("", 48, 35, 159, 20, $ES_READONLY)
+	GUICtrlSetTip($Input_URL, "GOG Game Page URL!")
+	$Button_URL = GuiCtrlCreateButton("COPY", 207, 34, 53, 23)
+	GUICtrlSetFont($Button_URL, 7, 600, 0, "Small Fonts")
+	GUICtrlSetTip($Button_URL, "Copy the Game Page URL to clipboard!")
+	;
+	$Button_descript = GuiCtrlCreateButton("DESCRIPTION", 10, 65, 120, 47)
 	GUICtrlSetFont($Button_descript, 9, 600)
 	GUICtrlSetTip($Button_descript, "Return game description!")
-	$Group_descript = GuiCtrlCreateGroup("", 10, 50, 120, 40)
-	$Checkbox_descript = GUICtrlCreateCheckbox("Save description", 23, 62, 100, 20)
+	$Group_descript = GuiCtrlCreateGroup("", 10, 105, 120, 40)
+	$Checkbox_descript = GUICtrlCreateCheckbox("Save description", 23, 117, 100, 20)
 	GUICtrlSetTip($Checkbox_descript, "Save the game description locally!")
 	;
-	$Button_changelog = GuiCtrlCreateButton("CHANGELOG", 140, 10, 118, 47)
+	$Button_changelog = GuiCtrlCreateButton("CHANGELOG", 140, 65, 118, 47)
 	GUICtrlSetFont($Button_changelog, 9, 600)
 	GUICtrlSetTip($Button_changelog, "Return game changelog!")
-	$Group_changelog = GuiCtrlCreateGroup("", 140, 50, 118, 40)
-	$Checkbox_changelog = GUICtrlCreateCheckbox("Save changelog", 152, 62, 95, 20)
+	$Group_changelog = GuiCtrlCreateGroup("", 140, 105, 118, 40)
+	$Checkbox_changelog = GUICtrlCreateCheckbox("Save changelog", 152, 117, 95, 20)
 	GUICtrlSetTip($Checkbox_changelog, "Save the game changelog locally!")
 	;
-	$Group_save = GuiCtrlCreateGroup("Save To Folder Locations", 10, 95, 248, 47)
-	$Checkbox_local = GUICtrlCreateCheckbox("Program Sub-folder", 20, 112, 110, 20)
+	$Group_save = GuiCtrlCreateGroup("Save To Folder Locations", 10, 150, 248, 47)
+	$Checkbox_local = GUICtrlCreateCheckbox("Program Sub-folder", 20, 167, 110, 20)
 	GUICtrlSetTip($Checkbox_local, "Save to a program sub-folder!")
-	$Checkbox_game = GUICtrlCreateCheckbox("Game", 140, 112, 50, 20)
+	$Checkbox_game = GUICtrlCreateCheckbox("Game", 140, 167, 50, 20)
 	GUICtrlSetTip($Checkbox_game, "Save to a game folder!")
-	$Checkbox_games = GUICtrlCreateCheckbox("Games", 198, 112, 50, 20)
+	$Checkbox_games = GUICtrlCreateCheckbox("Games", 198, 167, 50, 20)
 	GUICtrlSetTip($Checkbox_games, "Save to the games folder!")
 	;
-	$Checkbox_purge = GUICtrlCreateCheckbox("Sanitize Saves", 14, 150, 100, 20)
+	$Checkbox_purge = GUICtrlCreateCheckbox("Sanitize Saves", 14, 205, 100, 20)
 	GUICtrlSetTip($Checkbox_purge, "Sanitize (cleanup) text in the saved files!")
 	;
-	$Checkbox_offline = GUICtrlCreateCheckbox("Use Offline", 118, 150, 70, 20)
+	$Checkbox_offline = GUICtrlCreateCheckbox("Use Offline", 118, 205, 70, 20)
 	GUICtrlSetTip($Checkbox_offline, "Use offline saves if they exist!")
 	;
-	$Button_general = GuiCtrlCreateButton("GENERAL", 10, 175, 85, 30)
+	$Button_general = GuiCtrlCreateButton("GENERAL", 10, 230, 85, 30)
 	GUICtrlSetFont($Button_general, 8, 600)
 	GUICtrlSetTip($Button_general, "Return general details!")
 	;
-	$Button_manifest = GuiCtrlCreateButton("MANIFEST", 105, 175, 85, 30)
+	$Button_manifest = GuiCtrlCreateButton("MANIFEST", 105, 230, 85, 30)
 	GUICtrlSetFont($Button_manifest, 8, 600)
 	GUICtrlSetTip($Button_manifest, "View the game entry in the manifest!")
 	;
-	$Button_all = GuiCtrlCreateButton("ALL", 198, 153, 60, 32)
+	$Button_all = GuiCtrlCreateButton("ALL", 198, 208, 60, 32)
 	GUICtrlSetFont($Button_all, 9, 600)
 	GUICtrlSetTip($Button_all, "Return ALL details!")
 	;
-	$Button_close = GuiCtrlCreateButton("EXIT", 198, 195, 60, 50, $BS_ICON)
+	$Button_close = GuiCtrlCreateButton("EXIT", 198, 250, 60, 50, $BS_ICON)
 	GUICtrlSetTip($Button_close, "Exit / Close / Quit the window!")
 	;
-	$Button_cdkey = GuiCtrlCreateButton("CDKey CHECK && FIX", 10, 215, 180, 30)
+	$Button_cdkey = GuiCtrlCreateButton("CDKey CHECK && FIX", 10, 270, 180, 30)
 	GUICtrlSetFont($Button_cdkey, 9, 600)
 	GUICtrlSetTip($Button_cdkey, "Check for CDKeys & update the record!")
 	;
@@ -9579,6 +9838,9 @@ Func GameDetailsGUI()
 	ElseIf $gmesfld = 1 Then
 		GUICtrlSetState($Checkbox_game, $GUI_DISABLE)
 	EndIf
+	;
+	GUICtrlSetData($Input_ID, $ID)
+	GUICtrlSetData($Input_URL, $web)
 	;
 	GUICtrlSetState($Checkbox_purge, $purge)
 	GUICtrlSetState($Checkbox_offline, $offline)
@@ -9609,9 +9871,16 @@ Func GameDetailsGUI()
 			;
 			GUIDelete($DetailsGUI)
 			ExitLoop
+		Case $msg = $Button_URL
+			; Copy the Game PAge URL to clipboard
+			$link = "https://www.gog.com" & $web
+			ClipPut($link)
 		Case $msg = $Button_manifest
 			; View the game entry in the manifest
 			$return = "manifest"
+		Case $msg = $Button_ID
+			; Copy the Game ID to clipboard
+			ClipPut($ID)
 		Case $msg = $Button_general
 			; Return general details
 			$return = "general"
@@ -10597,9 +10866,12 @@ Func GetChecksumQuery($rat = "")
 EndFunc ;=> GetChecksumQuery
 
 Func GetFileDownloadDetails($listview = "")
-	Local $alias, $col1, $col2, $col3, $col4, $fext, $l, $language, $languages, $loop, $OPS, $proceed, $sect, $val, $values
+	Local $alias, $col1, $col2, $col3, $col4, $fext, $l, $language, $languages, $loop, $OPS, $proceed, $sect, $titerrs, $val, $values
 	;$caption
-	_FileCreate($downfiles)
+	If $caption <> "Download Other" Then
+		_FileCreate($downfiles)
+		$xtra = 0
+	EndIf
 	Sleep(500)
 	If $listview <> "" Then
 		IniWrite($downfiles, "Title", "caption", $caption)
@@ -10629,10 +10901,12 @@ Func GetFileDownloadDetails($listview = "")
 	;
 	$alias = ""
 	$checksum = ""
-	$col1 = 0
+	;$col1 = 0
+	$col1 = $xtra
 	$col2 = ""
 	$col3 = ""
 	$col4 = ""
+	$titerrs = 0
 	$filesize = ""
 	$language = ""
 	$languages = ""
@@ -10651,6 +10925,21 @@ Func GetFileDownloadDetails($listview = "")
 			$line = $line[2]
 			$line = StringSplit($line, '",', 1)
 			$language = $line[1]
+			; Language Check for external manifest file entries (in particular).
+			If $language <> "" Then
+				If $language <> $lang And $language <> $second Then
+					$alias = ""
+					$checksum = ""
+					$col3 = ""
+					$col4 = ""
+					$filesize = ""
+					$language = ""
+					;$languages = ""
+					$OPS = ""
+					$URL = ""
+					ContinueLoop
+				EndIf
+			EndIf
 		ElseIf StringInStr($line, '"Languages":') > 0 Then
 			$line = StringSplit($line, '"Languages": [', 1)
 			$line = $line[2]
@@ -10673,14 +10962,21 @@ Func GetFileDownloadDetails($listview = "")
 			$URL = $line[1]
 		ElseIf StringInStr($line, '"Title":') > 0 Then
 			$line = StringSplit($line, '"Title": "', 1)
-			$line = $line[2]
-			$line = StringSplit($line, '",', 1)
-			$alias = $line[1]
+			If $line[0] > 1 Then
+				$line = $line[2]
+				$line = StringSplit($line, '",', 1)
+				$alias = $line[1]
+			Else
+				$alias = ""
+				$titerrs = $titerrs + 1
+			EndIf
 		ElseIf StringInStr($line, '"Name":') > 0 Then
 			$line = StringSplit($line, '"Name": "', 1)
 			$line = $line[2]
 			$line = StringSplit($line, '",', 1)
 			$col4 = $line[1]
+			$col4 = StringReplace($col4, "[", "{")
+			$col4 = StringReplace($col4, "]", "}")
 			$fext = StringRight($col4, 4)
 			; Excluded File Types check.
 			If $extbin = 1 Then
@@ -10732,9 +11028,13 @@ Func GetFileDownloadDetails($listview = "")
 			EndIf
 		ElseIf StringInStr($line, '"Checksum":') > 0 Then
 			$line = StringSplit($line, '"Checksum": "', 1)
-			$line = $line[2]
-			$line = StringSplit($line, '"', 1)
-			$checksum = $line[1]
+			If $line[0] > 1 Then
+				$line = $line[2]
+				$line = StringSplit($line, '"', 1)
+				$checksum = $line[1]
+			Else
+				$checksum = ""
+			EndIf
 			;
 			$proceed = 1
 			If $exists = 1 Then
@@ -10803,6 +11103,21 @@ Func GetFileDownloadDetails($listview = "")
 				;MsgBox(262192, "$col4 $col3 $checksum", $col4 & @LF & $col3 & @LF & $checksum, 0, $GOGcliGUI)
 				; Check to skip duplicates.
 				If IniRead($downfiles, $col4, "file", "") <> $col4 Then
+					; Language Check for external manifest file entries (in particular).
+					If $languages <> "" Then
+						If StringInStr($languages, $lang) < 1 And StringInStr($languages, $second) < 1 Then
+							$alias = ""
+							$checksum = ""
+							$col3 = ""
+							$col4 = ""
+							$filesize = ""
+							$language = ""
+							$languages = ""
+							$OPS = ""
+							$URL = ""
+							ContinueLoop
+						EndIf
+					EndIf
 					; Check for DOWNLOAD ALL.
 					If $allgames = 1 Then
 						$fext = StringRight($col4, 3)
@@ -10879,6 +11194,7 @@ Func GetFileDownloadDetails($listview = "")
 			$col4 = ""
 			$filesize = ""
 			$language = ""
+			$languages = ""
 			$OPS = ""
 			$URL = ""
 		ElseIf $loop = 1 Then
@@ -10893,9 +11209,16 @@ Func GetFileDownloadDetails($listview = "")
 			EndIf
 		EndIf
 	Next
+	If $caption = "Download Other" Then
+		$xtra = $col1
+	EndIf
 	If $listview <> "" Then
 		;Sleep(5000)
 		SplashOff()
+	EndIf
+	If $titerrs > 0 Then
+		MsgBox(262192, "Error Report", $titerrs & " title(s) were blank, so skipped!" & @LF _
+			& @LF & "NOTE - This might be due to errors at GOG," & @LF & "or because of entries without downloads.", 0, $GOGcliGUI)
 	EndIf
 EndFunc ;=> GetFileDownloadDetails
 

@@ -1,10 +1,2 @@
 
-GOGcli GUI v2.8 update purely involves an important BUGFIX for the DOWNLOAD ALL process.
-
-NOTES - First off let me apologize for a flaw in my program, especially to first time users, who would likely have all been impacted. Those already using my program likely weren't impacted, as I wasn't.
-
-The flaw appears to be fixed, and just took renaming of one variable to do so. It seems I probably should not have used a generic name for it, as somewhere in related code I must have used that name already ... code that only runs, it seems, for first time users.
-
-However, while that was certainly a big mistake of small proportions, perhaps my worst mistake was not running everything as a new user, before releasing the update with DOWNLOAD ALL, as doing so would have allowed me to detect the flaw.
-
-In my defense, I can only say it had a been a long day with lots of coding, that involved tweaking and troubleshooting, and in the end I had run out of time and energy, to go that extra mile, and being so tired, my thinking at that point was no doubt a bit flawed too. In hindsight I probably should have waited another day, but my mind could not see an issue at that point ... oh sweet confidence ... ever the coder's nemesis.
+GOGcli GUI v3.0 update has two new fields and buttons on the DETAILS window, to allow viewing and copying either the selected Game ID or Game Web Page URL. The 'Game Files Selector' window now has three extra fields at the bottom of the list, to provide more information - File Title, Download URL, Game Title (NOTE - To see full text in these fields, the window will likely need to be stretched). BUGFIX for square brackets in a file name.
