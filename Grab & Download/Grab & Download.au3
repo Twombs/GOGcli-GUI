@@ -10,7 +10,7 @@
 
 ; FUNCTIONS
 ; MainGUI(), IDResultsGUI()
-; GetTheFullTitle(), SaveGuiWindowPosition()
+; GetFileInfo(), GetTheFullTitle(), SaveGuiWindowPosition()
 
 #include <Constants.au3>
 #include <GUIConstantsEx.au3>
@@ -29,11 +29,10 @@
 
 Global $Button_down, $Button_list, $Button_menu, $Button_paste, $Button_start, $Context_menu, $Log_item, $Paste_item, $RichEdit_drop
 
-Global $a, $array, $bytes, $checksum, $cliptxt, $cookie, $downurl, $DropperGUI, $entry, $file, $fileinfo, $game, $gogcli, $grabini
-Global $lasturl, $left, $line, $linksfile, $logerr, $loops, $mass, $n, $num, $nums, $params, $shell, $slug, $style, $target, $text
-Global $title, $top, $u, $url, $urls, $version
-
-Global $addurl, $created, $flat, $len, $val, $targlen, $linkfle, $wait, $e, $entries, $GID, $ID, $html, $htmltxt, $idlink, $name, $names
+Global $a, $array, $bytes, $checksum, $cookie, $created, $downurl, $DropperGUI, $e, $entries, $entry, $fext, $file, $fileinfo, $flat
+Global $game, $GID, $gogcli, $grabini, $html, $htmltxt, $ID, $idlink, $left, $len, $line, $linkfle, $linksfile, $logerr, $loops, $mass
+Global $n, $name, $names, $num, $nums, $params, $ping, $shell, $slug, $style, $target, $targlen, $text, $title, $top, $u, $url, $urls
+Global $val, $version, $wait
 
 _Singleton("grab-and-download-timboli", 0)
 
@@ -42,6 +41,7 @@ $created = "June 2022"
 $fileinfo = @ScriptDir & "\Fileinfo.txt"
 $gogcli = @ScriptDir & "\gogcli.exe"
 $grabini = @ScriptDir & "\Grabber.ini"
+$htmltxt = @ScriptDir & "\Html.txt"
 $linkfle = @ScriptDir & "\Links.txt"
 $linksfile = @ScriptDir & "\Downlinks.ini"
 $version = "v1.0"
@@ -52,14 +52,11 @@ If $wait = "" Then
 	IniWrite($grabini, "Clear Pasted URL", "wait", $wait)
 EndIf
 
-$lasturl = IniRead($linksfile, "Last Download", "url", "")
-
 MainGUI()
 
 Exit
 
 Func MainGUI()
-	;$target = "  DRAG & DROP" & @CR & "    or PASTE the" & @CR & " URL (link) HERE"
 	$target = "  DRAG & DROP" & @CR & "    or PASTE the" & @CR & "    DOWNLOAD" & @CR & "     URL HERE"
 	$targlen = StringLen($target)
 	;
@@ -256,6 +253,8 @@ Func MainGUI()
 										$array = _ArrayToString($array, @CRLF, 2)
 										FileWrite($linkfle, $array & @CRLF)
 										;MsgBox(262208, "URL", $url, 0, $DropperGUI)
+										;
+										If $num <> "" Then GetFileInfo()
 									EndIf
 									Sleep($wait)
 									If $u = $urls[0] Then
@@ -350,6 +349,91 @@ Func IDResultsGUI()
 EndFunc ;=> IDResultsGUI
 
 
+Func GetFileInfo()
+	$downurl = StringReplace($url, "http://www.gog.com", "")
+	$downurl = StringReplace($downurl, "https://www.gog.com", "")
+	If $downurl <> "" Then
+		If FileExists($gogcli) Then
+			If FileExists($cookie) Then
+				$ping = Ping("gog.com", 4000)
+				If $ping > 0 Then
+					SplashTextOn("", "Downloading Info!", 200, 120, Default, Default, 33)
+					FileDelete($fileinfo)
+					Sleep(500)
+					$file = ""
+					$checksum = ""
+					$mass = ""
+					FileChangeDir(@ScriptDir)
+					$params = "-c Cookie.txt gog-api url-path-info -p " & $downurl
+					RunWait(@ComSpec & ' /c echo ' & $downurl & ' && gogcli.exe ' & $params & ' >"' & $fileinfo & '"', @ScriptDir)
+					Sleep(1000)
+					SplashOff()
+					If FileExists($fileinfo) Then
+						$logerr = ""
+						_FileReadToArray($fileinfo, $array)
+						For $a = 1 To $array[0]
+							$line = $array[$a]
+							If StringInStr($line, "File Name:") > 0 Then
+								$file = StringSplit($line, "File Name:", 1)
+								$file = $file[2]
+								$file = StringStripWS($file, 3)
+							ElseIf StringInStr($line, "Checksum:") > 0 Then
+								$checksum = StringSplit($line, "Checksum:", 1)
+								$checksum = $checksum[2]
+								$checksum = StringStripWS($checksum, 3)
+							ElseIf StringInStr($line, "Size:") > 0 Then
+								$mass = StringSplit($line, "Size:", 1)
+								$mass = $mass[2]
+								$mass = StringStripWS($mass, 3)
+								If $mass <> "" Then
+									$bytes = $mass
+								EndIf
+							EndIf
+						Next
+						$fext = StringRight($file, 4)
+						If $file = "" Then
+							$logerr = "File Name"
+						EndIf
+						If $checksum = "" And ($fext = ".exe" Or $fext= ".bin" Or $fext = "") Then
+							If $logerr = "" Then
+								$logerr = "Checksum"
+							Else
+								$logerr = $logerr & ", Checksum"
+							EndIf
+						EndIf
+						If $mass = "" Then
+							If $logerr = "" Then
+								$logerr = "File Size"
+							Else
+								$logerr = $logerr & ", File Size"
+							EndIf
+						EndIf
+						If $logerr <> "" Then
+							MsgBox(262192, "Download Error", "Missing information for download file - " & $logerr & ".", 0, $DropperGUI)
+						Else
+							IniWrite($linksfile, $url, "file", $file)
+							IniWrite($linksfile, $url, "size", $bytes)
+							IniWrite($linksfile, $url, "checksum", $checksum)
+							;$entry = "File Name: " & $file & @LF & "Verified File Size: " & $bytes & " bytes" & @LF & "Checksum: " & $checksum
+							;MsgBox(262192 + 16, "Download Result", $entry, 0, $DropperGUI)
+						EndIf
+					Else
+						MsgBox(262192, "Program Error", "Required Fileinfo.txt file not found!", 0, $DropperGUI)
+					EndIf
+				Else
+					MsgBox(262192, "Web Error", "No connection detected!", 0, $DropperGUI)
+				EndIf
+			Else
+				MsgBox(262192, "Program Error", "Required Cookie.txt file not found!", 0, $DropperGUI)
+			EndIf
+		Else
+			MsgBox(262192, "Program Error", "Required program gogcli.exe not found!", 0, $DropperGUI)
+		EndIf
+	Else
+		MsgBox(262192, "Program Error", "No GOG game file download URL provided!", 0, $DropperGUI)
+	EndIf
+EndFunc ;=> GetFileInfo
+
 Func GetTheFullTitle()
 	SplashTextOn("", "Getting ID(s)!", 200, 120, Default, Default, 33)
 	$idlink = "https://embed.gog.com/games/ajax/filtered?mediaType=game&search=*" & $game
@@ -358,7 +442,6 @@ Func GetTheFullTitle()
 		$names = ""
 		;$last = ""
 	Else
-		$htmltxt = @ScriptDir & "\Html.txt"
 		_FileCreate($htmltxt)
 		FileWrite($htmltxt, $html)
 		;
@@ -416,114 +499,3 @@ Func SaveGuiWindowPosition()
    EndIf
    IniWrite($grabini, "Program Window", "top", $top)
 EndFunc ;=> SaveGuiWindowPosition
-
-Func TempFunc()
-	Local $URL
-	While 1
-		$cliptxt = ClipGet()
-		If StringInStr($cliptxt, $lasturl) < 1 Then
-			If StringLeft($cliptxt, 4) <> "http" Then
-				$URL = ""
-			Else
-				If StringInStr($cliptxt, "www.gog.com") < 1 Then
-					$URL = ""
-				Else
-					$URL = $cliptxt
-				EndIf
-			EndIf
-		Else
-			$URL = ""
-		EndIf
-		$val = InputBox("Game URL Query", "A GOG game file download URL is required." & @LF & @LF & $lasturl, $URL, "", 500, 155, Default, Default)
-		If @error = 0 Then
-			; https://www.gog.com/downloads/dying_light_the_following_enhanced_edition/en1installer0
-			; /downloads/bio_menace/en1installer0
-			$downurl = StringReplace($val, "http://www.gog.com", "")
-			$downurl = StringReplace($downurl, "https://www.gog.com", "")
-			If $downurl <> "" Then
-				If FileExists($gogcli) Then
-					If FileExists($cookie) Then
-						$ping = Ping("gog.com", 4000)
-						If $ping > 0 Then
-							SplashTextOn("", "Downloading Info!", 200, 120, Default, Default, 33)
-							FileDelete($fileinfo)
-							Sleep(500)
-							$file = ""
-							$checksum = ""
-							$mass = ""
-							FileChangeDir(@ScriptDir)
-							$params = "-c Cookie.txt gog-api url-path-info -p " & $downurl
-							RunWait(@ComSpec & ' /c echo ' & $downurl & ' && gogcli.exe ' & $params & ' >"' & $fileinfo & '"', @ScriptDir)
-							Sleep(1000)
-							SplashOff()
-							If FileExists($fileinfo) Then
-								$logerr = ""
-								_FileReadToArray($fileinfo, $array)
-								For $a = 1 To $array[0]
-									$line = $array[$a]
-									If StringInStr($line, "File Name:") > 0 Then
-										$file = StringSplit($line, "File Name:", 1)
-										$file = $file[2]
-										$file = StringStripWS($file, 3)
-									ElseIf StringInStr($line, "Checksum:") > 0 Then
-										$checksum = StringSplit($line, "Checksum:", 1)
-										$checksum = $checksum[2]
-										$checksum = StringStripWS($checksum, 3)
-									ElseIf StringInStr($line, "Size:") > 0 Then
-										$mass = StringSplit($line, "Size:", 1)
-										$mass = $mass[2]
-										$mass = StringStripWS($mass, 3)
-										If $mass <> "" Then
-											$bytes = $mass
-										EndIf
-									EndIf
-								Next
-								$fext = StringRight($file, 4)
-								If $file = "" Then
-									$logerr = "File Name"
-								EndIf
-								If $checksum = "" And ($fext = ".exe" Or $fext= ".bin" Or $fext = "") Then
-									If $logerr = "" Then
-										$logerr = "Checksum"
-									Else
-										$logerr = $logerr & ", Checksum"
-									EndIf
-								EndIf
-								If $mass = "" Then
-									If $logerr = "" Then
-										$logerr = "File Size"
-									Else
-										$logerr = $logerr & ", File Size"
-									EndIf
-								EndIf
-								If $logerr <> "" Then
-									MsgBox(262192, "Download Error", "Missing information for download file - " & $logerr & ".", 0)
-								Else
-									$lasturl = $downurl
-									IniWrite($linksfile, "Last Download", "url", $lasturl)
-									IniWrite($linksfile, $downurl, "file", $file)
-									IniWrite($linksfile, $downurl, "size", $bytes)
-									IniWrite($linksfile, $downurl, "checksum", $checksum)
-									$entry = "File Name: " & $file & @LF & "Verified File Size: " & $bytes & " bytes" & @LF & "Checksum: " & $checksum
-									MsgBox(262192 + 16, "Download Result", $entry, 0)
-								EndIf
-							Else
-								MsgBox(262192, "Program Error", "Required Fileinfo.txt file not found!", 0)
-							EndIf
-						Else
-							MsgBox(262192, "Web Error", "No connection detected!", 0)
-						EndIf
-					Else
-						MsgBox(262192, "Program Error", "Required Cookie.txt file not found!", 0)
-					EndIf
-				Else
-					MsgBox(262192, "Program Error", "Required program gogcli.exe not found!", 0)
-				EndIf
-			Else
-				MsgBox(262192, "Program Error", "No GOG game file download URL provided!", 0)
-			EndIf
-		Else
-			ExitLoop
-		EndIf
-	WEnd
-EndFunc ;=> TempFunc
