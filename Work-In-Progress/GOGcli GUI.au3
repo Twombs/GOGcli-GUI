@@ -47,8 +47,8 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $update, $version
 
-$update = "Updated in May 2022."
-$version = "v2.9"
+$update = "Updated in June 2022."
+$version = "v3.1"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -84,18 +84,18 @@ Global $Item_verify_game, $Item_verify_now, $Label_bed, $Label_cat, $Label_dlc, 
 Global $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
 Global $7zip, $a, $addlist, $alert, $alerts, $alf, $alldetail, $alldown, $allgames, $allkeys, $alpha, $ans, $array, $backups, $bigcover
-Global $bigpic, $blackjpg, $blurb, $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $cease, $changelogs, $check, $checksum, $checkval
-Global $cnt, $compare, $completed, $cookie, $cookies, $cover, $covers, $covimg, $datafold, $DBfile, $declare, $descript, $descriptions
-Global $dest, $details, $DetailsGUI, $DLC, $dlcfile, $done, $down, $downfiles, $downlist, $download, $downloads, $downlog, $drv, $endgame
-Global $entries, $entry, $erred, $existDB, $exists, $extbin, $extdmg, $extexe, $extpkg, $extsh, $extzip, $f, $file, $fileinfo, $filepth
-Global $files, $filesize, $final, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini
-Global $gametxt, $gams, $getlatest, $gmefold, $gmesfld, $gogcli, $GOGcliGUI, $hash, $head, $height, $histfile, $history, $htmlfle, $i
-Global $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $include, $ind, $inifle, $json, $keep
-Global $key, $lang, $left, $line, $lines, $link, $list, $listed, $listview, $log, $logfle, $lowid, $m, $manall, $manalt, $manifest
-Global $manifests, $manlist, $md5check, $mini, $minimize, $model, $n, $name, $num, $numb, $offline, $OP, $open, $OS, $OSes, $outfold
-Global $overlook, $params, $part, $parts, $percent, $ping, $pinged, $processed, $progress, $pth, $purge, $r, $rat, $ratify, $read
-Global $record, $relax, $reportexe, $res, $rest, $results, $ret, $return, $row, $s, $same, $savkeys, $savlog, $second, $selector
-Global $session, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $state, $stop, $style, $subfold, $SYS, $tag
+Global $bigpic, $blackjpg, $blurb, $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $cease, $changelogs, $check, $checklist, $checksum
+Global $checkval, $cnt, $compare, $completed, $cookie, $cookies, $cover, $covers, $covimg, $datafold, $DBfile, $declare, $descript
+Global $descriptions, $dest, $details, $DetailsGUI, $DLC, $dlcfile, $done, $down, $downfiles, $downlist, $download, $downloads, $downlog
+Global $drv, $endgame, $entries, $entry, $erred, $existDB, $exists, $extbin, $extdmg, $extexe, $extpkg, $extsh, $extzip, $f, $file
+Global $fileinfo, $filepth, $files, $filesize, $final, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games
+Global $gamesfold, $gamesini, $gametxt, $gams, $getlatest, $gmefold, $gmesfld, $gogcli, $GOGcliGUI, $hash, $head, $height, $histfile
+Global $history, $htmlfle, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $include, $ind
+Global $inifle, $json, $keep, $key, $lang, $left, $line, $lines, $link, $list, $listcheck, $listed, $listview, $log, $logfle, $lowid
+Global $m, $manall, $manalt, $manifest, $manifests, $manlist, $md5check, $mini, $minimize, $model, $n, $name, $num, $numb, $offline, $OP
+Global $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping, $pinged, $processed, $progress, $pth, $purge, $r
+Global $rat, $ratify, $read, $record, $relax, $reportexe, $res, $rest, $results, $ret, $return, $row, $s, $same, $savkeys, $savlog, $second
+Global $selector, $session, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $state, $stop, $style, $subfold, $SYS, $tag
 Global $tagfle, $tail, $text, $title, $titleF, $titleID, $titleIDup, $titlist, $top, $type, $types, $typs, $updated, $updates, $URL
 Global $user, $valhistory, $validate, $verify, $warn, $web, $which, $width, $winpos, $xtra, $z, $zipcheck, $zipfile, $zippath
 ;, $foldzip, $resultfle
@@ -109,6 +109,7 @@ $bigpic = @ScriptDir & "\Big.jpg"
 $blackjpg = @ScriptDir & "\Black.jpg"
 $cdkeys = @ScriptDir & "\CDkeys.ini"
 $changelogs = @ScriptDir & "\Changelogs"
+$checklist = @ScriptDir & "\Checklist.txt"
 $compare = @ScriptDir & "\Comparisons.txt"
 $cookies = @ScriptDir & "\Cookie.txt"
 $covers = @ScriptDir & "\Covers"
@@ -158,6 +159,7 @@ EndIf
 ;IniWrite($gamesini, "Games", "total", $games)
 
 If Not FileExists($addlist) Then _FileCreate($addlist)
+If Not FileExists($checklist) Then _FileCreate($checklist)
 If Not FileExists($alldetail) Then DirCreate($alldetail)
 If Not FileExists($changelogs) Then DirCreate($changelogs)
 If Not FileExists($covers) Then DirCreate($covers)
@@ -1156,17 +1158,18 @@ Exit
 
 Func MainGUI()
 	Local $Checkbox_quit, $Checkbox_stop, $Menu_down, $Menu_get, $Menu_list, $Menu_man, $Menu_compare_opts
-	Local $Item_alerts_clear, $Item_alerts_view, $Item_compare_all, $Item_compare_aqua, $Item_compare_declare
-	Local $Item_compare_ignore, $Item_compare_one, $Item_compare_orange, $Item_compare_overlook, $Item_compare_red
-	Local $Item_compare_rep, $Item_compare_report, $Item_compare_view, $Item_compare_wipe, $Item_compare_yellow
-	Local $Item_database_display, $Item_database_prior, $Item_database_view, $Item_down_clear, $Item_down_history
-	Local $Item_down_view, $Item_exclude_bin, $Item_exclude_dmg, $Item_exclude_exe, $Item_exclude_pkg, $Item_exclude_sh
+	Local $Item_alerts_clear, $Item_alerts_view, $Item_checklist_add, $Item_checklist_clear, $Item_checklist_enable
+	Local $Item_checklist_view, $Item_compare_all, $Item_compare_aqua, $Item_compare_declare, $Item_compare_ignore
+	Local $Item_compare_one, $Item_compare_orange, $Item_compare_overlook, $Item_compare_red, $Item_compare_rep
+	Local $Item_compare_report, $Item_compare_view, $Item_compare_wipe, $Item_compare_yellow, $Item_database_display
+	Local $Item_database_prior, $Item_database_view, $Item_down_clear, $Item_down_history, $Item_down_view
+	Local $Item_exclude_bin, $Item_exclude_dmg, $Item_exclude_exe, $Item_exclude_pkg, $Item_exclude_sh
 	Local $Item_exclude_zip, $Item_lists_dlcs, $Item_lists_keys, $Item_lists_latest, $Item_lists_tags, $Item_man_clear
 	Local $Item_man_view, $Item_manifest_entry, $Item_manifest_fix, $Item_manifest_orphan, $Item_manifest_view
 	Local $Item_save_keys, $Item_updated_dupes, $Item_updated_list, $Item_updated_mark, $Item_validate_histfle
-	Local $Item_validate_history, $Label_progress, $Progress_valid, $Sub_menu_alerts, $Sub_menu_comparisons
-	Local $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_exclude, $Sub_menu_lists, $Sub_menu_manifest
-	Local $Sub_menu_manifests, $Sub_menu_save, $Sub_menu_updated, $Sub_menu_validate
+	Local $Item_validate_history, $Label_progress, $Progress_valid, $Sub_menu_alerts, $Sub_menu_checklist
+	Local $Sub_menu_comparisons, $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_exclude, $Sub_menu_lists
+	Local $Sub_menu_manifest, $Sub_menu_manifests, $Sub_menu_save, $Sub_menu_updated, $Sub_menu_validate
 	;
 	Local $downall, $Sub_menu_downall, $Item_downall_clear, $Item_downall_create, $Item_downall_disable, $Item_downall_display
 	Local $Item_downall_info, $Item_downall_list, $Item_downall_log, $Item_downall_opts, $Item_downall_start, $Item_downall_view
@@ -1174,8 +1177,8 @@ Func MainGUI()
 	Local $accept, $addto, $alias, $amount, $aqua, $arraytits, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4
 	Local $compall, $compone, $ctrl, $delay, $description, $destfld, $destfle, $dir, $disable, $display, $dll, $e, $error
 	Local $everything, $exist, $existing, $fext, $filelist, $find, $finished, $fixed, $flename, $foldpth, $former, $gambak
-	Local $get, $hours, $IDD, $idlink, $ids, $l, $language, $languages, $last, $lastgame, $latest, $loop, $manfold, $mans
-	Local $method, $mins, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $patchfld, $paths, $pos, $prior, $proceed
+	Local $get, $hours, $IDD, $idlink, $ids, $l, $language, $languages, $last, $lastgame, $lastone, $latest, $loop, $manfold
+	Local $mans, $method, $mins, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $patchfld, $paths, $pos, $prior, $proceed
 	Local $query, $red, $rep, $result, $retrieve, $savtxt, $secs, $sect, $sects, $serial, $shift, $skipped, $slugD, $started
 	Local $tagtxt, $taken, $tested, $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
 	;
@@ -1383,6 +1386,17 @@ Func MainGUI()
 	$Item_alerts_clear = GUICtrlCreateMenuItem("Clear Alerts", $Sub_menu_alerts)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
+	$Sub_menu_checklist = GUICtrlCreateMenu("Checklist", $Menu_list)
+	$Item_checklist_add = GUICtrlCreateMenuItem("Add To Checklist", $Sub_menu_checklist)
+	GUICtrlCreateMenuItem("", $Sub_menu_checklist)
+	$Item_checklist_clear = GUICtrlCreateMenuItem("Clear the Checklist", $Sub_menu_checklist)
+	GUICtrlCreateMenuItem("", $Sub_menu_checklist)
+	$Item_checklist_view = GUICtrlCreateMenuItem("View the Checklist", $Sub_menu_checklist)
+	GUICtrlCreateMenuItem("", $Sub_menu_checklist)
+	GUICtrlCreateMenuItem("", $Sub_menu_checklist)
+	$Item_checklist_enable = GUICtrlCreateMenuItem("Enable the Checklist", $Sub_menu_checklist, -1, 0)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
 	$Sub_menu_comparisons = GUICtrlCreateMenu("Comparisons", $Menu_list)
 	$Item_compare_rep = GUICtrlCreateMenuItem("Comparison Report", $Sub_menu_comparisons)
 	GUICtrlCreateMenuItem("", $Sub_menu_comparisons)
@@ -1585,6 +1599,8 @@ Func MainGUI()
 	$query = ""
 	;
 	BackupManifestEtc()
+	;
+	$listcheck = 4
 	;
 	$ignore = IniRead($inifle, "Compare Options", "ignore", "")
 	If $ignore = "" Then
@@ -1976,6 +1992,7 @@ Func MainGUI()
 	$existing = ""
 	$find = ""
 	$last = ""
+	$lastone = ""
 	$ratify = 4
 	$verify = 4
 	$valnow = ""
@@ -2617,37 +2634,76 @@ Func MainGUI()
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_last
 			; Find the latest added game(s)
-			If _IsPressed("11") Then $last = ""
-			If FileExists($addlist) Then
-				$res = _FileReadToArray($addlist, $latest)
-				If $res = 1 Then
-					If $last = "" Then
-						$last = $latest[0]
-						$title = $latest[$last]
-					Else
-						If $last > 1 Then
-							$last = $last - 1
-						Else
+			If $listcheck = 4 Then
+				If _IsPressed("11") Then $last = ""
+				If FileExists($addlist) Then
+					$res = _FileReadToArray($addlist, $latest)
+					If $res = 1 Then
+						If $last = "" Then
 							$last = $latest[0]
+							$title = $latest[$last]
+						Else
+							If $last > 1 Then
+								$last = $last - 1
+							Else
+								$last = $latest[0]
+							EndIf
+							$title = $latest[$last]
 						EndIf
-						$title = $latest[$last]
-					EndIf
-					$ind = -1
-					While 1
-						$ind = _GUICtrlListView_FindInText($Listview_games, $title, $ind, False, False)
-						If $ind = -1 Then ExitLoop
-						If _GUICtrlListView_GetItemText($Listview_games, $ind, 1) = $title Then ExitLoop
-					WEnd
-					If $ind > -1 Then
-						GUICtrlSetState($Listview_games, $GUI_FOCUS)
-						_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
-						ContinueLoop
+						$ind = -1
+						While 1
+							$ind = _GUICtrlListView_FindInText($Listview_games, $title, $ind, False, False)
+							If $ind = -1 Then ExitLoop
+							If _GUICtrlListView_GetItemText($Listview_games, $ind, 1) = $title Then ExitLoop
+						WEnd
+						If $ind > -1 Then
+							GUICtrlSetState($Listview_games, $GUI_FOCUS)
+							_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+							ContinueLoop
+						EndIf
+					Else
+						MsgBox(262192, "Read Error", "Added.txt file not read!", 0, $GOGcliGUI)
 					EndIf
 				Else
-					MsgBox(262192, "Read Error", "Added.txt file not read!", 0, $GOGcliGUI)
+					MsgBox(262192, "File Error", "Added.txt file not found!", 0, $GOGcliGUI)
 				EndIf
 			Else
-				MsgBox(262192, "File Error", "Added.txt file not found!", 0, $GOGcliGUI)
+				If _IsPressed("11") Then $lastone = ""
+				If FileExists($checklist) Then
+					$res = _FileReadToArray($checklist, $latest)
+					If $res = 1 Then
+						If $lastone = "" Then
+							$lastone = $latest[0]
+							$entry = $latest[$lastone]
+						Else
+							If $lastone > 1 Then
+								$lastone = $lastone - 1
+							Else
+								$lastone = $latest[0]
+							EndIf
+							$entry = $latest[$lastone]
+						EndIf
+						$title = StringSplit($entry, "|", 1)
+						$ID = $title[1]
+						$title = $title[2]
+						$ind = -1
+						While 1
+							$ind = _GUICtrlListView_FindInText($Listview_games, $title, $ind, False, False)
+							If $ind = -1 Then ExitLoop
+							If _GUICtrlListView_GetItemText($Listview_games, $ind, 1) = $title _
+								And _GUICtrlListView_GetItemText($Listview_games, $ind, 0) = $ID Then ExitLoop
+						WEnd
+						If $ind > -1 Then
+							GUICtrlSetState($Listview_games, $GUI_FOCUS)
+							_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+							ContinueLoop
+						EndIf
+					Else
+						MsgBox(262192, "Read Error", "Checklist.txt file not read!", 0, $GOGcliGUI)
+					EndIf
+				Else
+					MsgBox(262192, "File Error", "Checklist.txt file not found!", 0, $GOGcliGUI)
+				EndIf
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_info
@@ -3749,6 +3805,8 @@ Func MainGUI()
 												$line = $line[2]
 												$line = StringSplit($line, '",', 1)
 												$col4 = $line[1]
+												$col4 = StringReplace($col4, "[", "{")
+												$col4 = StringReplace($col4, "]", "}")
 												$fext = StringRight($col4, 4)
 												; Excluded File Types check.
 												If $extbin = 1 Then
@@ -3832,20 +3890,22 @@ Func MainGUI()
 												If $proceed > 0 Then
 													; Check to skip duplicates.
 													If IniRead($downfiles, $col4, "file", "") <> $col4 Then
-														IniWrite($downfiles, $col4, "game", $titleD)
-														IniWrite($downfiles, $col4, "slug", $slugD)
-														IniWrite($downfiles, $col4, "ID", $IDD)
-														IniWrite($downfiles, $col4, "file", $col4)
-														IniWrite($downfiles, $col4, "language", $language)
-														IniWrite($downfiles, $col4, "languages", $languages)
-														IniWrite($downfiles, $col4, "OS", $OPS)
-														IniWrite($downfiles, $col4, "URL", $URL)
-														IniWrite($downfiles, $col4, "title", $alias)
-														IniWrite($downfiles, $col4, "bytes", $filesize)
-														IniWrite($downfiles, $col4, "size", $col3)
-														IniWrite($downfiles, $col4, "checksum", $checksum)
-														IniWrite($downfiles, $col4, "type", $col2)
-														If $proceed = 2 Then IniWrite($downfiles, $col4, "missing", "checksum")
+														If $IDD <> "" And $titleD <> "" And $URL <> "" Then
+															IniWrite($downfiles, $col4, "game", $titleD)
+															IniWrite($downfiles, $col4, "slug", $slugD)
+															IniWrite($downfiles, $col4, "ID", $IDD)
+															IniWrite($downfiles, $col4, "file", $col4)
+															IniWrite($downfiles, $col4, "language", $language)
+															IniWrite($downfiles, $col4, "languages", $languages)
+															IniWrite($downfiles, $col4, "OS", $OPS)
+															IniWrite($downfiles, $col4, "URL", $URL)
+															IniWrite($downfiles, $col4, "title", $alias)
+															IniWrite($downfiles, $col4, "bytes", $filesize)
+															IniWrite($downfiles, $col4, "size", $col3)
+															IniWrite($downfiles, $col4, "checksum", $checksum)
+															IniWrite($downfiles, $col4, "type", $col2)
+															If $proceed = 2 Then IniWrite($downfiles, $col4, "missing", "checksum")
+														EndIf
 													EndIf
 												EndIf
 												$alias = ""
@@ -5216,8 +5276,8 @@ Func MainGUI()
 				GUICtrlSetData($Label_bed, "Remove Duplicates")
 				$lines = ""
 				$former = 1
-				;Local $checklist = @ScriptDir & "\Checked.txt"
-				;_FileCreate($checklist)
+				;Local $checking = @ScriptDir & "\Checked.txt"
+				;_FileCreate($checking)
 				_FileReadToArray($updated, $array, 1)
 				If IsArray($array) Then
 					;_ArrayDisplay($array)
@@ -5267,14 +5327,14 @@ Func MainGUI()
 							EndIf
 						EndIf
 					Next
-					;FileWrite($checklist, $lines & @CRLF)
+					;FileWrite($checking, $lines & @CRLF)
 					FileWrite($updated, $lines & @CRLF)
 				EndIf
 				SetStateOfControls($GUI_ENABLE, "all")
 				GUICtrlSetData($Label_top, "")
 				GUICtrlSetData($Label_mid, "")
 				GUICtrlSetData($Label_bed, "")
-				;ShellExecute($checklist)
+				;ShellExecute($checking)
 				ShellExecute($updated)
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
@@ -6666,6 +6726,67 @@ Func MainGUI()
 				GUICtrlSetTip($Button_get, "Get game titles from GOG library!")
 			EndIf
 			GUICtrlSetState($Item_compare_all, $compall)
+		Case $msg = $Item_checklist_view
+			; View the Checklist
+			If FileExists($checklist) Then ShellExecute($checklist)
+		Case $msg = $Item_checklist_enable
+			; Enable the Checklist
+			If $listcheck = 4 Then
+				$listcheck = 1
+				MsgBox(262208, "Advise", "The 'Last' button will now use the Checklist.", 0, $GOGcliGUI)
+			Else
+				$listcheck = 4
+				MsgBox(262208, "Advise", "The 'Last' button is restored to the Added list.", 0, $GOGcliGUI)
+			EndIf
+			GUICtrlSetState($Item_checklist_enable, $listcheck)
+		Case $msg = $Item_checklist_clear
+			; Clear the Checklist
+			$ans = MsgBox(262209 + 256, "Delete ALL Query", "Do you want to remove ALL of" _
+				& @LF & "the entries from the Checklist?", 0, $GOGcliGUI)
+			If $ans = 1 Then
+				_FileCreate($checklist)
+			EndIf
+		Case $msg = $Item_checklist_add
+			; Add To Checklist
+			If $ID = "" Then
+				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+			Else
+				If $title = "" Then
+					MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+				Else
+					$entry = $ID & "|" & $title
+					;MsgBox(262192, "ID & Title", $entry, 0, $GOGcliGUI)
+					If FileExists($checklist) Then
+						$res = _FileReadToArray($checklist, $latest)
+						If $res = 1 Then
+							$ind = _ArraySearch($latest, $entry, 1, 0, 0, 0)
+							;MsgBox(262192, "Index", $ind, 0, $GOGcliGUI)
+							If $ind = -1 Then
+								FileWriteLine($checklist, $entry)
+							Else
+								$ans = MsgBox(262209 + 256, "Delete Query", "Do you want to remove the selected" _
+									& @LF & "entry from the Checklist?" & @LF _
+									& @LF & $title, 0, $GOGcliGUI)
+								If $ans = 1 Then
+									_ArrayDelete($latest, $ind)
+									$latest[0] = $latest[0] - 1
+									;_ArrayDisplay($latest)
+									;MsgBox(262192, "Count", $latest[0], 0, $GOGcliGUI)
+									If IsArray($latest) And $latest[0] > 0 Then
+										_FileWriteFromArray($checklist, $latest, 1, Default)
+									Else
+										_FileCreate($checklist)
+									EndIf
+								EndIf
+							EndIf
+						Else
+							FileWriteLine($checklist, $entry)
+						EndIf
+					Else
+						MsgBox(262192, "File Error", "Checklist.txt file not found!", 0, $GOGcliGUI)
+					EndIf
+				EndIf
+			EndIf
 		Case $msg = $Item_alerts_view
 			; View Alerts
 			If FileExists($alerts) Then ShellExecute($alerts)
@@ -7108,15 +7229,15 @@ Func FileSelectorGUI()
 ;~ 	$caption = "Download ALL - The Interactive Adventures of Dog Mendonça and Pizzaboy®"
 ;~ 	$caption = "Download ALL - Wallace and Gromit's Episode 1 Fright of the Bumblebees"
 	Local $Button_download, $Button_dwn, $Button_quit, $Button_uncheck, $Button_up, $Checkbox_cancel, $Checkbox_mini, $Checkbox_relax, $Checkbox_skip
-	Local $Combo_OSfle, $Combo_shutdown, $Group_exist, $Group_files, $Group_OS, $Group_select, $Label_done, $Label_percent, $Label_shut, $Label_speed
-	Local $Label_warn, $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat, $Radio_selset
-	Local $Menu_list, $Sub_menu_remove, $Item_remove_ext, $Item_remove_lin, $Item_remove_mac, $Item_remove_sel, $Item_remove_win
+	Local $Combo_OSfle, $Combo_shutdown, $Group_exist, $Group_files, $Group_OS, $Group_select, $Label_done, $Label_game, $Label_percent, $Label_shut
+	Local $Label_speed, $Label_title, $Label_URL, $Label_warn, $ListView_files, $Progress_bar, $Radio_selall, $Radio_selext, $Radio_selgame, $Radio_selpat
+	Local $Radio_selset, $Menu_list, $Sub_menu_remove, $Item_remove_ext, $Item_remove_lin, $Item_remove_mac, $Item_remove_sel, $Item_remove_win
 	;
 	Local $amount, $began, $begin, $begun, $cancel, $changelog, $checked, $code, $col1, $col2, $col3, $col4, $color, $datapic, $description, $dllcall
-	Local $downloading, $dwn, $dwnfle, $edge, $ents, $exist, $fext, $finish, $gotten, $hours, $icoDwn, $icofle, $icoUp, $IDD, $idlink, $idx, $imageD
-	Local $lastid, $listing, $manfold, $mins, $missing, $movdwn, $movup, $osfle, $paths, $prior, $removed, $saved, $savtxt, $secs, $sect, $sections
-	Local $SelectorGUI, $serial, $shutdown, $sizecheck, $skip, $slugD, $speed, $start, $styles, $sum, $taken, $theme, $titleD, $tmpman, $up, $upfle
-	Local $val, $valfile, $valid, $visible, $wide
+	Local $downloading, $dwn, $dwnfle, $edge, $ents, $exist, $fext, $filetit, $finish, $gotten, $hours, $icoDwn, $icofle, $icoUp, $IDD, $idlink, $idx
+	Local $imageD, $lastid, $listing, $manfold, $mins, $missing, $movdwn, $movup, $osfle, $paths, $prior, $removed, $saved, $savtxt, $secs, $sect
+	Local $sections, $SelectorGUI, $serial, $shutdown, $sizecheck, $skip, $slugD, $speed, $start, $styles, $sum, $taken, $theme, $titleD, $tmpman
+	Local $up, $upfle, $val, $valfile, $valid, $visible, $wide
 	;
 	;$mini = 1
 	$styles = $WS_OVERLAPPED + $WS_CAPTION + $WS_MINIMIZEBOX + $WS_SIZEBOX + $WS_VISIBLE ; + $WS_POPUP
@@ -7127,10 +7248,24 @@ Func FileSelectorGUI()
 	; CONTROLS
 	$Group_files = GuiCtrlCreateGroup("Files To Download", 10, 10, $width - 25, 302)
 	GUICtrlSetResizing($Group_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
-	$ListView_files = GUICtrlCreateListView("||||", 20, 30, $width - 45, 270, $LVS_SHOWSELALWAYS + $LVS_SINGLESEL + $LVS_REPORT + $LVS_NOCOLUMNHEADER, _
+	$ListView_files = GUICtrlCreateListView("||||", 20, 30, $width - 45, 250, $LVS_SHOWSELALWAYS + $LVS_SINGLESEL + $LVS_REPORT + $LVS_NOCOLUMNHEADER, _
 																						$LVS_EX_FULLROWSELECT + $LVS_EX_GRIDLINES + $LVS_EX_CHECKBOXES)
 	GUICtrlSetBkColor($ListView_files, 0xF0D0F0)
 	GUICtrlSetResizing($ListView_files, $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKHEIGHT)
+	$Label_title = GuiCtrlCreateLabel("", 20, 282, 160, 18, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_title, $COLOR_GREEN)
+	GUICtrlSetColor($Label_title, $COLOR_WHITE)
+	GUICtrlSetResizing($Label_title, $GUI_DOCKAUTO)
+	GUICtrlSetTip($Label_title, "File Title!")
+	$Label_URL = GuiCtrlCreateLabel("", 182, 282, 221, 18, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_URL, 0xFFBB77)
+	GUICtrlSetResizing($Label_URL, $GUI_DOCKAUTO)
+	GUICtrlSetTip($Label_URL, "Download URL!")
+	$Label_game = GuiCtrlCreateLabel("", 405, 282, 160, 18, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_game, $COLOR_GREEN)
+	GUICtrlSetColor($Label_game, $COLOR_WHITE)
+	GUICtrlSetResizing($Label_game, $GUI_DOCKAUTO)
+	GUICtrlSetTip($Label_game, "Game Title!")
 	;
 	$Label_shut = GuiCtrlCreateLabel("SHUTDOWN", $width - 325, 5, 76, 21, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
 	GUICtrlSetResizing($Label_shut, $GUI_DOCKRIGHT + $GUI_DOCKAUTO + $GUI_DOCKSIZE)
@@ -7647,6 +7782,7 @@ Func FileSelectorGUI()
 				$edge = @DesktopWidth - $wide - 20
 			ElseIf $wide < $width Then
 				$wide = $width + 10
+				$edge = $left
 			Else
 				$edge = $left
 			EndIf
@@ -9219,6 +9355,13 @@ Func FileSelectorGUI()
 						GUICtrlSetState($Button_dwn, $GUI_ENABLE)
 						GUICtrlSetState($Button_up, $GUI_ENABLE)
 					EndIf
+					$entry = _GUICtrlListView_GetItemText($ListView_files, $idx, 3)
+					$filetit = IniRead($downfiles, $entry, "title", "")
+					GUICtrlSetData($Label_title, $filetit)
+					$URL = IniRead($downfiles, $entry, "URL", "")
+					GUICtrlSetData($Label_URL, $URL)
+					$titleD = IniRead($downfiles, $entry, "game", "")
+					GUICtrlSetData($Label_game, $titleD)
 				EndIf
 			EndIf
 		Case $msg = $Radio_selset
@@ -9719,13 +9862,13 @@ Func FileSelectorGUI()
 EndFunc ;=> FileSelectorGUI
 
 Func GameDetailsGUI()
-	Local $Button_all, $Button_cdkey, $Button_changelog, $Button_close, $Button_descript, $Button_general, $Button_manifest
-	Local $Checkbox_changelog, $Checkbox_descript, $Checkbox_game, $Checkbox_games, $Checkbox_local, $Checkbox_purge
-	Local $Group_changelog, $Group_descript, $Group_save
+	Local $Button_all, $Button_cdkey, $Button_changelog, $Button_close, $Button_descript, $Button_general, $Button_ID, $Button_manifest
+	Local $Button_URL, $Checkbox_changelog, $Checkbox_descript, $Checkbox_game, $Checkbox_games, $Checkbox_local, $Checkbox_purge
+	Local $Group_changelog, $Group_descript, $Group_save, $Input_ID, $Input_URL, $Label_ID, $Label_URL
 	Local $above, $high, $side, $wide
 	;
 	$wide = 268
-	$high = 255
+	$high = 310
 	$side = IniRead($inifle, "Details Window", "left", $left)
 	$above = IniRead($inifle, "Details Window", "top", $top)
 	$DetailsGUI = GuiCreate("Game Details - View & Save", $wide, $high, $side, $above, $WS_OVERLAPPED + $WS_CAPTION + $WS_SYSMENU _
@@ -9733,50 +9876,68 @@ Func GameDetailsGUI()
 	GUISetBkColor(0xFFBB77, $DetailsGUI)
 	;
 	; CONTROLS
-	$Button_descript = GuiCtrlCreateButton("DESCRIPTION", 10, 10, 120, 47)
+	$Label_ID = GUICtrlCreateLabel("Game ID", 10, 10, 60, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_ID, $COLOR_BLACK)
+	GUICtrlSetColor($Label_ID, $COLOR_WHITE)
+	$Input_ID = GUICtrlCreateInput("", 70, 10, 137, 20, $ES_READONLY)
+	GUICtrlSetTip($Input_ID, "GOG Game ID!")
+	$Button_ID = GuiCtrlCreateButton("COPY", 207, 9, 53, 23)
+	GUICtrlSetFont($Button_ID, 7, 600, 0, "Small Fonts")
+	GUICtrlSetTip($Button_ID, "Copy the Game ID to clipboard!")
+	;
+	$Label_URL = GUICtrlCreateLabel("URL", 10, 35, 38, 20, $SS_CENTER + $SS_CENTERIMAGE + $SS_SUNKEN)
+	GUICtrlSetBkColor($Label_URL, $COLOR_BLUE)
+	GUICtrlSetColor($Label_URL, $COLOR_WHITE)
+	$Input_URL = GUICtrlCreateInput("", 48, 35, 159, 20, $ES_READONLY)
+	GUICtrlSetTip($Input_URL, "GOG Game Page URL!")
+	$Button_URL = GuiCtrlCreateButton("COPY", 207, 34, 53, 23)
+	GUICtrlSetFont($Button_URL, 7, 600, 0, "Small Fonts")
+	GUICtrlSetTip($Button_URL, "Copy the Game Page URL to clipboard!")
+	;
+	$Button_descript = GuiCtrlCreateButton("DESCRIPTION", 10, 65, 120, 47)
 	GUICtrlSetFont($Button_descript, 9, 600)
 	GUICtrlSetTip($Button_descript, "Return game description!")
-	$Group_descript = GuiCtrlCreateGroup("", 10, 50, 120, 40)
-	$Checkbox_descript = GUICtrlCreateCheckbox("Save description", 23, 62, 100, 20)
+	$Group_descript = GuiCtrlCreateGroup("", 10, 105, 120, 40)
+	$Checkbox_descript = GUICtrlCreateCheckbox("Save description", 23, 117, 100, 20)
 	GUICtrlSetTip($Checkbox_descript, "Save the game description locally!")
 	;
-	$Button_changelog = GuiCtrlCreateButton("CHANGELOG", 140, 10, 118, 47)
+	$Button_changelog = GuiCtrlCreateButton("CHANGELOG", 140, 65, 118, 47)
 	GUICtrlSetFont($Button_changelog, 9, 600)
 	GUICtrlSetTip($Button_changelog, "Return game changelog!")
-	$Group_changelog = GuiCtrlCreateGroup("", 140, 50, 118, 40)
-	$Checkbox_changelog = GUICtrlCreateCheckbox("Save changelog", 152, 62, 95, 20)
+	$Group_changelog = GuiCtrlCreateGroup("", 140, 105, 118, 40)
+	$Checkbox_changelog = GUICtrlCreateCheckbox("Save changelog", 152, 117, 95, 20)
 	GUICtrlSetTip($Checkbox_changelog, "Save the game changelog locally!")
 	;
-	$Group_save = GuiCtrlCreateGroup("Save To Folder Locations", 10, 95, 248, 47)
-	$Checkbox_local = GUICtrlCreateCheckbox("Program Sub-folder", 20, 112, 110, 20)
+	$Group_save = GuiCtrlCreateGroup("Save To Folder Locations", 10, 150, 248, 47)
+	$Checkbox_local = GUICtrlCreateCheckbox("Program Sub-folder", 20, 167, 110, 20)
 	GUICtrlSetTip($Checkbox_local, "Save to a program sub-folder!")
-	$Checkbox_game = GUICtrlCreateCheckbox("Game", 140, 112, 50, 20)
+	$Checkbox_game = GUICtrlCreateCheckbox("Game", 140, 167, 50, 20)
 	GUICtrlSetTip($Checkbox_game, "Save to a game folder!")
-	$Checkbox_games = GUICtrlCreateCheckbox("Games", 198, 112, 50, 20)
+	$Checkbox_games = GUICtrlCreateCheckbox("Games", 198, 167, 50, 20)
 	GUICtrlSetTip($Checkbox_games, "Save to the games folder!")
 	;
-	$Checkbox_purge = GUICtrlCreateCheckbox("Sanitize Saves", 14, 150, 100, 20)
+	$Checkbox_purge = GUICtrlCreateCheckbox("Sanitize Saves", 14, 205, 100, 20)
 	GUICtrlSetTip($Checkbox_purge, "Sanitize (cleanup) text in the saved files!")
 	;
-	$Checkbox_offline = GUICtrlCreateCheckbox("Use Offline", 118, 150, 70, 20)
+	$Checkbox_offline = GUICtrlCreateCheckbox("Use Offline", 118, 205, 70, 20)
 	GUICtrlSetTip($Checkbox_offline, "Use offline saves if they exist!")
 	;
-	$Button_general = GuiCtrlCreateButton("GENERAL", 10, 175, 85, 30)
+	$Button_general = GuiCtrlCreateButton("GENERAL", 10, 230, 85, 30)
 	GUICtrlSetFont($Button_general, 8, 600)
 	GUICtrlSetTip($Button_general, "Return general details!")
 	;
-	$Button_manifest = GuiCtrlCreateButton("MANIFEST", 105, 175, 85, 30)
+	$Button_manifest = GuiCtrlCreateButton("MANIFEST", 105, 230, 85, 30)
 	GUICtrlSetFont($Button_manifest, 8, 600)
 	GUICtrlSetTip($Button_manifest, "View the game entry in the manifest!")
 	;
-	$Button_all = GuiCtrlCreateButton("ALL", 198, 153, 60, 32)
+	$Button_all = GuiCtrlCreateButton("ALL", 198, 208, 60, 32)
 	GUICtrlSetFont($Button_all, 9, 600)
 	GUICtrlSetTip($Button_all, "Return ALL details!")
 	;
-	$Button_close = GuiCtrlCreateButton("EXIT", 198, 195, 60, 50, $BS_ICON)
+	$Button_close = GuiCtrlCreateButton("EXIT", 198, 250, 60, 50, $BS_ICON)
 	GUICtrlSetTip($Button_close, "Exit / Close / Quit the window!")
 	;
-	$Button_cdkey = GuiCtrlCreateButton("CDKey CHECK && FIX", 10, 215, 180, 30)
+	$Button_cdkey = GuiCtrlCreateButton("CDKey CHECK && FIX", 10, 270, 180, 30)
 	GUICtrlSetFont($Button_cdkey, 9, 600)
 	GUICtrlSetTip($Button_cdkey, "Check for CDKeys & update the record!")
 	;
@@ -9794,6 +9955,9 @@ Func GameDetailsGUI()
 	ElseIf $gmesfld = 1 Then
 		GUICtrlSetState($Checkbox_game, $GUI_DISABLE)
 	EndIf
+	;
+	GUICtrlSetData($Input_ID, $ID)
+	GUICtrlSetData($Input_URL, $web)
 	;
 	GUICtrlSetState($Checkbox_purge, $purge)
 	GUICtrlSetState($Checkbox_offline, $offline)
@@ -9824,9 +9988,16 @@ Func GameDetailsGUI()
 			;
 			GUIDelete($DetailsGUI)
 			ExitLoop
+		Case $msg = $Button_URL
+			; Copy the Game PAge URL to clipboard
+			$link = "https://www.gog.com" & $web
+			ClipPut($link)
 		Case $msg = $Button_manifest
 			; View the game entry in the manifest
 			$return = "manifest"
+		Case $msg = $Button_ID
+			; Copy the Game ID to clipboard
+			ClipPut($ID)
 		Case $msg = $Button_general
 			; Return general details
 			$return = "general"
@@ -10921,6 +11092,8 @@ Func GetFileDownloadDetails($listview = "")
 			$line = $line[2]
 			$line = StringSplit($line, '",', 1)
 			$col4 = $line[1]
+			$col4 = StringReplace($col4, "[", "{")
+			$col4 = StringReplace($col4, "]", "}")
 			$fext = StringRight($col4, 4)
 			; Excluded File Types check.
 			If $extbin = 1 Then
