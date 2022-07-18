@@ -37,14 +37,14 @@ Global $List_games, $Menu_list, $Pic_cover
 Global $defimage, $GameInfoGUI, $height, $icoF, $icoI, $icoM, $icoX, $OptionsGUI, $pth, $shell, $user32, $width
 
 Global $boxart, $bytes, $cc, $check, $cliptxt, $cnt, $cover, $d, $datafold, $date, $description, $developer, $dev, $devs
-Global $dll, $downone, $downtwo, $e, $editor, $entries, $entry, $f, $feature, $features, $fixed, $gameinfo, $genre, $GID
-Global $handle, $head, $hide, $high, $html, $htmltxt, $ID, $idlink, $image, $ind, $inifle, $last, $lastlang, $lastOS
+Global $dll, $downone, $downtwo, $e, $editor, $entries, $entry, $f, $feature, $features, $fixed, $gamedata, $gameinfo, $genre
+Global $GID, $handle, $head, $hide, $high, $html, $htmltxt, $ID, $idlink, $image, $ind, $inifle, $last, $lastlang, $lastOS
 Global $line, $logfle, $manfold, $minimize, $minimum, $mpos, $name, $names, $ontop, $OS, $ping, $playtype, $price, $publisher
 Global $read, $release, $reload, $requires, $s, $show, $skip, $slug, $status, $success, $supported, $sys, $system, $systems
 Global $t, $tag, $tags, $tail, $text, $titfile, $title, $titles, $total, $update, $updated, $URL, $val, $versions, $wide
 Global $xpos, $ypos
 
-Global $a, $array, $checksum, $cookie, $create, $downurl, $extra, $extras, $file, $fileinfo, $gogcli, $i, $info
+Global $a, $array, $change, $checksum, $cookie, $create, $downurl, $extra, $extras, $file, $fileinfo, $gogcli, $i, $info
 Global $installer, $installers, $lang, $manifest, $mass, $params, $section, $size, $type, $version
 
 _Singleton("gog-game-info-timboli", 0)
@@ -60,11 +60,35 @@ $inifle = @ScriptDir & "\Options.ini"
 $logfle = @ScriptDir & "\Info.log"
 $manfold = @ScriptDir & "\Manifests"
 $titfile = @ScriptDir & "\Titles.ini"
-$updated = "May 2022"
-$update = "v2.2"
+$updated = "July 2022"
+$update = "v2.3"
 
 If Not FileExists($datafold) Then DirCreate($datafold)
 If Not FileExists($manfold) Then DirCreate($manfold)
+
+$change = IniRead($inifle, "Games Data Folder", "change", "")
+If $change = "" Then
+	If FileExists($titfile) Then
+		SplashTextOn("", "Changing The Data" & @LF & "Folder Structure", 200, 140, Default, Default, 33)
+		$read = _FileReadToArray($titfile, $entries)
+		If IsArray($entries) Then
+			For $e = 1 To $entries[0]
+				$line = $entries[$e]
+				If StringLeft($line, 3) = "id=" Then
+					$ID = StringTrimLeft($line, 3)
+					$gamedata = $datafold & "\" & $ID
+					If Not FileExists($gamedata) Then DirCreate($gamedata)
+					FileMove($gamedata & ".txt", $gamedata & "\")
+					FileMove($gamedata & "_cover.jpg", $gamedata & "\")
+					FileMove($gamedata & "_image.png", $gamedata & "\")
+				EndIf
+			Next
+		EndIf
+		SplashOff()
+	EndIf
+	$change = 1
+	IniWrite($inifle, "Games Data Folder", "change", $change)
+EndIf
 
 $cc = IniRead($inifle, "Price Query", "country_code", "")
 If $cc = "" Then
@@ -207,6 +231,9 @@ GUICtrlSetTip($Pic_cover, "Click to see full image!")
 ;
 ; CONTEXT MENU
 $Menu_list = GUICtrlCreateContextMenu($List_games)
+$Item_list_datafold = GUICtrlCreateMenuItem("Open Data Folder", $Menu_list)
+GUICtrlCreateMenuItem("", $Menu_list)
+GUICtrlCreateMenuItem("", $Menu_list)
 $Item_list_manifest = GUICtrlCreateMenuItem("View Manifest", $Menu_list)
 ;
 ; OS_SETTINGS
@@ -353,10 +380,15 @@ While 1
 				"NO = Select which to replace." & @LF & _
 				"CANCEL = Abort any replacements.", 0, $GameInfoGUI)
 			If $ans = 6 Then
-				$cover = $datafold & "\" & $ID & "_cover.jpg"
+				$cover = $datafold & "\" & $ID & "\" & $ID & "_cover.jpg"
 				If FileExists($cover) Then
 					FileDelete($cover)
 					GUICtrlSetImage($Pic_cover, $defimage)
+				Else
+					$gamedata = $datafold & "\" & $ID
+					If Not FileExists($gamedata) Then
+						DirCreate($gamedata)
+					EndIf
 				EndIf
 				$cover = $datafold & "\" & $ID & "_image.png"
 				If FileExists($cover) Then FileDelete($cover)
@@ -380,10 +412,15 @@ While 1
 					"NO = Replace Cover." & @LF & _
 					"CANCEL = Abort any replacements.", 0, $GameInfoGUI)
 				If $ans = 6 Then
-					$cover = $datafold & "\" & $ID & "_cover.jpg"
+					$cover = $datafold & "\" & $ID & "\" & $ID & "_cover.jpg"
 					If FileExists($cover) Then
 						FileDelete($cover)
 						GUICtrlSetImage($Pic_cover, $defimage)
+					Else
+						$gamedata = $datafold & "\" & $ID
+						If Not FileExists($gamedata) Then
+							DirCreate($gamedata)
+						EndIf
 					EndIf
 					$boxart = IniRead($gameinfo, $ID, "boxart", "")
 					If $boxart <> "" Then
@@ -393,8 +430,15 @@ While 1
 						GUICtrlSetImage($Pic_cover, $cover)
 					EndIf
 				ElseIf $ans = 7 Then
-					$cover = $datafold & "\" & $ID & "_image.png"
-					If FileExists($cover) Then FileDelete($cover)
+					$cover = $datafold & "\" & $ID & "\" & $ID & "_image.png"
+					If FileExists($cover) Then
+						FileDelete($cover)
+					Else
+						$gamedata = $datafold & "\" & $ID
+						If Not FileExists($gamedata) Then
+							DirCreate($gamedata)
+						EndIf
+					EndIf
 					$image = IniRead($gameinfo, $ID, "cover", "")
 					If $image <> "" Then
 						SplashTextOn("", "Downloading Cover!", 200, 120, Default, Default, 33)
@@ -629,15 +673,21 @@ While 1
 					GUICtrlSetData($Input_imgurl, "")
 					GUICtrlSetImage($Pic_cover, $defimage)
 					IniDelete($titfile, $title)
-					$gameinfo = $datafold & "\" & $ID & ".txt"
+					$gameinfo = $datafold & "\" & $ID & "\" & $ID & ".txt"
 					If FileExists($gameinfo) Then
 						$slug = IniRead($gameinfo, $ID, "slug", "")
 						If $slug <> "" Then
 							$manifest = $manfold & "\" & $slug & "_manifest.txt"
 							FileDelete($manifest)
 						EndIf
+					;Else
+					;	$gamedata = $datafold & "\" & $ID
+					;	If Not FileExists($gamedata) Then
+					;		DirCreate($gamedata)
+					;	EndIf
 					EndIf
-					FileDelete($datafold & "\" & $ID & "*.*")
+					;FileDelete($datafold & "\" & $ID & "\" & $ID & "*.*")
+					DirRemove($datafold & "\" & $ID, 1)
 					_FileWriteLog($logfle, "REMOVED = " & $title, -1)
 					FileWriteLine($logfle, "")
 					LoadTheList()
@@ -690,7 +740,7 @@ While 1
 			$ID = IniRead($titfile, $title, "id", "")
 			If $ID <> "" Then
 				;IniRead($titfile, $title, "date", $date)
-				$gameinfo = $datafold & "\" & $ID & ".txt"
+				$gameinfo = $datafold & "\" & $ID & "\" & $ID & ".txt"
 				If FileExists($gameinfo) Then
 					;IniRead($gameinfo, $ID, "slug", $slug)
 					$URL = IniRead($gameinfo, $ID, "url", "")
@@ -732,7 +782,7 @@ While 1
 					$supported = IniRead($gameinfo, $ID, "supported", "")
 					;IniRead($gameinfo, $ID, "boxart", $boxart)
 					$image = IniRead($gameinfo, $ID, "cover", "")
-					$cover = $datafold & "\" & $ID & "_cover.jpg"
+					$cover = $datafold & "\" & $ID & "\" & $ID & "_cover.jpg"
 					If Not FileExists($cover) Then
 						$cover = ""
 					EndIf
@@ -761,7 +811,7 @@ While 1
 		; Click to see full image.
 		$ID = GUICtrlRead($Input_ID)
 		If $ID <> "" Then
-			$cover = $datafold & "\" & $ID & "_image.png"
+			$cover = $datafold & "\" & $ID & "\" & $ID & "_image.png"
 			If FileExists($cover) Then
 				ShellExecute($cover)
 				GUISetState(@SW_MINIMIZE, $GameInfoGUI)
@@ -810,7 +860,7 @@ While 1
 		$title = GUICtrlRead($Input_gametit)
 		If $title <> "" Then
 			$ID = GUICtrlRead($Input_ID)
-			$gameinfo = $datafold & "\" & $ID & ".txt"
+			$gameinfo = $datafold & "\" & $ID & "\" & $ID & ".txt"
 			If FileExists($gameinfo) Then
 				$slug = IniRead($gameinfo, $ID, "slug", "")
 				If $slug <> "" Then
@@ -829,6 +879,20 @@ While 1
 				EndIf
 			Else
 				MsgBox(262192, "File Error", "No game info file found for selected entry!", 2, $GameInfoGUI)
+			EndIf
+		Else
+			MsgBox(262192, "View Error", "No entry selected!", 2, $GameInfoGUI)
+		EndIf
+	Case $msg = $Item_list_datafold
+		; Open Data Folder
+		$title = GUICtrlRead($Input_gametit)
+		If $title <> "" Then
+			$ID = GUICtrlRead($Input_ID)
+			$gamedata = $datafold & "\" & $ID
+			If FileExists($gamedata) Then
+				ShellExecute($gamedata)
+			Else
+				MsgBox(262192, "Open Error", "Folder does not exist!", 2, $GameInfoGUI)
 			EndIf
 		Else
 			MsgBox(262192, "View Error", "No entry selected!", 2, $GameInfoGUI)
@@ -1105,7 +1169,7 @@ EndFunc ;=> FixUnicode
 
 Func GetGameDetail()
 	Local $bakfile, $errors, $flag, $logerr, $timestamp
-	$gameinfo = $datafold & "\" & $ID & ".txt"
+	$gameinfo = $datafold & "\" & $ID & "\" & $ID & ".txt"
 	$ping = Ping("gog.com", 4000)
 	If $ping > 0 Then
 		SplashTextOn("", "Downloading Data!", 200, 120, Default, Default, 33)
@@ -1374,7 +1438,7 @@ Func GetGameDetail()
 									$boxart = $boxart[$boxart[0]]
 									$boxart = StringReplace($boxart, "\/", "/")
 									IniWrite($gameinfo, $ID, "boxart", $boxart)
-									$cover = $datafold & "\" & $ID & "_cover.jpg"
+									$cover = $datafold & "\" & $ID & "\" & $ID & "_cover.jpg"
 									If Not FileExists($cover) Then
 										SplashTextOn("", "Downloading Cover!", 200, 120, Default, Default, 33)
 										InetGet($boxart, $cover, 1, 0)
@@ -1391,7 +1455,7 @@ Func GetGameDetail()
 										$image = StringReplace($image, "\/", "/")
 										$image = StringReplace($image, "_{formatter}.png", ".png")
 										IniWrite($gameinfo, $ID, "cover", $image)
-										$cover = $datafold & "\" & $ID & "_image.png"
+										$cover = $datafold & "\" & $ID & "\" & $ID & "_image.png"
 										If Not FileExists($cover) Then
 											SplashTextOn("", "Downloading Image!", 200, 120, Default, Default, 33)
 											InetGet($image, $cover, 1, 0)

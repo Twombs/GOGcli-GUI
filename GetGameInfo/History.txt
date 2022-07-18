@@ -34,3 +34,6 @@ Added a remove checkbox, that enables the ADD button as a CUT button, to remove 
 
 (v2.2)
 Added a right-click list option to view the manifest for selected game entry, if it exists. Errors for download file data, during manifest creation, are now reported and logged. Existing manifest file for a game, is now queried about replacement, with the option of a backup occurring.
+
+(v2.3)
+Added another right-click list option to Open the selected game's data folder, if it exists. Game image files and detail text file have been relocated for all games, to ID named sub-folders. NOTE - Prior users will see a splash appear at program startup, which advises of the Data folder structure change (creating ID sub-folders and relocating game files to them).
