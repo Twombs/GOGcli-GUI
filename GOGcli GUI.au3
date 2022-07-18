@@ -11,7 +11,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; FUNCTIONS
-; MainGUI(), SetupGUI(), FileSelectorGUI(), GameDetailsGUI(), OptionsWindow()
+; MainGUI(), SetupGUI(), FileSelectorGUI(), GameDetailsGUI(), GenreLists($action), OptionsWindow()
 ; BackupManifestEtc(), ClearFieldValues(), CompareFilesToManifest($numb), FillTheGamesList(), FixAllText($text), FixText($text), FixTitle($text)
 ; FixUnicode($text), GetChecksumQuery($rat), GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF), GetManifestForTitle()
 ; GetTheSize(), ParseTheGamelist(), RemoveHtml($text), RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which), ShowCorrectImage()
@@ -47,8 +47,8 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $update, $version
 
-$update = "Updated in June 2022."
-$version = "v3.0"
+$update = "Updated in July 2022."
+$version = "v3.2"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -83,21 +83,21 @@ Global $Input_OS, $Input_slug, $Input_title, $Input_ups, $Item_database_add, $It
 Global $Item_verify_game, $Item_verify_now, $Label_bed, $Label_cat, $Label_dlc, $Label_key, $Label_mid, $Label_OS, $Label_slug
 Global $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $7zip, $a, $addlist, $alert, $alerts, $alf, $alldetail, $alldown, $allgames, $allkeys, $alpha, $ans, $array, $backups, $bigcover
-Global $bigpic, $blackjpg, $blurb, $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $cease, $changelogs, $check, $checksum, $checkval
-Global $cnt, $compare, $completed, $cookie, $cookies, $cover, $covers, $covimg, $datafold, $DBfile, $declare, $descript, $descriptions
-Global $dest, $details, $DetailsGUI, $DLC, $dlcfile, $done, $down, $downfiles, $downlist, $download, $downloads, $downlog, $drv, $endgame
-Global $entries, $entry, $erred, $existDB, $exists, $extbin, $extdmg, $extexe, $extpkg, $extsh, $extzip, $f, $file, $fileinfo, $filepth
-Global $files, $filesize, $final, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games, $gamesfold, $gamesini
-Global $gametxt, $gams, $getlatest, $gmefold, $gmesfld, $gogcli, $GOGcliGUI, $hash, $head, $height, $histfile, $history, $htmlfle, $i
-Global $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image, $imgfle, $include, $ind, $inifle, $json, $keep
-Global $key, $lang, $left, $line, $lines, $link, $list, $listed, $listview, $log, $logfle, $lowid, $m, $manall, $manalt, $manifest
-Global $manifests, $manlist, $md5check, $mini, $minimize, $model, $n, $name, $num, $numb, $offline, $OP, $open, $OS, $OSes, $outfold
-Global $overlook, $params, $part, $parts, $percent, $ping, $pinged, $processed, $progress, $pth, $purge, $r, $rat, $ratify, $read
-Global $record, $relax, $reportexe, $res, $rest, $results, $ret, $return, $row, $s, $same, $savkeys, $savlog, $second, $selector
-Global $session, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $state, $stop, $style, $subfold, $SYS, $tag
-Global $tagfle, $tail, $text, $title, $titleF, $titleID, $titleIDup, $titlist, $top, $type, $types, $typs, $updated, $updates, $URL
-Global $user, $valhistory, $validate, $verify, $warn, $web, $which, $width, $winpos, $xtra, $z, $zipcheck, $zipfile, $zippath
+Global $7zip, $a, $action, $addlist, $alert, $alerts, $alf, $alldetail, $alldown, $allgames, $allkeys, $alpha, $ans, $array, $backups
+Global $bigcover, $bigpic, $blackjpg, $blurb, $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $cease, $changelogs, $check, $checklist
+Global $checksum, $checkval, $cnt, $compare, $completed, $cookie, $cookies, $cover, $covers, $covimg, $datafold, $DBfile, $declare
+Global $descript, $descriptions, $dest, $details, $DetailsGUI, $DLC, $dlcfile, $done, $down, $downfiles, $downlist, $download, $downloads
+Global $downlog, $drv, $endgame, $entries, $entry, $erred, $existDB, $exists, $extbin, $extdmg, $extexe, $extpkg, $extsh, $extzip, $f
+Global $file, $fileinfo, $filepth, $files, $filesize, $final, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games
+Global $gamesfold, $gamesini, $gametxt, $gams, $gencheck, $genfold, $genlist, $getlatest, $gmefold, $gmesfld, $gogcli, $GOGcliGUI, $hash
+Global $head, $height, $histfile, $history, $htmlfle, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image
+Global $imgfle, $include, $ind, $inifle, $json, $keep, $key, $lang, $left, $line, $lines, $link, $list, $listcheck, $listed, $listview
+Global $log, $logfle, $lowid, $m, $manall, $manalt, $manifest, $manifests, $manlist, $md5check, $mini, $minimize, $model, $n, $name, $num
+Global $numb, $offline, $OP, $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping, $pinged, $processed, $progress
+Global $pth, $purge, $r, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $rest, $results, $ret, $return, $row, $s, $same, $savkeys
+Global $savlog, $second, $selector, $session, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $state, $stop, $style
+Global $subfold, $SYS, $tag, $tagfle, $tail, $text, $title, $titleF, $titleID, $titleIDup, $titlist, $top, $type, $types, $typs, $updated
+Global $updates, $URL, $user, $valhistory, $validate, $verify, $warn, $web, $which, $width, $winpos, $xtra, $z, $zipcheck, $zipfile, $zippath
 ;, $foldzip, $resultfle
 
 $addlist = @ScriptDir & "\Added.txt"
@@ -109,6 +109,7 @@ $bigpic = @ScriptDir & "\Big.jpg"
 $blackjpg = @ScriptDir & "\Black.jpg"
 $cdkeys = @ScriptDir & "\CDkeys.ini"
 $changelogs = @ScriptDir & "\Changelogs"
+$checklist = @ScriptDir & "\Checklist.txt"
 $compare = @ScriptDir & "\Comparisons.txt"
 $cookies = @ScriptDir & "\Cookie.txt"
 $covers = @ScriptDir & "\Covers"
@@ -125,6 +126,7 @@ $fileinfo = @ScriptDir & "\Fileinfo.txt"
 $gamelist = @ScriptDir & "\Games.txt"
 $gamesini = @ScriptDir & "\Games.ini"
 $gametxt = @ScriptDir & "\Game.txt"
+$genfold = @ScriptDir & "\Genre Lists"
 $gogcli = @ScriptDir & "\gogcli.exe"
 $htmlfle = @ScriptDir & "\Manifest.html"
 $histfile = @ScriptDir & "\History.log"
@@ -158,12 +160,14 @@ EndIf
 ;IniWrite($gamesini, "Games", "total", $games)
 
 If Not FileExists($addlist) Then _FileCreate($addlist)
+If Not FileExists($checklist) Then _FileCreate($checklist)
 If Not FileExists($alldetail) Then DirCreate($alldetail)
 If Not FileExists($changelogs) Then DirCreate($changelogs)
 If Not FileExists($covers) Then DirCreate($covers)
 If Not FileExists($descriptions) Then DirCreate($descriptions)
 If Not FileExists($downlist) Then _FileCreate($downlist)
 ;~ If Not FileExists($foldzip) Then DirCreate($foldzip)
+If Not FileExists($genfold) Then DirCreate($genfold)
 If Not FileExists($updated) Then _FileCreate($updated)
 
 If FileExists($manifest) Then
@@ -1156,17 +1160,18 @@ Exit
 
 Func MainGUI()
 	Local $Checkbox_quit, $Checkbox_stop, $Menu_down, $Menu_get, $Menu_list, $Menu_man, $Menu_compare_opts
-	Local $Item_alerts_clear, $Item_alerts_view, $Item_compare_all, $Item_compare_aqua, $Item_compare_declare
-	Local $Item_compare_ignore, $Item_compare_one, $Item_compare_orange, $Item_compare_overlook, $Item_compare_red
-	Local $Item_compare_rep, $Item_compare_report, $Item_compare_view, $Item_compare_wipe, $Item_compare_yellow
-	Local $Item_database_display, $Item_database_prior, $Item_database_view, $Item_down_clear, $Item_down_history
-	Local $Item_down_view, $Item_exclude_bin, $Item_exclude_dmg, $Item_exclude_exe, $Item_exclude_pkg, $Item_exclude_sh
+	Local $Item_alerts_clear, $Item_alerts_view, $Item_checklist_add, $Item_checklist_clear, $Item_checklist_enable
+	Local $Item_checklist_view, $Item_compare_all, $Item_compare_aqua, $Item_compare_declare, $Item_compare_ignore
+	Local $Item_compare_one, $Item_compare_orange, $Item_compare_overlook, $Item_compare_red, $Item_compare_rep
+	Local $Item_compare_report, $Item_compare_view, $Item_compare_wipe, $Item_compare_yellow, $Item_database_display
+	Local $Item_database_prior, $Item_database_view, $Item_down_clear, $Item_down_history, $Item_down_view
+	Local $Item_exclude_bin, $Item_exclude_dmg, $Item_exclude_exe, $Item_exclude_pkg, $Item_exclude_sh
 	Local $Item_exclude_zip, $Item_lists_dlcs, $Item_lists_keys, $Item_lists_latest, $Item_lists_tags, $Item_man_clear
 	Local $Item_man_view, $Item_manifest_entry, $Item_manifest_fix, $Item_manifest_orphan, $Item_manifest_view
 	Local $Item_save_keys, $Item_updated_dupes, $Item_updated_list, $Item_updated_mark, $Item_validate_histfle
-	Local $Item_validate_history, $Label_progress, $Progress_valid, $Sub_menu_alerts, $Sub_menu_comparisons
-	Local $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_exclude, $Sub_menu_lists, $Sub_menu_manifest
-	Local $Sub_menu_manifests, $Sub_menu_save, $Sub_menu_updated, $Sub_menu_validate
+	Local $Item_validate_history, $Label_progress, $Progress_valid, $Sub_menu_alerts, $Sub_menu_checklist
+	Local $Sub_menu_comparisons, $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_exclude, $Sub_menu_lists
+	Local $Sub_menu_manifest, $Sub_menu_manifests, $Sub_menu_save, $Sub_menu_updated, $Sub_menu_validate
 	;
 	Local $downall, $Sub_menu_downall, $Item_downall_clear, $Item_downall_create, $Item_downall_disable, $Item_downall_display
 	Local $Item_downall_info, $Item_downall_list, $Item_downall_log, $Item_downall_opts, $Item_downall_start, $Item_downall_view
@@ -1174,10 +1179,10 @@ Func MainGUI()
 	Local $accept, $addto, $alias, $amount, $aqua, $arraytits, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4
 	Local $compall, $compone, $ctrl, $delay, $description, $destfld, $destfle, $dir, $disable, $display, $dll, $e, $error
 	Local $everything, $exist, $existing, $fext, $filelist, $find, $finished, $fixed, $flename, $foldpth, $former, $gambak
-	Local $get, $hours, $IDD, $idlink, $ids, $l, $language, $languages, $last, $lastgame, $latest, $loop, $manfold, $mans
-	Local $method, $mins, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $patchfld, $paths, $pos, $prior, $proceed
-	Local $query, $red, $rep, $result, $retrieve, $savtxt, $secs, $sect, $sects, $serial, $shift, $skipped, $slugD, $started
-	Local $tagtxt, $taken, $tested, $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
+	Local $get, $hours, $IDD, $idlink, $ids, $l, $language, $languages, $last, $lastgame, $lastgen, $lastone, $latest, $loop
+	Local $manfold, $mans, $method, $mins, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $patchfld, $paths, $pos, $prior
+	Local $proceed, $query, $red, $rep, $result, $retrieve, $savtxt, $secs, $sect, $sects, $serial, $shift, $skipped, $slugD
+	Local $started, $tagtxt, $taken, $tested, $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
 	;
 	If Not FileExists($blackjpg) Then
 		Local $hBitmap, $hGraphic, $hImage
@@ -1383,12 +1388,19 @@ Func MainGUI()
 	$Item_alerts_clear = GUICtrlCreateMenuItem("Clear Alerts", $Sub_menu_alerts)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
-	$Sub_menu_comparisons = GUICtrlCreateMenu("Comparisons", $Menu_list)
-	$Item_compare_rep = GUICtrlCreateMenuItem("Comparison Report", $Sub_menu_comparisons)
-	GUICtrlCreateMenuItem("", $Sub_menu_comparisons)
-	$Item_compare_view = GUICtrlCreateMenuItem("View Comparison File", $Sub_menu_comparisons)
+	$Sub_menu_checklist = GUICtrlCreateMenu("Checklist", $Menu_list)
+	$Item_checklist_add = GUICtrlCreateMenuItem("Add To Checklist", $Sub_menu_checklist)
+	GUICtrlCreateMenuItem("", $Sub_menu_checklist)
+	$Item_checklist_clear = GUICtrlCreateMenuItem("Clear the Checklist", $Sub_menu_checklist)
+	GUICtrlCreateMenuItem("", $Sub_menu_checklist)
+	$Item_checklist_view = GUICtrlCreateMenuItem("View the Checklist", $Sub_menu_checklist)
+	GUICtrlCreateMenuItem("", $Sub_menu_checklist)
+	GUICtrlCreateMenuItem("", $Sub_menu_checklist)
+	$Item_checklist_enable = GUICtrlCreateMenuItem("Enable the Checklist", $Sub_menu_checklist, -1, 0)
 	GUICtrlCreateMenuItem("", $Menu_list)
-	$Menu_compare_opts = GUICtrlCreateMenu("Comparison Settings", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Sub_menu_comparisons = GUICtrlCreateMenu("Comparisons", $Menu_list)
+	$Menu_compare_opts = GUICtrlCreateMenu("Settings", $Sub_menu_comparisons)
 	$Item_compare_ignore = GUICtrlCreateMenuItem("Ignore Missing Folders", $Menu_compare_opts, -1, 0)
 	$Item_compare_report = GUICtrlCreateMenuItem("Report Missing Folders", $Menu_compare_opts, -1, 0)
 	GUICtrlCreateMenuItem("", $Menu_compare_opts)
@@ -1399,6 +1411,11 @@ Func MainGUI()
 	$Item_compare_orange = GUICtrlCreateMenuItem("Wrong Size (ORANGE)", $Menu_compare_opts, -1, 0)
 	$Item_compare_yellow = GUICtrlCreateMenuItem("No Size (YELLOW)", $Menu_compare_opts, -1, 0)
 	$Item_compare_aqua = GUICtrlCreateMenuItem("No Manifest Entry (AQUA)", $Menu_compare_opts, -1, 0)
+	GUICtrlCreateMenuItem("", $Sub_menu_comparisons)
+	GUICtrlCreateMenuItem("", $Sub_menu_comparisons)
+	$Item_compare_rep = GUICtrlCreateMenuItem("Comparison Report", $Sub_menu_comparisons)
+	GUICtrlCreateMenuItem("", $Sub_menu_comparisons)
+	$Item_compare_view = GUICtrlCreateMenuItem("View Comparison File", $Sub_menu_comparisons)
 	GUICtrlCreateMenuItem("", $Sub_menu_comparisons)
 	$Item_compare_wipe = GUICtrlCreateMenuItem("Wipe Comparison File", $Sub_menu_comparisons)
 	GUICtrlCreateMenuItem("", $Menu_list)
@@ -1441,10 +1458,10 @@ Func MainGUI()
 	$Item_downall_log = GUICtrlCreateMenuItem("View LOG", $Sub_menu_downall)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
-	$Sub_menu_downloads = GUICtrlCreateMenu("Downloads", $Menu_list)
-	$Item_down_clear = GUICtrlCreateMenuItem("Clear Downloads List", $Sub_menu_downloads)
+	$Sub_menu_downloads = GUICtrlCreateMenu("Downloads List", $Menu_list)
+	$Item_down_clear = GUICtrlCreateMenuItem("Clear", $Sub_menu_downloads)
 	GUICtrlCreateMenuItem("", $Sub_menu_downloads)
-	$Item_down_view = GUICtrlCreateMenuItem("View Downloads List", $Sub_menu_downloads)
+	$Item_down_view = GUICtrlCreateMenuItem("View", $Sub_menu_downloads)
 	GUICtrlCreateMenuItem("", $Sub_menu_downloads)
 	GUICtrlCreateMenuItem("", $Sub_menu_downloads)
 	$Sub_menu_exclude = GUICtrlCreateMenu("Excluded File Types", $Sub_menu_downloads)
@@ -1461,6 +1478,14 @@ Func MainGUI()
 	$Item_down_histfle = GUICtrlCreateMenuItem("Open the History file", $Sub_menu_downloads)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
+	$Sub_menu_genres = GUICtrlCreateMenu("Genre Lists", $Menu_list)
+	$Item_genres_create = GUICtrlCreateMenuItem("Create", $Sub_menu_genres)
+	GUICtrlCreateMenuItem("", $Sub_menu_genres)
+	$Item_genres_view = GUICtrlCreateMenuItem("View", $Sub_menu_genres)
+	GUICtrlCreateMenuItem("", $Sub_menu_genres)
+	$Item_genres_enable = GUICtrlCreateMenuItem("Enable", $Sub_menu_genres, -1, 0)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
 	$Sub_menu_lists = GUICtrlCreateMenu("Lists", $Menu_list)
 	$Item_lists_latest = GUICtrlCreateMenuItem("Latest Additions", $Sub_menu_lists)
 	GUICtrlCreateMenuItem("", $Sub_menu_lists)
@@ -1471,17 +1496,7 @@ Func MainGUI()
 	$Item_lists_tags = GUICtrlCreateMenuItem("Tags", $Sub_menu_lists)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
-	$Sub_menu_manifests = GUICtrlCreateMenu("Manifests", $Menu_list)
-	$Item_man_clear = GUICtrlCreateMenuItem("Clear Manifests List", $Sub_menu_manifests)
-	GUICtrlCreateMenuItem("", $Sub_menu_manifests)
-	$Item_man_view = GUICtrlCreateMenuItem("View Manifests List", $Sub_menu_manifests)
-	GUICtrlCreateMenuItem("", $Menu_list)
-	GUICtrlCreateMenuItem("", $Menu_list)
-	$Sub_menu_save = GUICtrlCreateMenu("Save To File", $Menu_list)
-	$Item_save_keys = GUICtrlCreateMenuItem("CDkey or Serial", $Sub_menu_save)
-	GUICtrlCreateMenuItem("", $Menu_list)
-	GUICtrlCreateMenuItem("", $Menu_list)
-	$Sub_menu_manifest = GUICtrlCreateMenu("The Manifest", $Menu_list)
+	$Sub_menu_manifest = GUICtrlCreateMenu("Manifest", $Menu_list)
 	$Item_manifest_entry = GUICtrlCreateMenuItem("View Selected Entry", $Sub_menu_manifest)
 	GUICtrlCreateMenuItem("", $Sub_menu_manifest)
 	$Item_manifest_view = GUICtrlCreateMenuItem("View ALL", $Sub_menu_manifest)
@@ -1490,6 +1505,16 @@ Func MainGUI()
 	GUICtrlCreateMenuItem("", $Sub_menu_manifest)
 	$Item_manifest_orphan = GUICtrlCreateMenuItem("Check For Orphan Entries", $Sub_menu_manifest)
 	;$Item_manifest_fix = GUICtrlCreateMenuItem("Check && Fix The Manifest", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Sub_menu_manifests = GUICtrlCreateMenu("Manifests List", $Menu_list)
+	$Item_man_clear = GUICtrlCreateMenuItem("Clear", $Sub_menu_manifests)
+	GUICtrlCreateMenuItem("", $Sub_menu_manifests)
+	$Item_man_view = GUICtrlCreateMenuItem("View", $Sub_menu_manifests)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	$Sub_menu_save = GUICtrlCreateMenu("Save To File", $Menu_list)
+	$Item_save_keys = GUICtrlCreateMenuItem("CDkey or Serial", $Sub_menu_save)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	$Sub_menu_updated = GUICtrlCreateMenu("Updated", $Menu_list)
@@ -1585,6 +1610,9 @@ Func MainGUI()
 	$query = ""
 	;
 	BackupManifestEtc()
+	;
+	$gencheck = 4
+	$listcheck = 4
 	;
 	$ignore = IniRead($inifle, "Compare Options", "ignore", "")
 	If $ignore = "" Then
@@ -1740,6 +1768,26 @@ Func MainGUI()
 			$model = 16
 		ElseIf $hash = "81d4eaf7fa7e279482c65a1f4c8ce6fd" Or $hash = "545a2bb5c22d4d4116c86f0da6bfb987" Then
 			$model = 17
+		ElseIf $hash = "bf88af656e93aaa6869697edde22d9ca" Or $hash = "b1904e71553f70dd128d5adf38bcf113" Then
+			$model = 17.1
+		ElseIf $hash = "a8c49a20daf723544684f5e2a813b0fa" Or $hash = "29f5593a5993f7024ff23e0a98daf57d" Then
+			$model = 17.2
+		ElseIf $hash = "c3f422efbc162d72e836aaee101c1fdb" Or $hash = "741e7969744b0c464901ccafe35746e9" Then
+			$model = 17.3
+		ElseIf $hash = "9ea8bf488508fe35c3c4a4eeccb6d24c" Or $hash = "d26f00c1decb276a268e4dbb9c1ee014" Then
+			$model = 18
+		ElseIf $hash = "c91d0a06b97b55683a625a5fb68c0853" Or $hash = "de5a39cc8109301b034fc07ef4f4fd01" Then
+			$model = 19
+		ElseIf $hash = "bdc631180d7f119405e9b1661b251270" Or $hash = "d123409f6bc081b55f556b9d56480e85" Then
+			$model = 19.1
+		ElseIf $hash = "61981ec65200b47769548d5bb41e9ef2" Or $hash = "33c6c85bfff4e6d7156cd2ec37302d89" Then
+			$model = 19.2
+		ElseIf $hash = "8803552a6a8e76fe571fa219fdd0a43f" Or $hash = "1314f1e4ecbd68aa361adbd497bf30e9" Then
+			$model = 19.3
+		ElseIf $hash = "cbd9943f72844bb6f4da7ad4fdc5590c" Or $hash = "d5b7bec67307530ded9519ce997e7cbd" Then
+			$model = 19.4
+		ElseIf $hash = "52e9ac2dc4ea5707a23237a3f3b25082" Or $hash = "a799aafa053d64631fff0f0c3ff2626d" Then
+			$model = 20
 		Else
 			$model = 666
 			$accept = IniRead($inifle, "gogcli.exe", "accept", "")
@@ -1976,6 +2024,8 @@ Func MainGUI()
 	$existing = ""
 	$find = ""
 	$last = ""
+	$lastgen = ""
+	$lastone = ""
 	$ratify = 4
 	$verify = 4
 	$valnow = ""
@@ -2617,37 +2667,115 @@ Func MainGUI()
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_last
 			; Find the latest added game(s)
-			If _IsPressed("11") Then $last = ""
-			If FileExists($addlist) Then
-				$res = _FileReadToArray($addlist, $latest)
-				If $res = 1 Then
-					If $last = "" Then
-						$last = $latest[0]
-						$title = $latest[$last]
-					Else
-						If $last > 1 Then
-							$last = $last - 1
+			If $listcheck = 4 Then
+				If $gencheck = 4 Then
+					If _IsPressed("11") Then $last = ""
+					If FileExists($addlist) Then
+						$res = _FileReadToArray($addlist, $latest)
+						If $res = 1 Then
+							If $last = "" Then
+								$last = $latest[0]
+								$title = $latest[$last]
+							Else
+								If $last > 1 Then
+									$last = $last - 1
+								Else
+									$last = $latest[0]
+								EndIf
+								$title = $latest[$last]
+							EndIf
+							$ind = -1
+							While 1
+								$ind = _GUICtrlListView_FindInText($Listview_games, $title, $ind, False, False)
+								If $ind = -1 Then ExitLoop
+								If _GUICtrlListView_GetItemText($Listview_games, $ind, 1) = $title Then ExitLoop
+							WEnd
+							If $ind > -1 Then
+								GUICtrlSetState($Listview_games, $GUI_FOCUS)
+								_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+								ContinueLoop
+							EndIf
 						Else
-							$last = $latest[0]
+							MsgBox(262192, "Read Error", "Added.txt file not read!", 0, $GOGcliGUI)
 						EndIf
-						$title = $latest[$last]
-					EndIf
-					$ind = -1
-					While 1
-						$ind = _GUICtrlListView_FindInText($Listview_games, $title, $ind, False, False)
-						If $ind = -1 Then ExitLoop
-						If _GUICtrlListView_GetItemText($Listview_games, $ind, 1) = $title Then ExitLoop
-					WEnd
-					If $ind > -1 Then
-						GUICtrlSetState($Listview_games, $GUI_FOCUS)
-						_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
-						ContinueLoop
+					Else
+						MsgBox(262192, "File Error", "Added.txt file not found!", 0, $GOGcliGUI)
 					EndIf
 				Else
-					MsgBox(262192, "Read Error", "Added.txt file not read!", 0, $GOGcliGUI)
+					If _IsPressed("11") Then $lastgen = ""
+					If FileExists($checklist) Then
+						$res = _FileReadToArray($genlist, $latest)
+						If $res = 1 Then
+							If $lastgen = "" Then
+								$lastgen = $latest[0]
+								$entry = $latest[$lastgen]
+							Else
+								If $lastgen > 1 Then
+									$lastgen = $lastgen - 1
+								Else
+									$lastgen = $latest[0]
+								EndIf
+								$entry = $latest[$lastgen]
+							EndIf
+							$title = StringSplit($entry, "|", 1)
+							$ID = $title[1]
+							$title = $title[2]
+							$ind = -1
+							While 1
+								$ind = _GUICtrlListView_FindInText($Listview_games, $title, $ind, False, False)
+								If $ind = -1 Then ExitLoop
+								If _GUICtrlListView_GetItemText($Listview_games, $ind, 1) = $title _
+									And _GUICtrlListView_GetItemText($Listview_games, $ind, 0) = $ID Then ExitLoop
+							WEnd
+							If $ind > -1 Then
+								GUICtrlSetState($Listview_games, $GUI_FOCUS)
+								_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+								ContinueLoop
+							EndIf
+						Else
+							MsgBox(262192, "Read Error", "Checklist.txt file not read!", 0, $GOGcliGUI)
+						EndIf
+					Else
+						MsgBox(262192, "File Error", "Checklist.txt file not found!", 0, $GOGcliGUI)
+					EndIf
 				EndIf
 			Else
-				MsgBox(262192, "File Error", "Added.txt file not found!", 0, $GOGcliGUI)
+				If _IsPressed("11") Then $lastone = ""
+				If FileExists($checklist) Then
+					$res = _FileReadToArray($checklist, $latest)
+					If $res = 1 Then
+						If $lastone = "" Then
+							$lastone = $latest[0]
+							$entry = $latest[$lastone]
+						Else
+							If $lastone > 1 Then
+								$lastone = $lastone - 1
+							Else
+								$lastone = $latest[0]
+							EndIf
+							$entry = $latest[$lastone]
+						EndIf
+						$title = StringSplit($entry, "|", 1)
+						$ID = $title[1]
+						$title = $title[2]
+						$ind = -1
+						While 1
+							$ind = _GUICtrlListView_FindInText($Listview_games, $title, $ind, False, False)
+							If $ind = -1 Then ExitLoop
+							If _GUICtrlListView_GetItemText($Listview_games, $ind, 1) = $title _
+								And _GUICtrlListView_GetItemText($Listview_games, $ind, 0) = $ID Then ExitLoop
+						WEnd
+						If $ind > -1 Then
+							GUICtrlSetState($Listview_games, $GUI_FOCUS)
+							_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+							ContinueLoop
+						EndIf
+					Else
+						MsgBox(262192, "Read Error", "Checklist.txt file not read!", 0, $GOGcliGUI)
+					EndIf
+				Else
+					MsgBox(262192, "File Error", "Checklist.txt file not found!", 0, $GOGcliGUI)
+				EndIf
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_info
@@ -5220,8 +5348,8 @@ Func MainGUI()
 				GUICtrlSetData($Label_bed, "Remove Duplicates")
 				$lines = ""
 				$former = 1
-				;Local $checklist = @ScriptDir & "\Checked.txt"
-				;_FileCreate($checklist)
+				;Local $checking = @ScriptDir & "\Checked.txt"
+				;_FileCreate($checking)
 				_FileReadToArray($updated, $array, 1)
 				If IsArray($array) Then
 					;_ArrayDisplay($array)
@@ -5271,14 +5399,14 @@ Func MainGUI()
 							EndIf
 						EndIf
 					Next
-					;FileWrite($checklist, $lines & @CRLF)
+					;FileWrite($checking, $lines & @CRLF)
 					FileWrite($updated, $lines & @CRLF)
 				EndIf
 				SetStateOfControls($GUI_ENABLE, "all")
 				GUICtrlSetData($Label_top, "")
 				GUICtrlSetData($Label_mid, "")
 				GUICtrlSetData($Label_bed, "")
-				;ShellExecute($checklist)
+				;ShellExecute($checking)
 				ShellExecute($updated)
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
@@ -5870,6 +5998,28 @@ Func MainGUI()
 			; Lists - CDKeys
 			If FileExists($cdkeys) Then ShellExecute($cdkeys)
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Item_genres_view
+			; Genre Lists - View
+			GenreLists("View")
+		Case $msg = $Item_genres_enable
+			; Genre Lists - Enable
+			If $gencheck = 4 Then
+				GenreLists("Enable")
+				If $gencheck = 1 Then
+					If $listcheck = 1 Then
+						$listcheck = 4
+						GUICtrlSetState($Item_checklist_enable, $listcheck)
+					EndIf
+					MsgBox(262208, "Advise", "The 'Last' button will now use that Genre list.", 0, $GOGcliGUI)
+				EndIf
+			Else
+				$gencheck = 4
+				MsgBox(262208, "Advise", "The 'Last' button is restored to the Added list.", 0, $GOGcliGUI)
+			EndIf
+			GUICtrlSetState($Item_genres_enable, $gencheck)
+		Case $msg = $Item_genres_create
+			; Genre Lists - Create
+			GenreLists("Create")
 		Case $msg = $Item_exclude_zip
 			; Excluded File Types - ZIP
 			If $extzip = 1 Then
@@ -6670,6 +6820,71 @@ Func MainGUI()
 				GUICtrlSetTip($Button_get, "Get game titles from GOG library!")
 			EndIf
 			GUICtrlSetState($Item_compare_all, $compall)
+		Case $msg = $Item_checklist_view
+			; View the Checklist
+			If FileExists($checklist) Then ShellExecute($checklist)
+		Case $msg = $Item_checklist_enable
+			; Enable the Checklist
+			If $listcheck = 4 Then
+				If $gencheck = 1 Then
+					$gencheck = 4
+					GUICtrlSetState($Item_genres_enable, $gencheck)
+				EndIf
+				$listcheck = 1
+				MsgBox(262208, "Advise", "The 'Last' button will now use the Checklist.", 0, $GOGcliGUI)
+			Else
+				$listcheck = 4
+				MsgBox(262208, "Advise", "The 'Last' button is restored to the Added list.", 0, $GOGcliGUI)
+			EndIf
+			GUICtrlSetState($Item_checklist_enable, $listcheck)
+		Case $msg = $Item_checklist_clear
+			; Clear the Checklist
+			$ans = MsgBox(262209 + 256, "Delete ALL Query", "Do you want to remove ALL of" _
+				& @LF & "the entries from the Checklist?", 0, $GOGcliGUI)
+			If $ans = 1 Then
+				_FileCreate($checklist)
+			EndIf
+		Case $msg = $Item_checklist_add
+			; Add To Checklist
+			If $ID = "" Then
+				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+			Else
+				If $title = "" Then
+					MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
+				Else
+					$entry = $ID & "|" & $title
+					;MsgBox(262192, "ID & Title", $entry, 0, $GOGcliGUI)
+					If FileExists($checklist) Then
+						$res = _FileReadToArray($checklist, $latest)
+						If $res = 1 Then
+							$ind = _ArraySearch($latest, $entry, 1, 0, 0, 0)
+							;MsgBox(262192, "Index", $ind, 0, $GOGcliGUI)
+							If $ind = -1 Then
+								FileWriteLine($checklist, $entry)
+							Else
+								$ans = MsgBox(262209 + 256, "Delete Query", "Do you want to remove the selected" _
+									& @LF & "entry from the Checklist?" & @LF _
+									& @LF & $title, 0, $GOGcliGUI)
+								If $ans = 1 Then
+									_ArrayDelete($latest, $ind)
+									$latest[0] = $latest[0] - 1
+									;_ArrayDisplay($latest)
+									;MsgBox(262192, "Count", $latest[0], 0, $GOGcliGUI)
+									If IsArray($latest) And $latest[0] > 0 Then
+										_FileWriteFromArray($checklist, $latest, 1, Default)
+									Else
+										_FileCreate($checklist)
+									EndIf
+								EndIf
+							EndIf
+						Else
+							FileWriteLine($checklist, $entry)
+						EndIf
+					Else
+						MsgBox(262192, "File Error", "Checklist.txt file not found!", 0, $GOGcliGUI)
+					EndIf
+				EndIf
+			EndIf
 		Case $msg = $Item_alerts_view
 			; View Alerts
 			If FileExists($alerts) Then ShellExecute($alerts)
@@ -10201,6 +10416,120 @@ Func OptionsWindow()
 	WEnd
 EndFunc ;=> OptionsWindow
 
+Func GenreLists($action)
+	SetStateOfControls($GUI_DISABLE, "all")
+	Local $Button_close, $Combo_genres, $Group_genres
+	Local $cat, $genre, $genres, $GenresGUI, $sect, $sects
+	;
+	$GenresGUI = GuiCreate("Genre List - " & $action, 190, 70, Default, Default, $WS_OVERLAPPED + $WS_CAPTION + $WS_SYSMENU _
+																	+ $WS_VISIBLE + $WS_CLIPSIBLINGS, $WS_EX_TOPMOST, $GOGcliGUI)
+	GUISetBkColor(0xF0D0F0, $GenresGUI)
+	;
+	; CONTROLS
+	$Group_genres = GuiCtrlCreateGroup("Genres", 10, 10, 110, 50)
+	$Combo_genres = GUICtrlCreateCombo("", 20, 30, 90, 20)
+	GUICtrlSetTip($Combo_genres, "Select the Genre to work with!")
+	;
+	$Button_close = GuiCtrlCreateButton("EXIT", 130, 10, 50, 50, $BS_ICON)
+	GUICtrlSetTip($Button_close, "Exit / Close / Quit the window!")
+	;
+	; SETTINGS
+	GUICtrlSetImage($Button_close, $user, $icoX, 1)
+	;
+	$genres = IniRead($inifle, "Genre", "names", "")
+	If $genres = "" Then
+		$genres = "||Action|Adventure|Mystery|Racing|Role-playing|Shooter|Simulation|Sports|Strategy|Turn-based|other"
+		IniWrite($inifle, "Genre", "names", $genres)
+	EndIf
+	GUICtrlSetData($Combo_genres, $genres, "")
+
+	GuiSetState(@SW_SHOW, $GenresGUI)
+	While 1
+		$msg = GuiGetMsg()
+		Select
+		Case $msg = $GUI_EVENT_CLOSE Or $msg = $Button_close
+			; Exit / Close / Quit the window
+			$gencheck = 4
+			GUIDelete($GenresGUI)
+			ExitLoop
+		Case $msg = $Combo_genres
+			; Select the Genre to work with & Close the window
+			GUISetState(@SW_HIDE, $GenresGUI)
+			$genre = GUICtrlRead($Combo_genres)
+			If $genre = "" Then
+				$genre = "none"
+			EndIf
+			;
+			$genlist = $genfold & "\" & $genre & ".txt"
+			If $action = "Create" Then
+				_FileCreate($genlist)
+				;
+				GUISwitch($GOGcliGUI)
+				GUICtrlSetImage($Pic_cover, $blackjpg)
+				GUICtrlSetData($Label_top, $genre)
+				GUICtrlSetData($Label_mid, "Searching...")
+				;
+				$titles = ""
+				$cnt = 0
+				$sects = IniReadSectionNames($gamesini)
+				For $s = 1 To $sects[0]
+					$sect = $sects[$s]
+					$cat = IniRead($gamesini, $sect, "category", "")
+					If $cat = $genre Or ($cat = "" And $genre = "none") Or ($cat <> "Action" And $cat <> "Adventure" And $cat <> "Mystery" _
+						And $cat <> "Racing" And $cat <> "Role-playing" And $cat <> "Shooter" And $cat <> "Simulation" And $cat <> "Sports" _
+						And $cat <> "Strategy" And $cat <> "Turn-based" And $cat <> "" And $genre = "other") Then
+						$game = IniRead($gamesini, $sect, "title", "")
+						$game = StringReplace($game, 'â„¢', '™')
+						$game = StringReplace($game, 'Â®', '®')
+						If $titles = "" Then
+							$titles = $sect & "|" & $game
+						Else
+							$titles = $titles & @CRLF & $sect & "|" & $game
+						EndIf
+						$cnt = $cnt + 1
+						GUICtrlSetData($Label_bed, $cnt)
+					EndIf
+				Next
+				If $cnt = 0 Then
+					GUICtrlSetData($Label_bed, "Nothing found!")
+					;SplashTextOn("", "Nothing found!", 180, 100, Default, Default, 33)
+					;Sleep(1000)
+					;SplashOff()
+				Else
+					FileWrite($genlist, $titles)
+					If FileExists($genlist) Then ShellExecute($genlist)
+				EndIf
+				;
+				Sleep(1500)
+				GUICtrlSetData($Label_top, "")
+				GUICtrlSetData($Label_mid, "")
+				GUICtrlSetData($Label_bed, "")
+				GUISwitch($GenresGUI)
+			ElseIf $action = "Enable" Then
+				If FileExists($genlist) Then
+					$gencheck = 1
+				Else
+					$gencheck = 4
+				EndIf
+			ElseIf $action = "View" Then
+				If FileExists($genlist) Then
+					ShellExecute($genlist)
+				Else
+					SplashTextOn("", "No such list!", 180, 100, Default, Default, 33)
+					Sleep(1000)
+					SplashOff()
+				EndIf
+			EndIf
+			;
+			GUIDelete($GenresGUI)
+			ExitLoop
+		Case Else
+			;;;
+		EndSelect
+	WEnd
+	SetStateOfControls($GUI_ENABLE, "all")
+	GUICtrlSetState($Listview_games, $GUI_FOCUS)
+EndFunc ;=> GenreLists (GUI)
 
 Func BackupManifestEtc()
 	Local $addbak, $bdate, $compbak, $cookbak, $databak, $dlcbak, $endadd, $endbak, $endcomp, $endcook, $enddata, $enddlc
