@@ -31,7 +31,7 @@ Global $Button_add, $Button_exit, $Button_get, $Button_info, $Button_move, $Butt
 Global $Checkbox_remove, $Edit_reqs, $Edit_sumry, $Group_cover, $Group_date, $Group_devs, $Group_games, $Group_gametit
 Global $Group_genre, $Group_ID, $Group_imgurl, $Group_OS, $Group_price, $Group_size, $Group_sumry, $Group_type, $Group_weburl
 Global $Input_date, $Input_devs, $Input_gametit, $Input_genre, $Input_get, $Input_ID, $Input_imgurl, $Input_OS
-Global $Input_price, $Input_size, $Input_type, $Input_weburl, $Item_list_manifest, $Item_list_summary
+Global $Input_price, $Input_size, $Input_type, $Input_weburl, $Item_list_manifest
 Global $List_games, $Menu_list, $Pic_cover
 
 Global $defimage, $GameInfoGUI, $height, $icoF, $icoI, $icoM, $icoX, $OptionsGUI, $pth, $shell, $user32, $width
@@ -61,7 +61,7 @@ $logfle = @ScriptDir & "\Info.log"
 $manfold = @ScriptDir & "\Manifests"
 $titfile = @ScriptDir & "\Titles.ini"
 $updated = "July 2022"
-$update = "v2.4"
+$update = "v2.3"
 
 If Not FileExists($datafold) Then DirCreate($datafold)
 If Not FileExists($manfold) Then DirCreate($manfold)
@@ -235,9 +235,6 @@ $Item_list_datafold = GUICtrlCreateMenuItem("Open Data Folder", $Menu_list)
 GUICtrlCreateMenuItem("", $Menu_list)
 GUICtrlCreateMenuItem("", $Menu_list)
 $Item_list_manifest = GUICtrlCreateMenuItem("View Manifest", $Menu_list)
-GUICtrlCreateMenuItem("", $Menu_list)
-GUICtrlCreateMenuItem("", $Menu_list)
-$Item_list_summary = GUICtrlCreateMenuItem("Get Alternate Summary", $Menu_list)
 ;
 ; OS_SETTINGS
 $shell = @SystemDir & "\shell32.dll"
@@ -858,59 +855,6 @@ While 1
 		Else
 			MsgBox(262192, "View Error", "No entry selected!", 2, $GameInfoGUI)
 		EndIf
-	Case $msg = $Item_list_summary
-		; Get Alternate Summary
-		$title = GUICtrlRead($Input_gametit)
-		If $title <> "" Then
-			$ID = GUICtrlRead($Input_ID)
-			$gameinfo = $datafold & "\" & $ID & "\" & $ID & ".txt"
-			If FileExists($gameinfo) Then
-				If FileExists($downtwo) Then
-					$read = FileRead($downtwo)
-					If $read <> "" Then
-						; TITLE
-						$title = StringSplit($read, '"title":', 1)
-						If $title[0] > 1 Then
-							$title = $title[2]
-							$title = StringSplit($title, '",', 1)
-							$title = $title[1]
-							$title = StringReplace($title, '"', '')
-							$title = FixUnicode($title)
-							If $title = IniRead($gameinfo, $ID, "title", "") Then
-								; DESCRIPTION
-								$description = StringSplit($read, '"description":', 1)
-								If $description[0] > 1 Then
-									$description = $description[2]
-									$description = StringSplit($description, '",', 1)
-									$description = $description[1]
-									$description = StringReplace($description, '"', '')
-									$description = FixAllText($description)
-									$description = StringStripWS($description, 3)
-									$description = StringReplace($description, @CRLF, "|")
-									$description = StringReplace($description, "full = |", "full = ")
-									IniWrite($gameinfo, $ID, "description", $description)
-									;MsgBox(262192, "Description Result", $description, 0, $GameInfoGUI)
-								Else
-									MsgBox(262192, "Data Check Failure", "Description not found!", 2, $GameInfoGUI)
-								EndIf
-							Else
-								MsgBox(262192, "Data Check Failure", "No matching title found!", 2, $GameInfoGUI)
-							EndIf
-						Else
-							MsgBox(262192, "Data Check Failure", "Title not found!", 2, $GameInfoGUI)
-						EndIf
-					Else
-						MsgBox(262192, "Alternate Summary Download", "No data retrieved!", 2, $GameInfoGUI)
-					EndIf
-				Else
-					MsgBox(262192, "File Error", "Alternate summary download file not found!", 2, $GameInfoGUI)
-				EndIf
-			Else
-				MsgBox(262192, "File Error", "No game info file found for selected entry!", 2, $GameInfoGUI)
-			EndIf
-		Else
-			MsgBox(262192, "View Error", "No entry selected!", 2, $GameInfoGUI)
-		EndIf
 	Case $msg = $Item_list_manifest
 		; View Manifest
 		$title = GUICtrlRead($Input_gametit)
@@ -1225,9 +1169,7 @@ EndFunc ;=> FixUnicode
 
 Func GetGameDetail()
 	Local $bakfile, $errors, $flag, $logerr, $timestamp
-	$gamedata = $datafold & "\" & $ID
-	If Not FileExists($gamedata) Then DirCreate($gamedata)
-	$gameinfo = $gamedata & "\" & $ID & ".txt"
+	$gameinfo = $datafold & "\" & $ID & "\" & $ID & ".txt"
 	$ping = Ping("gog.com", 4000)
 	If $ping > 0 Then
 		SplashTextOn("", "Downloading Data!", 200, 120, Default, Default, 33)

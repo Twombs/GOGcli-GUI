@@ -37,3 +37,6 @@ Added a right-click list option to view the manifest for selected game entry, if
 
 (v2.3)
 Added another right-click list option to Open the selected game's data folder, if it exists. Game image files and detail text file have been relocated for all games, to ID named sub-folders. NOTE - Prior users will see a splash appear at program startup, which advises of the Data folder structure change (creating ID sub-folders and relocating game files to them).
+
+(v2.4)
+BUGFIX for data sub-folder creation. Added another right-click option to the 'Game Title' list, for an alternate description to be retrieved from downloaded data files.
