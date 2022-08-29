@@ -12,9 +12,11 @@
 
 ; FUNCTIONS
 ; MainGUI(), SetupGUI(), FileSelectorGUI(), GameDetailsGUI(), GenreLists($action), OptionsWindow()
+;
 ; BackupManifestEtc(), ClearFieldValues(), CompareFilesToManifest($numb), FillTheGamesList(), FixAllText($text), FixText($text), FixTitle($text)
-; FixUnicode($text), GetChecksumQuery($rat), GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF), GetManifestForTitle()
-; GetTheSize(), ParseTheGamelist(), RemoveHtml($text), RetrieveDataFromGOG($listed, $list), SetStateOfControls($state, $which), ShowCorrectImage()
+; FixUnicode($text), GetChecksumQuery($rat), GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF), GetGOGcliVersion()
+; GetManifestForTitle(), GetTheSize(), HistoryCheckOne(), HistoryCheckTwo(), ParseTheGamelist(), RemoveHtml($text), RetrieveDataFromGOG($listed, $list)
+; SetStateOfControls($state, $which), ShowCorrectImage()
 ;
 ; , SetTheColumnWidths() UNUSED
 ;
@@ -47,8 +49,8 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $update, $version
 
-$update = "Updated in July 2022."
-$version = "v3.2"
+$update = "Updated in August 2022."
+$version = "v3.3"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -77,27 +79,28 @@ If $status = 0 Then
 EndIf
 
 Global $Button_dest, $Button_dir, $Button_down, $Button_exit, $Button_find, $Button_fold, $Button_game, $Button_get, $Button_info
-Global $Button_last, $Button_log, $Button_man, $Button_pic, $Button_setup, $Button_sub, $Button_tag, $Button_web, $Checkbox_alpha
-Global $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc, $Input_key
-Global $Input_OS, $Input_slug, $Input_title, $Input_ups, $Item_database_add, $Item_database_relax, $Item_down_all, $Item_verify_file
-Global $Item_verify_game, $Item_verify_now, $Label_bed, $Label_cat, $Label_dlc, $Label_key, $Label_mid, $Label_OS, $Label_slug
-Global $Label_top, $Label_ups, $Listview_games, $Pic_cover
+Global $Button_last, $Button_log, $Button_man, $Button_ontop, $Button_pic, $Button_setup, $Button_sub, $Button_tag, $Button_web
+Global $Checkbox_alpha, $Checkbox_show, $Combo_dest, $Group_cover, $Group_dest, $Group_games, $Input_cat, $Input_dest, $Input_dlc
+Global $Input_key, $Input_OS, $Input_slug, $Input_title, $Input_ups, $Item_database_add, $Item_database_relax, $Item_down_all
+Global $Item_verify_file, $Item_verify_game, $Item_verify_now, $Label_bed, $Label_cat, $Label_dlc, $Label_key, $Label_mid
+Global $Label_OS, $Label_slug, $Label_top, $Label_ups, $Listview_games, $Pic_cover
 
-Global $7zip, $a, $action, $addlist, $alert, $alerts, $alf, $alldetail, $alldown, $allgames, $allkeys, $alpha, $ans, $array, $backups
-Global $bigcover, $bigpic, $blackjpg, $blurb, $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $cease, $changelogs, $check, $checklist
-Global $checksum, $checkval, $cnt, $compare, $completed, $cookie, $cookies, $cover, $covers, $covimg, $datafold, $DBfile, $declare
-Global $descript, $descriptions, $dest, $details, $DetailsGUI, $DLC, $dlcfile, $done, $down, $downfiles, $downlist, $download, $downloads
-Global $downlog, $drv, $endgame, $entries, $entry, $erred, $existDB, $exists, $extbin, $extdmg, $extexe, $extpkg, $extsh, $extzip, $f
-Global $file, $fileinfo, $filepth, $files, $filesize, $final, $flag, $fold, $found, $free, $game, $gamefold, $gamelist, $gamepic, $games
-Global $gamesfold, $gamesini, $gametxt, $gams, $gencheck, $genfold, $genlist, $getlatest, $gmefold, $gmesfld, $gogcli, $GOGcliGUI, $hash
-Global $head, $height, $histfile, $history, $htmlfle, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry, $ignore, $image
-Global $imgfle, $include, $ind, $inifle, $json, $keep, $key, $lang, $left, $line, $lines, $link, $list, $listcheck, $listed, $listview
-Global $log, $logfle, $lowid, $m, $manall, $manalt, $manifest, $manifests, $manlist, $md5check, $mini, $minimize, $model, $n, $name, $num
-Global $numb, $offline, $OP, $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping, $pinged, $processed, $progress
-Global $pth, $purge, $r, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $rest, $results, $ret, $return, $row, $s, $same, $savkeys
-Global $savlog, $second, $selector, $session, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $state, $stop, $style
-Global $subfold, $SYS, $tag, $tagfle, $tail, $text, $title, $titleF, $titleID, $titleIDup, $titlist, $top, $type, $types, $typs, $updated
-Global $updates, $URL, $user, $valhistory, $validate, $verify, $warn, $web, $which, $width, $winpos, $xtra, $z, $zipcheck, $zipfile, $zippath
+Global $7zip, $a, $accept, $action, $addlist, $alert, $alerts, $alf, $alldetail, $alldown, $allgames, $allkeys, $alpha, $ans, $array
+Global $backups, $bigcover, $bigpic, $blackjpg, $blurb, $bytes, $caption, $category, $cd, $cdkey, $cdkeys, $cease, $changelogs, $check
+Global $checklist, $checksum, $checkval, $cnt, $compare, $completed, $cookie, $cookies, $cover, $covers, $covimg, $datafold, $DBfile
+Global $declare, $descript, $descriptions, $dest, $details, $DetailsGUI, $DLC, $dlcfile, $done, $down, $downfiles, $downlist, $download
+Global $downloads, $downlog, $drv, $endgame, $entries, $entry, $erred, $existDB, $exists, $extbin, $extdmg, $extexe, $extpkg, $extsh
+Global $extzip, $f, $file, $fileinfo, $filepth, $files, $filesize, $final, $flag, $fold, $found, $free, $game, $gamefold, $gamelist
+Global $gamepic, $games, $gamesfold, $gamesini, $gametxt, $gams, $gencheck, $genfold, $genlist, $getlatest, $gmefold, $gmesfld, $gogcli
+Global $GOGcliGUI, $hash, $head, $height, $histfile, $history, $htmlfle, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry
+Global $ignore, $image, $imgfle, $include, $ind, $inifle, $json, $keep, $key, $lang, $left, $line, $lines, $link, $list, $listcheck, $listed
+Global $listview, $log, $logfle, $lowid, $m, $manall, $manalt, $manifest, $manifests, $manlist, $md5check, $mini, $minimize, $model, $n, $name
+Global $num, $numb, $offline, $ontop, $OP, $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping, $pinged, $processed
+Global $progress, $pth, $purge, $r, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $rest, $results, $ret, $return, $row, $s, $same
+Global $savkeys, $savlog, $second, $selector, $session, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $state, $stop
+Global $style, $subfold, $SYS, $tag, $tagfle, $tail, $text, $title, $titleF, $titleID, $titleIDup, $titlist, $top, $type, $types, $typs
+Global $updated, $updates, $URL, $user, $valhistory, $validate, $verify, $warn, $web, $which, $width, $winpos, $xtra, $z, $zipcheck
+Global $zipfile, $zippath
 ;, $foldzip, $resultfle
 
 $addlist = @ScriptDir & "\Added.txt"
@@ -197,326 +200,7 @@ EndIf
 $entry = "File Name" & @TAB & "Game Title" & @TAB & "Game ID" & @TAB & "Bytes" & @TAB & "Size" & @TAB & "Checksum" & @TAB & "MD5" & @TAB & "Zip" _
 	& @TAB & "Started" & @TAB & "Finished" & @TAB & "Taken" & @TAB & "Validate" & @TAB & "Complete" & @TAB & "Taken" & @TAB & "Total"
 If Not FileExists($histfile) Then
-	Local $block, $complete, $date, $finished, $hours, $mins, $secs, $started, $taken, $total
-	FileWriteLine($histfile, $entry)
-	$ans = MsgBox(262177 + 256, "Program Advice & Query", "This program now has a 'History.log' file and Viewer, which" _
-		& @LF & "is available via the right-click 'Games' list context menu." & @LF _
-		& @LF & "Downloads --> History Viewer" _
-		& @LF & "Downloads --> Open the History file" & @LF _
-		& @LF & "This file gets populated with every download, showing the" _
-		& @LF & "result (of the download and its validation) and details." & @LF _
-		& @LF & "If you currently have a 'Log.txt' file with download records," _
-		& @LF & "then that can be processed now to populate the 'History.log'" _
-		& @LF & "file already. Doing so could take a few minutes if there are" _
-		& @LF & "many records." & @LF _
-		& @LF & "OK = Read the Log file and attempt to extract records." _
-		& @LF & "CANCEL = Ignore the Log file." & @LF _
-		& @LF & "NOTE - This is a once only opportunity to extract records" _
-		& @LF & "from the Log file ... short of deleting the 'History.log' file" _
-		& @LF & "manually, and starting again, but with fewer details.", 0)
-	If $ans = 1 Then
-		If FileExists($logfle) Then
-			$cnt = _FileCountLines($logfle)
-			If $cnt > 1 Then
-				SplashTextOn("", "Creating History!", 200, 120, Default, Default, 33)
-				$entries = ""
-				; Need to read in the manifest file.
-				$manifests = FileRead($manifest)
-				If $manifests <> "" Then
-					;$games = StringSplit($manifests, '"Id":', 1)
-					;_FileReadToArray($logfle, $array, 1)
-					$read = FileRead($logfle)
-					If $read <> "" Then
-						$array = StringSplit($read, @CRLF & @CRLF, 1)
-						If IsArray($array) Then
-							For $a = 1 To $array[0]
-								;$line = $array[$a]
-								$block = $array[$a]
-								If $block <> "" Then
-									If StringInStr($block, ": DOWNLOADING -") > 0 And StringInStr($block, ": COMPLETED.") > 0 And StringInStr($block, "the File Size check.") > 0 Then
-										$started = StringSplit($block, " : DOWNLOADING - ", 1)
-										$block = $started[2]
-										$started = $started[1]
-										$started = StringStripWS($started, 7)
-										If StringInStr($started, " : ") > 0 Then
-											; Bad date
-											ContinueLoop
-										EndIf
-										$file = StringSplit($block, @CRLF, 1)
-										$file = $file[1]
-										$file = StringStripWS($file, 7)
-										If StringInStr($entries, $file) > 0 Or StringInStr($file, ":") > 0 Then
-											; Don't add the file more than once or Skip if file name is bad.
-											; Strictly speaking, you shouldn't need to add more than once, unless a failure occured,
-											; but then we only really want to create a record of passes.
-											ContinueLoop
-										;ElseIf StringInStr($file, "_metro_") > 0 Then
-										;	MsgBox(262208, "$file", $file)
-										EndIf
-										$finished = StringSplit($block, " : COMPLETED.", 1)
-										$block = $finished[2]
-										$finished = $finished[1]
-										$finished = StringSplit($finished, @CRLF, 1)
-										$finished = $finished[$finished[0]]
-										$finished = StringStripWS($finished, 7)
-										If StringInStr($finished, " : ") > 0 Then
-											; Bad date
-											ContinueLoop
-										EndIf
-										$size = StringSplit($block, " the File Size check.", 1)
-										$size = $size[1]
-										$size = StringSplit($size, " : ", 1)
-										$size = $size[$size[0]]
-										If $size = "Passed" Then
-											$size = "pass"
-										ElseIf $size = "Failed" Then
-											ContinueLoop
-											$size = "fail"
-										Else
-											; Bad size check value
-											ContinueLoop
-										EndIf
-										;
-										$games = StringSplit($manifests, $file, 1)
-										If $games[0] > 1 Then
-											$check = $games[1]
-											$games = $games[2]
-											$check = StringSplit($check, '"Id":', 1)
-											If $check[0] > 1 Then
-												$check = $check[$check[0]]
-												$ID = StringSplit($check, ',', 1)
-												$ID = $ID[1]
-												$ID = StringStripWS($ID, 3)
-												If StringInStr($ID, ":") > 0 Then
-													; Bad ID value
-													ContinueLoop
-												EndIf
-												$title = StringSplit($check, '"Title":', 1)
-												If $title[0] > 1 Then
-													$title = $title[2]
-													$title = StringSplit($title, ',', 1)
-													$title = $title[1]
-													$title = StringReplace($title, '"', '')
-													$title = StringReplace($title, '\u0026', '&')
-													$title = StringStripWS($title, 7)
-													;If StringInStr($title, ":") > 0 Then ContinueLoop
-													$check = StringSplit($games, '}', 1)
-													If $check[0] > 1 Then
-														$check = $check[1]
-														$bytes = StringSplit($check, '"VerifiedSize":', 1)
-														If $bytes[0] > 1 Then
-															$bytes = $bytes[2]
-															$bytes = StringSplit($bytes, ',', 1)
-															$bytes = $bytes[1]
-															$bytes = StringStripWS($bytes, 7)
-															If $bytes = "" Then $bytes = "na"
-															If StringInStr($bytes, ":") > 0 Then
-																; Bad bytes value
-																ContinueLoop
-															EndIf
-															$checksum = StringSplit($check, '"Checksum":', 1)
-															If $checksum[0] > 1 Then
-																$checksum = $checksum[2]
-																$checksum = StringReplace($checksum, '"', '')
-																$checksum = StringReplace($checksum, '}', '')
-																$checksum = StringStripWS($checksum, 7)
-																If $checksum = "" Then $checksum = "na"
-																If StringInStr($checksum, ":") > 0 Then
-																	; Bad checksum value
-																	ContinueLoop
-																EndIf
-																;MsgBox(262208, "$md5check", $md5check)
-																$entry = $file & @TAB & $title & @TAB & $ID & @TAB & $bytes & @TAB & $size & @TAB & $checksum
-																$verify = StringSplit($read, " : " & $file, 1)
-																If $verify[0] > 1 Then
-																	$date = $verify[1]
-																	$verify = $verify[2]
-																	$date = StringSplit($date, @CRLF & @CRLF, 1)
-																	If $date[0] > 1 Then
-																		; Should be left with just one line.
-																		$date = $date[$date[0]]
-																		$date = StringStripWS($date, 3)
-																		If StringInStr($date, @CRLF) > 0 Or StringInStr($date, " : ") > 0 Then
-																			; More than one line or bad date, so skip to next possible download entry.
-																			If StringInStr($date, "MD5 Check passed") > 0 Or StringInStr($date, "ZIP Check passed") > 0 _
-																				Or StringInStr($date, "MD5 Check failed") > 0 Or StringInStr($date, "ZIP Check failed") > 0 Then
-																				$date = StringSplit($date, @CRLF, 1)
-																				If $date[0] > 1 Then
-																					$date = $date[$date[0]]
-																					$date = StringStripWS($date, 7)
-																					;2021-12-14 10:21:00
-																					If StringLen($date) <> 19 Then
-																						; Bad date value
-																						;If StringInStr($file, "_metro_") > 0 Then MsgBox(262208, "$date", $date)
-																						ContinueLoop
-																					EndIf
-																				Else
-																					; Bad date value
-																					ContinueLoop
-																				EndIf
-																			Else
-																				; Bad date value
-																				ContinueLoop
-																			EndIf
-																		EndIf
-																		;MsgBox(262208, "$date", $date)
-																		$verify = StringSplit($verify, "." & @CRLF, 1)
-																		If $verify[0] > 1 Then
-																			$verify = $verify[1]
-																			$verify = StringSplit($verify, " : ", 1)
-																			If $verify[0] > 1 Then
-																				; NOTE - For this exercise in building from existing log entries, we really only want to record successes.
-																				$verify = $verify[$verify[0]]
-																				$verify = StringStripWS($verify, 7)
-																				If $verify = "MD5 Check passed" Then
-																					$md5check = "pass"
-																					$zipcheck = "na"
-																				ElseIf $verify = "MD5 Check failed" Then
-																					ContinueLoop
-																					$md5check = "fail"
-																					$zipcheck = "na"
-																				ElseIf $verify = "ZIP Check passed" Then
-																					$zipcheck = "pass"
-																					$md5check = "na"
-																				ElseIf $verify = "ZIP Check failed" Then
-																					ContinueLoop
-																					$zipcheck = "fail"
-																					$md5check = "na"
-																				Else
-																					; Bad MD5 or Zip check value
-																					;If StringInStr($file, "_metro_") > 0 Then MsgBox(262208, "$verify", $verify)
-																					ContinueLoop
-																				EndIf
-																				;MsgBox(262208, "$md5check", $md5check)
-																				$entry = $entry & @TAB & $md5check & @TAB & $zipcheck & @TAB & $started & @TAB & $finished
-																				$started = StringReplace($started, '-', '/')
-																				$finished = StringReplace($finished, '-', '/')
-																				$taken = _DateDiff('s', $started, $finished)
-																				$hours = "00"
-																				$mins = "00"
-																				$secs = "00"
-																				If $taken > 59 Then
-																					$mins = Floor($taken / 60)
-																					$secs = $taken - ($mins * 60)
-																					If $mins > 59 Then
-																						$hours = Floor($mins / 60)
-																						$mins = $mins - ($hours * 60)
-																						$hours = StringRight("0" & $hours, 2)
-																					EndIf
-																					$mins = StringRight("0" & $mins, 2)
-																					$secs = StringRight("0" & $secs, 2)
-																				Else
-																					;$taken = $taken & " secs"
-																					If $taken > 0 Then
-																						$secs = $taken
-																						$secs = StringRight("0" & $secs, 2)
-																					EndIf
-																				EndIf
-																				$taken = $hours & ":" & $mins & ":" & $secs
-																				$entry = $entry & @TAB & $taken & @TAB & "na" & @TAB & $date
-																				; No need to do the following, as no way to glean start time was registered in the log for validating after downloading.
-																				; Date is completion time for validation. The reason for this issue, is because all downloads occur first, then validate
-																				; occurs for all those downloads. NOTE - I should modify my code to write the validate start time for each file. DONE
-																				; Though it won't help at this point for the 'History.log' file, except where a deletion of that has occurred. Anyway,
-																				; it is not that great a benefit, so hardly worth bothering with it at this point.
-;~ 																				$date = StringReplace($date, '-', '/')
-;~ 																				$complete = _DateDiff('s', $finished, $date)
-;~ 																				$hours = "00"
-;~ 																				$mins = "00"
-;~ 																				$secs = "00"
-;~ 																				If $complete > 59 Then
-;~ 																					$mins = Floor($complete / 60)
-;~ 																					$secs = $complete - ($mins * 60)
-;~ 																					If $mins > 59 Then
-;~ 																						$hours = Floor($mins / 60)
-;~ 																						$mins = $mins - ($hours * 60)
-;~ 																						$hours = StringRight("0" & $hours, 2)
-;~ 																					EndIf
-;~ 																					$mins = StringRight("0" & $mins, 2)
-;~ 																					$secs = StringRight("0" & $secs, 2)
-;~ 																				Else
-;~ 																					;$complete = $complete & " secs"
-;~ 																					If $complete > 0 Then
-;~ 																						$secs = $complete
-;~ 																						$secs = StringRight("0" & $secs, 2)
-;~ 																					EndIf
-;~ 																				EndIf
-;~ 																				$complete = $hours & ":" & $mins & ":" & $secs
-;~ 																				$total = _DateDiff('s', $started, $date)
-;~ 																				$hours = "00"
-;~ 																				$mins = "00"
-;~ 																				$secs = "00"
-;~ 																				If $total > 59 Then
-;~ 																					$mins = Floor($total / 60)
-;~ 																					$secs = $total - ($mins * 60)
-;~ 																					If $mins > 59 Then
-;~ 																						$hours = Floor($mins / 60)
-;~ 																						$mins = $mins - ($hours * 60)
-;~ 																						$hours = StringRight("0" & $hours, 2)
-;~ 																					EndIf
-;~ 																					$mins = StringRight("0" & $mins, 2)
-;~ 																					$secs = StringRight("0" & $secs, 2)
-;~ 																				Else
-;~ 																					;$total = $total & " secs"
-;~ 																					If $total > 0 Then
-;~ 																						$secs = $total
-;~ 																						$secs = StringRight("0" & $secs, 2)
-;~ 																					EndIf
-;~ 																				EndIf
-;~ 																				$total = $hours & ":" & $mins & ":" & $secs
-																				$complete = "na"
-																				$total = "na"
-																				$entry = $entry & @TAB & $complete & @TAB & $total
-																				;FileWriteLine($histfile, $entry)
-																				If $entries = "" Then
-																					$entries = $entry
-																				Else
-																					$entries = $entries & @CRLF & $entry
-																				EndIf
-																				;If $a > 500 Then ExitLoop
-																			Else
-																				ContinueLoop
-																			EndIf
-																		Else
-																			ContinueLoop
-																		EndIf
-																	Else
-																		ContinueLoop
-																	EndIf
-																Else
-																	ContinueLoop
-																EndIf
-															Else
-																ContinueLoop
-															EndIf
-														Else
-															ContinueLoop
-														EndIf
-													Else
-														ContinueLoop
-													EndIf
-												Else
-													ContinueLoop
-												EndIf
-											Else
-												ContinueLoop
-											EndIf
-										Else
-											ContinueLoop
-										EndIf
-									EndIf
-								EndIf
-							Next
-							If $entries <> "" Then
-								FileWriteLine($histfile, $entries)
-							EndIf
-						EndIf
-					EndIf
-				EndIf
-				SplashOff()
-			EndIf
-		EndIf
-	EndIf
+	HistoryCheckOne()
 Else
 	$cnt = _FileCountLines($histfile)
 	If $cnt = 0 Then
@@ -528,624 +212,7 @@ $entry = "File Name" & @TAB & "Game Title" & @TAB & "Game ID" & @TAB & "Bytes" &
 	& @TAB & "Started" & @TAB & "Finished" & @TAB & "Taken"
 	;& @TAB & "Started" & @TAB & "Finished" & @TAB & "Taken" & @TAB & "Validate" & @TAB & "Complete" & @TAB & "Taken" & @TAB & "Total"
 If Not FileExists($valhistory) Then
-	Local $amount, $block, $finished, $hours, $mins, $secs, $started, $taken, $titles
-	FileWriteLine($valhistory, $entry)
-	$ans = MsgBox(262177 + 256, "Program Advice & Query", "This program now has a 'Validation.log' file and Viewer, which" _
-		& @LF & "is available via the right-click 'Games' list context menu." & @LF _
-		& @LF & "Validation --> History Viewer" _
-		& @LF & "Validation --> Open the Validation file" & @LF _
-		& @LF & "This file gets populated with every manual validation, showing" _
-		& @LF & "the result (of the validation) and some detail." & @LF _
-		& @LF & "If you currently have a 'Log.txt' file with some validation records," _
-		& @LF & "then that can be processed now to populate the 'Validation.log'" _
-		& @LF & "file already. Doing so could take a few minutes if there are many" _
-		& @LF & "records." & @LF _
-		& @LF & "OK = Read the Log file and attempt to extract records." _
-		& @LF & "CANCEL = Ignore the Log file." & @LF _
-		& @LF & "NOTE - This is a once only opportunity to extract records from" _
-		& @LF & "the Log file ... short of deleting the 'Validation.log' file manually," _
-		& @LF & "and starting again, but with fewer details.", 0)
-	If $ans = 1 Then
-		If FileExists($logfle) Then
-			$cnt = _FileCountLines($logfle)
-			If $cnt > 1 Then
-				SplashTextOn("", "Creating History!", 200, 120, Default, Default, 33)
-				$entries = ""
-				; Need to read in the manifest file.
-				$manifests = FileRead($manifest)
-				If $manifests <> "" Then
-					$titles = @LF & FileRead($titlist)
-					$read = FileRead($logfle)
-					If $read <> "" Then
-						$array = StringSplit($read, @CRLF & @CRLF, 1)
-						If IsArray($array) Then
-							For $a = 1 To $array[0]
-								$block = $array[$a]
-								If $block <> "" Then
-									If StringInStr($block, " : Validating Game File.") > 0 Then
-										; NOTE - When a ContinueLoop occurs, no record is created.
-										; Skipping records where Size or MD5 or ZIP have failed.
-										$started = StringSplit($block, " : Validating Game File.", 1)
-										$block = $started[2]
-										If StringInStr($block, "Validate cancelled.") > 0 Then ContinueLoop
-										$started = $started[1]
-										$started = StringStripWS($started, 7)
-										$lines = StringSplit($block, @CRLF, 1)
-										$title = $lines[2]
-										$title = StringSplit($title, ' : ', 1)
-										$title = $title[2]
-										$title = StringReplace($title, '\u0026', '&')
-										$title = StringStripWS($title, 7)
-										$file = $lines[4]
-										$file = StringSplit($file, ' : ', 1)
-										$file = $file[2]
-										$file = StringStripWS($file, 7)
-										If StringInStr($entries, $file) > 0 Then
-											; Already exists so skip
-											ContinueLoop
-										EndIf
-										$fext = StringRight($file, 4)
-										If $fext <> ".bin" And $fext <> ".dmg" And $fext <> ".exe" And $fext <> ".pkg" And $fext <> ".zip" Then
-											$fext = StringRight($file, 3)
-											If $fext <> ".sh" Then
-												; Bad file type
-												ContinueLoop
-												; WARNING - There are some other file types on occasion, that will likely have a file size record
-												; and may even be a zip based file (i.e. PDF, RAR and 7Z). So we should probably cater.
-											EndIf
-										EndIf
-										$size = $lines[5]
-										$size = StringSplit($size, " : ", 1)
-										$size = $size[2]
-										If $size = "File Size passed." Then
-											$size = "pass"
-										ElseIf $size = "File Size failed." Then
-											$size = "fail"
-											ContinueLoop
-										Else
-											; Bad size check value
-											ContinueLoop
-										EndIf
-										;MsgBox(262208, "$block", $block)
-										$finished = $lines[6]
-										$finished = StringSplit($finished, " : ", 1)
-										$verify = $finished[2]
-										$finished = $finished[1]
-										$finished = StringStripWS($finished, 7)
-										$verify = StringStripWS($verify, 7)
-										If $verify = "MD5 (checksum) passed." Then
-											$md5check = "pass"
-											$zipcheck = "na"
-										ElseIf $verify = "MD5 (checksum) failed." Then
-											$md5check = "fail"
-											$zipcheck = "na"
-											ContinueLoop
-										ElseIf $verify = "ZIP check passed." Then
-											$zipcheck = "pass"
-											$md5check = "na"
-										ElseIf $verify = "ZIP check failed." Then
-											$zipcheck = "fail"
-											$md5check = "na"
-											ContinueLoop
-										Else
-											; Bad MD5 or Zip check value
-											ContinueLoop
-										EndIf
-										;MsgBox(262208, "$md5check", $md5check)
-										$entry = $file & @TAB & $title
-										; We need to get Game ID, Bytes and Checksum from the Manifest.
-										$games = StringSplit($manifests, $file, 1)
-										If $games[0] > 1 Then
-											; FILE FOUND IN MANIFEST
-											$check = $games[1]
-											$games = $games[2]
-											$check = StringSplit($check, '"Id":', 1)
-											If $check[0] > 1 Then
-												$check = $check[$check[0]]
-												$ID = StringSplit($check, ',', 1)
-												$ID = $ID[1]
-												$ID = StringStripWS($ID, 3)
-												If StringInStr($ID, ":") > 0 Then
-													; Bad ID value
-													ContinueLoop
-												EndIf
-												$check = StringSplit($games, '}', 1)
-												If $check[0] > 1 Then
-													$check = $check[1]
-													$bytes = StringSplit($check, '"VerifiedSize":', 1)
-													If $bytes[0] > 1 Then
-														$bytes = $bytes[2]
-														$bytes = StringSplit($bytes, ',', 1)
-														$bytes = $bytes[1]
-														$bytes = StringStripWS($bytes, 7)
-														If $bytes = "" Then $bytes = "na"
-														If StringInStr($bytes, ":") > 0 Then
-															; Bad bytes value
-															ContinueLoop
-														EndIf
-														If $bytes < 1024 Then
-															$amount = $bytes & " bytes"
-														ElseIf $bytes < 1048576 Then
-															$amount = Round($bytes / 1024, 0) & " Kb"
-														ElseIf $bytes < 1073741824 Then
-															$amount = Round($bytes / 1048576, 0) & " Mb"
-														ElseIf $bytes < 1099511627776 Then
-															$amount = Round($bytes / 1073741824, 2) & " Gb"
-														Else
-															$amount = Round($bytes / 1099511627776, 3) & " Tb"
-														EndIf
-														$checksum = StringSplit($check, '"Checksum":', 1)
-														If $checksum[0] > 1 Then
-															$checksum = $checksum[2]
-															$checksum = StringReplace($checksum, '"', '')
-															$checksum = StringReplace($checksum, '}', '')
-															$checksum = StringStripWS($checksum, 7)
-															If $checksum = "" Then $checksum = "na"
-															If StringInStr($checksum, ":") > 0 Then
-																; Bad checksum value
-																ContinueLoop
-															EndIf
-														Else
-															; Checksum missing from manifest
-															ContinueLoop
-														EndIf
-													Else
-														; Bytes missing from manifest
-														ContinueLoop
-													EndIf
-												Else
-													; Bad manifest split
-													ContinueLoop
-												EndIf
-											Else
-												; IDs missing from manifest
-												ContinueLoop
-											EndIf
-										Else
-											; File missing from manifest (probably replaced in an update).
-											; Check the Database.
-											$ID = StringSplit($titles, @LF & $title & "|", 1)
-											If $ID[0] > 1 Then
-												$ID = $ID[2]
-												$ID = StringSplit($ID, "|", 1)
-												$ID = $ID[1]
-												$slug = IniRead($gamesini, $ID, "slug", "")
-												If $slug = "" Then
-													; Use a different method due to possible Game Title change.
-													$slug = IniReadSection($existDB, $file)
-													If @error Then
-														$slug = ""
-													Else
-														; Value
-														;$value = $slug[1][1]
-														; Key
-														$slug = $slug[1][0]
-													EndIf
-												EndIf
-											Else
-												$slug = ""
-											EndIf
-											If $slug <> "" Then
-												$checksum = IniRead($existDB, $file, $slug, "")
-												If $checksum <> "" Then
-													; FILE FOUND IN DATABASE
-													$checksum = StringSplit($checksum, "|", 1)
-													$bytes = $checksum[1]
-													$checksum = $checksum[2]
-													If $bytes < 1024 Then
-														$amount = $bytes & " bytes"
-													ElseIf $bytes < 1048576 Then
-														$amount = Round($bytes / 1024, 0) & " Kb"
-													ElseIf $bytes < 1073741824 Then
-														$amount = Round($bytes / 1048576, 0) & " Mb"
-													ElseIf $bytes < 1099511627776 Then
-														$amount = Round($bytes / 1073741824, 2) & " Gb"
-													Else
-														$amount = Round($bytes / 1099511627776, 3) & " Tb"
-													EndIf
-													$entry = $entry & @TAB & $ID & @TAB & $bytes & @TAB & $amount & @TAB & $size & @TAB & $checksum
-													$entry = $entry & @TAB & $md5check & @TAB & $zipcheck & @TAB & $started & @TAB & $finished
-													; Get time taken for validation.
-													$started = StringReplace($started, '-', '/')
-													$finished = StringReplace($finished, '-', '/')
-													$taken = _DateDiff('s', $started, $finished)
-													$hours = "00"
-													$mins = "00"
-													$secs = "00"
-													If $taken > 59 Then
-														$mins = Floor($taken / 60)
-														$secs = $taken - ($mins * 60)
-														$secs = StringRight("0" & $secs, 2)
-														If $mins > 59 Then
-															$hours = Floor($mins / 60)
-															$mins = $mins - ($hours * 60)
-															$hours = StringRight("0" & $hours, 2)
-														EndIf
-														$mins = StringRight("0" & $mins, 2)
-														$secs = StringRight("0" & $secs, 2)
-													Else
-														;$taken = $taken & " secs"
-														If $taken > 0 Then
-															$secs = $taken
-															$secs = StringRight("0" & $secs, 2)
-														EndIf
-													EndIf
-													$taken = $hours & ":" & $mins & ":" & $secs
-													$entry = $entry & @TAB & $taken
-													;MsgBox(262208, "$entry", $entry & @LF & @LF & "Block = " & $a)
-													If $entries = "" Then
-														$entries = $entry
-													Else
-														$entries = $entries & @CRLF & $entry
-													EndIf
-												EndIf
-											EndIf
-											ContinueLoop
-										EndIf
-										$entry = $entry & @TAB & $ID & @TAB & $bytes & @TAB & $amount & @TAB & $size & @TAB & $checksum
-										$entry = $entry & @TAB & $md5check & @TAB & $zipcheck & @TAB & $started & @TAB & $finished
-										; Get time taken for validation.
-										$started = StringReplace($started, '-', '/')
-										$finished = StringReplace($finished, '-', '/')
-										$taken = _DateDiff('s', $started, $finished)
-										$hours = "00"
-										$mins = "00"
-										$secs = "00"
-										If $taken > 59 Then
-											$mins = Floor($taken / 60)
-											$secs = $taken - ($mins * 60)
-											$secs = StringRight("0" & $secs, 2)
-											If $mins > 59 Then
-												$hours = Floor($mins / 60)
-												$mins = $mins - ($hours * 60)
-												$hours = StringRight("0" & $hours, 2)
-											EndIf
-											$mins = StringRight("0" & $mins, 2)
-											$secs = StringRight("0" & $secs, 2)
-										Else
-											;$taken = $taken & " secs"
-											If $taken > 0 Then
-												$secs = $taken
-												$secs = StringRight("0" & $secs, 2)
-											EndIf
-										EndIf
-										$taken = $hours & ":" & $mins & ":" & $secs
-										$entry = $entry & @TAB & $taken
-										;MsgBox(262208, "$entry", $entry & @LF & @LF & "Block = " & $a)
-										If $entries = "" Then
-											$entries = $entry
-										Else
-											$entries = $entries & @CRLF & $entry
-										EndIf
-									ElseIf StringInStr($block, " : Validating Game Files.") > 0 Then
-										; NOTE - When a ContinueLoop occurs, no record is created.
-										; Skipping records where Size or MD5 or ZIP have failed.
-										$block = StringSplit($block, " : Validating Game Files.", 1)
-										$block = $block[2]
-										If StringInStr($block, "Validate cancelled.") > 0 Then ContinueLoop
-										;MsgBox(262208, "$block", $block)
-										$game = ""
-										$ID = ""
-										$lines = StringSplit($block, @CRLF, 1)
-										$title = $lines[2]
-										If StringInStr($title, "\") > 0 Then
-											; Skipping for now, because it is an old style validation entry that doesn't include the Game Title.
-											; But in reality, when not testing, we need to get the title from either the manifest or path tail.
-											;ContinueLoop
-											$title = StringSplit($title, '\', 1)
-											$title = $title[$title[0]]
-										Else
-											$title = StringSplit($title, ' : ', 1)
-											$title = $title[2]
-											$title = StringReplace($title, '\u0026', '&')
-											$title = StringStripWS($title, 7)
-										EndIf
-										;MsgBox(262208, "$title", $title)
-										For $l = 2 To $lines[0]
-											$line = $lines[$l]
-											$file = ""
-											$fext = StringRight($line, 4)
-											If $fext = ".bin" Or $fext = ".dmg" Or $fext = ".exe" Or $fext = ".pkg" Or $fext = ".zip" Then
-												$file = $line
-											Else
-												$fext = StringRight($line, 3)
-												If $fext = ".sh" Then
-													$file = $line
-												EndIf
-											EndIf
-											If $file <> "" Then
-												;MsgBox(262208, "$line", $line)
-												$file = StringSplit($file, ' : ', 1)
-												$started = $file[1]
-												$started = StringStripWS($started, 7)
-												$file = $file[2]
-												$file = StringStripWS($file, 7)
-												If StringInStr($file, "\") > 0 Then
-													$file = StringSplit($file, '\', 1)
-													$file = $file[$file[0]]
-												EndIf
-												If StringInStr($entries, $file) > 0 Then
-													; Already exists so skip
-													ContinueLoop
-												EndIf
-												$l = $l + 1
-												$size = $lines[$l]
-												$size = StringSplit($size, " : ", 1)
-												$size = $size[2]
-												If $size = "File Size passed." Then
-													$size = "pass"
-												ElseIf $size = "File Size failed." Then
-													$size = "fail"
-													ContinueLoop
-												Else
-													; Bad size check value
-													ContinueLoop
-												EndIf
-												$l = $l + 1
-												$line = $lines[$l]
-												$line = StringSplit($line, " : ", 1)
-												$verify = $line[2]
-												$verify = StringStripWS($verify, 7)
-												If $verify = "MD5 (checksum) passed." Then
-													$md5check = "pass"
-													$zipcheck = "na"
-												ElseIf $verify = "MD5 (checksum) failed." Then
-													$md5check = "fail"
-													$zipcheck = "na"
-													ContinueLoop
-												ElseIf $verify = "ZIP check passed." Then
-													$zipcheck = "pass"
-													$md5check = "na"
-												ElseIf $verify = "ZIP check failed." Then
-													$zipcheck = "fail"
-													$md5check = "na"
-													ContinueLoop
-												Else
-													; Bad MD5 or Zip check value
-													ContinueLoop
-												EndIf
-												$finished = $line[1]
-												$finished = StringStripWS($finished, 7)
-												$entry = $file & @TAB & $title
-												; We need to get Game ID, Bytes and Checksum from the Manifest.
-												If $ID = "" Then
-													; FIRST GAME FILE
-													; NOTE - We should only need to get the ID once per block.
-													$games = StringSplit($manifests, $file, 1)
-													If $games[0] > 1 Then
-														$check = $games[1]
-														$games = $games[2]
-														$check = StringSplit($check, '"Id":', 1)
-														If $check[0] > 1 Then
-															$check = $check[$check[0]]
-															$ID = StringSplit($check, ',', 1)
-															$ID = $ID[1]
-															$ID = StringStripWS($ID, 3)
-															If StringInStr($ID, ":") > 0 Then
-																; Bad ID value
-																$ID = ""
-																ContinueLoop
-															EndIf
-															$game = StringSplit($manifests, '"Id": ' & $ID, 1)
-															$game = $game[2]
-															$game = StringSplit($game, '"Id":', 1)
-															$game = $game[1]
-														Else
-															; IDs missing from manifest
-															ContinueLoop
-														EndIf
-													Else
-														; File missing from manifest
-														ContinueLoop
-													EndIf
-													;MsgBox(262208, "$ID", $ID)
-												Else
-													; OTHER GAME FILES
-													;MsgBox(262208, "$game", $game)
-													If $game = "" Then
-														; Bad ID split
-														ContinueLoop
-													Else
-														;MsgBox(262208, "$file", $file)
-														$games = StringSplit($game, $file, 1)
-														If $games[0] > 1 Then
-															$games = $games[2]
-														Else
-															; File missing from manifest (probably replaced in an update).
-															; Check the Database
-															$ID = StringSplit($titles, @LF & $title & "|", 1)
-															If $ID[0] > 1 Then
-																$ID = $ID[2]
-																$ID = StringSplit($ID, "|", 1)
-																$ID = $ID[1]
-																$slug = IniRead($gamesini, $ID, "slug", "")
-																If $slug = "" Then
-																	; Use a different method due to possible Game Title change.
-																	$slug = IniReadSection($existDB, $file)
-																	If @error Then
-																		$slug = ""
-																	Else
-																		; Value
-																		;$value = $slug[1][1]
-																		; Key
-																		$slug = $slug[1][0]
-																	EndIf
-																EndIf
-															Else
-																$slug = ""
-															EndIf
-															If $slug <> "" Then
-																$checksum = IniRead($existDB, $file, $slug, "")
-																If $checksum <> "" Then
-																	; FILE FOUND IN DATABASE
-																	$checksum = StringSplit($checksum, "|", 1)
-																	$bytes = $checksum[1]
-																	$checksum = $checksum[2]
-																	If $bytes < 1024 Then
-																		$amount = $bytes & " bytes"
-																	ElseIf $bytes < 1048576 Then
-																		$amount = Round($bytes / 1024, 0) & " Kb"
-																	ElseIf $bytes < 1073741824 Then
-																		$amount = Round($bytes / 1048576, 0) & " Mb"
-																	ElseIf $bytes < 1099511627776 Then
-																		$amount = Round($bytes / 1073741824, 2) & " Gb"
-																	Else
-																		$amount = Round($bytes / 1099511627776, 3) & " Tb"
-																	EndIf
-																	$entry = $entry & @TAB & $ID & @TAB & $bytes & @TAB & $amount & @TAB & $size & @TAB & $checksum
-																	$entry = $entry & @TAB & $md5check & @TAB & $zipcheck & @TAB & $started & @TAB & $finished
-																	; Get time taken for validation.
-																	$started = StringReplace($started, '-', '/')
-																	$finished = StringReplace($finished, '-', '/')
-																	$taken = _DateDiff('s', $started, $finished)
-																	$hours = "00"
-																	$mins = "00"
-																	$secs = "00"
-																	If $taken > 59 Then
-																		$mins = Floor($taken / 60)
-																		$secs = $taken - ($mins * 60)
-																		$secs = StringRight("0" & $secs, 2)
-																		If $mins > 59 Then
-																			$hours = Floor($mins / 60)
-																			$mins = $mins - ($hours * 60)
-																			$hours = StringRight("0" & $hours, 2)
-																		EndIf
-																		$mins = StringRight("0" & $mins, 2)
-																		$secs = StringRight("0" & $secs, 2)
-																	Else
-																		;$taken = $taken & " secs"
-																		If $taken > 0 Then
-																			$secs = $taken
-																			$secs = StringRight("0" & $secs, 2)
-																		EndIf
-																	EndIf
-																	$taken = $hours & ":" & $mins & ":" & $secs
-																	$entry = $entry & @TAB & $taken
-																	;MsgBox(262208, "$entry", $entry & @LF & @LF & "Block = " & $a)
-																	If $entries = "" Then
-																		$entries = $entry
-																	Else
-																		$entries = $entries & @CRLF & $entry
-																	EndIf
-																EndIf
-															Else
-																;$games = $games[1]
-																;MsgBox(262208, "$file $games", $file & @LF & $games)
-																;$check = StringSplit($games, '"Name":', 1)
-																;For $c = 1 To $check[0]
-																;	$line = $check[$c]
-																;	MsgBox(262208, "$file $line", $file & @LF & $line)
-																;Next
-															EndIf
-															ContinueLoop
-														EndIf
-													EndIf
-												EndIf
-												If $ID <> "" Then
-													$check = StringSplit($games, '}', 1)
-													If $check[0] > 1 Then
-														$check = $check[1]
-														;MsgBox(262208, "$check", $check)
-														$bytes = StringSplit($check, '"VerifiedSize":', 1)
-														If $bytes[0] > 1 Then
-															$bytes = $bytes[2]
-															$bytes = StringSplit($bytes, ',', 1)
-															$bytes = $bytes[1]
-															$bytes = StringStripWS($bytes, 7)
-															If $bytes = "" Then $bytes = "na"
-															If StringInStr($bytes, ":") > 0 Then
-																; Bad bytes value
-																ContinueLoop
-															EndIf
-															If $bytes < 1024 Then
-																$amount = $bytes & " bytes"
-															ElseIf $bytes < 1048576 Then
-																$amount = Round($bytes / 1024, 0) & " Kb"
-															ElseIf $bytes < 1073741824 Then
-																$amount = Round($bytes / 1048576, 0) & " Mb"
-															ElseIf $bytes < 1099511627776 Then
-																$amount = Round($bytes / 1073741824, 2) & " Gb"
-															Else
-																$amount = Round($bytes / 1099511627776, 3) & " Tb"
-															EndIf
-															$checksum = StringSplit($check, '"Checksum":', 1)
-															If $checksum[0] > 1 Then
-																$checksum = $checksum[2]
-																$checksum = StringReplace($checksum, '"', '')
-																$checksum = StringReplace($checksum, '}', '')
-																$checksum = StringStripWS($checksum, 7)
-																If $checksum = "" Then $checksum = "na"
-																If StringInStr($checksum, ":") > 0 Then
-																	; Bad checksum value
-																	ContinueLoop
-																EndIf
-																;MsgBox(262208, "$bytes $checksum", $bytes & @LF & $checksum)$amount
-																$entry = $entry & @TAB & $ID & @TAB & $bytes & @TAB & $amount & @TAB & $size & @TAB & $checksum
-																;MsgBox(262208, "$entry", $entry)
-																$entry = $entry & @TAB & $md5check & @TAB & $zipcheck & @TAB & $started & @TAB & $finished
-																;MsgBox(262208, "$entry", $entry)
-																; Get time taken for validation.
-																$started = StringReplace($started, '-', '/')
-																$finished = StringReplace($finished, '-', '/')
-																$taken = _DateDiff('s', $started, $finished)
-																$hours = "00"
-																$mins = "00"
-																$secs = "00"
-																If $taken > 59 Then
-																	$mins = Floor($taken / 60)
-																	$secs = $taken - ($mins * 60)
-																	$secs = StringRight("0" & $secs, 2)
-																	If $mins > 59 Then
-																		$hours = Floor($mins / 60)
-																		$mins = $mins - ($hours * 60)
-																		$hours = StringRight("0" & $hours, 2)
-																	EndIf
-																	$mins = StringRight("0" & $mins, 2)
-																	$secs = StringRight("0" & $secs, 2)
-																Else
-																	;$taken = $taken & " secs"
-																	If $taken > 0 Then
-																		$secs = $taken
-																		$secs = StringRight("0" & $secs, 2)
-																	EndIf
-																EndIf
-																$taken = $hours & ":" & $mins & ":" & $secs
-																$entry = $entry & @TAB & $taken
-																;MsgBox(262208, "$entry", $entry & @LF & @LF & "Block = " & $a)
-																If $entries = "" Then
-																	$entries = $entry
-																Else
-																	$entries = $entries & @CRLF & $entry
-																EndIf
-															Else
-																; Checksum missing from manifest
-																ContinueLoop
-															EndIf
-														Else
-															; Bytes missing from manifest
-															ContinueLoop
-														EndIf
-													Else
-														; Bad manifest split
-														ContinueLoop
-													EndIf
-												EndIf
-											EndIf
-										Next
-										;Exit
-									EndIf
-								EndIf
-							Next
-							If $entries <> "" Then
-								FileWriteLine($valhistory, $entries)
-							EndIf
-						EndIf
-					EndIf
-				EndIf
-				SplashOff()
-			EndIf
-		EndIf
-	EndIf
+	HistoryCheckTwo()
 Else
 	$cnt = _FileCountLines($valhistory)
 	If $cnt = 0 Then
@@ -1175,8 +242,8 @@ Func MainGUI()
 	;
 	Local $downall, $Sub_menu_downall, $Item_downall_clear, $Item_downall_create, $Item_downall_disable, $Item_downall_display
 	Local $Item_downall_info, $Item_downall_list, $Item_downall_log, $Item_downall_opts, $Item_downall_start, $Item_downall_view
-	;
-	Local $accept, $addto, $alias, $amount, $aqua, $arraytits, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4
+	;$accept,
+	Local $addto, $alias, $amount, $aqua, $arraytits, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4
 	Local $compall, $compone, $ctrl, $delay, $description, $destfld, $destfle, $dir, $disable, $display, $dll, $e, $error
 	Local $everything, $exist, $existing, $fext, $filelist, $find, $finished, $fixed, $flename, $foldpth, $former, $gambak
 	Local $get, $hours, $IDD, $idlink, $ids, $l, $language, $languages, $last, $lastgame, $lastgen, $lastone, $latest, $loop
@@ -1256,6 +323,10 @@ Func MainGUI()
 	GUICtrlSetTip($Button_dest, "Browse to set the destination folder!")
 	$Button_fold = GuiCtrlCreateButton("Open", 367, 361, 23, 22, $BS_ICON)
 	GUICtrlSetTip($Button_fold, "Open the selected destination folder!")
+	;
+	$Button_ontop = GUICtrlCreateCheckbox("ON TOP", 520, 0, 60, 16, $BS_PUSHLIKE)
+	GUICtrlSetFont($Button_ontop, 6, 600, 0, "Small Fonts")
+	GUICtrlSetTip($Button_ontop, "Toggle the ON TOP program window state!")
 	;
 	$Group_cover = GuiCtrlCreateGroup("Cover or Status", 390, 10, 190, 160)
 	$Pic_cover = GUICtrlCreatePic($blackjpg, 400, 30, 170, 100, $SS_NOTIFY)
@@ -1570,6 +641,15 @@ Func MainGUI()
 	GUICtrlSetImage($Button_exit, $user, $icoX, 1)
 	;
 	; SETTINGS
+	$ontop = IniRead($inifle, "Program Window", "ontop", "")
+	If $ontop = "" Then
+		$ontop = 1
+		IniWrite($inifle, "Program Window", "ontop", $ontop)
+	ElseIf $ontop = 4 Then
+		WinSetOnTop($GOGcliGUI, "", 0)
+	EndIf
+	GUICtrlSetState($Button_ontop, $ontop)
+	;
 	$cnt = _FileCountLines($downlist)
 	If $cnt > 0 Then
 		GUICtrlSetData($Button_down, "DOWNLOAD" & @LF & "LIST")
@@ -1727,86 +807,7 @@ Func MainGUI()
 		SetStateOfControls($GUI_DISABLE)
 		If $exist <> 1 Then GUICtrlSetState($Button_setup, $GUI_DISABLE)
 	ElseIf $exist = 1 Then
-		_Crypt_Startup()
-		$hash = _Crypt_HashFile($gogcli, $CALG_MD5)
-		$hash = StringTrimLeft($hash, 2)
-		; Win32 or Win64
-		If $hash = "3628874296eb56801d035ed94e08b3a5" Or $hash = "fed1bcfbee23cd70039836d49b97901d" Then
-			; Note - v0.1.1 (Win64 only) and v0.1.2 have the same Win 64 version.
-			$model = 1
-		ElseIf $hash = "0e14a4ecd72b1df04e7b5161edd09157" Or $hash = "6293d448cafabea81fd9ebef325be1c9" Then
-			$model = 2
-		ElseIf $hash = "7ea8487d664d77b17fba01654534b2a8" Or $hash = "663e7644144bb8dd69bdaf8d947d699b" Then
-			$model = 3
-		ElseIf $hash = "eb31b8e2e92f23b21fbec12a46bd018b" Or $hash = "1b415189123f4af596739a5b8e365a23" Then
-			$model = 4
-		ElseIf $hash = "2aaa0e08a43851e0d45dcd06467d4307" Or $hash = "d9ac73f14ff470683f3855125fcc4912" Then
-			$model = 5
-		ElseIf $hash = "426c2f4b9cc1598cd599b41443e8cb86" Or $hash = "0f8800e625c60a2f34b727596258cee3" Then
-			$model = 5.1
-		ElseIf $hash = "c2a8c97eb9072297922c5e8084039e33" Or $hash = "3b0eca66a859494307973a80e47524cd" Then
-			$model = 6
-		ElseIf $hash = "8277fd2044f922e7aff000596a56f39a" Or $hash = "5e0fe5090fc4d9f252c6e16e771bf8ae" Then
-			$model = 7
-		ElseIf $hash = "9d3cb9df6fae01ab13f608de5cbc8bbf" Or $hash = "2b0cea101bb12a00bd73dfd1b58f5253" Then
-			$model = 8
-		ElseIf $hash = "ba659ad7e3cc33b0bc0b600302fe308e" Or $hash = "336c9416f6dc6d28c8337ad8283173ad" Then
-			$model = 9
-		ElseIf $hash = "4e9024fafe084b48aab64dc079436e82" Or $hash = "d9caee3343f5dad898ceefff5860d8d8" Then
-			$model = 10
-		ElseIf $hash = "17798e152a4597f052c77bdda99367e5" Or $hash = "331166edd599fdbf36520fb02fde166b" Then
-			$model = 11
-		ElseIf $hash = "3ffc4aba6aa6e6c516d91cea7a414878" Or $hash = "68389e4853c935756653454caf5759d6" Then
-			$model = 12
-		ElseIf $hash = "9126ac9b680e00f807fcfff6d99ea356" Or $hash = "60cd1f616d728ad312b018e9c1ef4a5c" Then
-			$model = 13
-		ElseIf $hash = "80f1547577a94fd2f6bc7d131ce26bc1" Or $hash = "2b0dd2b5bc29571bdc8a1d03f59fabed" Then
-			$model = 14
-		ElseIf $hash = "3e8d0a996ea82c1425c8ba5f20e27958" Or $hash = "f89997c91ad8aafe7a7d8dbadd4bf30b" Then
-			$model = 15
-		ElseIf $hash = "5985b3d6feaf5ebe27a561b5e7999492" Or $hash = "28429b72767f9be987b374144a20481c" Then
-			$model = 16
-		ElseIf $hash = "81d4eaf7fa7e279482c65a1f4c8ce6fd" Or $hash = "545a2bb5c22d4d4116c86f0da6bfb987" Then
-			$model = 17
-		ElseIf $hash = "bf88af656e93aaa6869697edde22d9ca" Or $hash = "b1904e71553f70dd128d5adf38bcf113" Then
-			$model = 17.1
-		ElseIf $hash = "a8c49a20daf723544684f5e2a813b0fa" Or $hash = "29f5593a5993f7024ff23e0a98daf57d" Then
-			$model = 17.2
-		ElseIf $hash = "c3f422efbc162d72e836aaee101c1fdb" Or $hash = "741e7969744b0c464901ccafe35746e9" Then
-			$model = 17.3
-		ElseIf $hash = "9ea8bf488508fe35c3c4a4eeccb6d24c" Or $hash = "d26f00c1decb276a268e4dbb9c1ee014" Then
-			$model = 18
-		ElseIf $hash = "c91d0a06b97b55683a625a5fb68c0853" Or $hash = "de5a39cc8109301b034fc07ef4f4fd01" Then
-			$model = 19
-		ElseIf $hash = "bdc631180d7f119405e9b1661b251270" Or $hash = "d123409f6bc081b55f556b9d56480e85" Then
-			$model = 19.1
-		ElseIf $hash = "61981ec65200b47769548d5bb41e9ef2" Or $hash = "33c6c85bfff4e6d7156cd2ec37302d89" Then
-			$model = 19.2
-		ElseIf $hash = "8803552a6a8e76fe571fa219fdd0a43f" Or $hash = "1314f1e4ecbd68aa361adbd497bf30e9" Then
-			$model = 19.3
-		ElseIf $hash = "cbd9943f72844bb6f4da7ad4fdc5590c" Or $hash = "d5b7bec67307530ded9519ce997e7cbd" Then
-			$model = 19.4
-		ElseIf $hash = "52e9ac2dc4ea5707a23237a3f3b25082" Or $hash = "a799aafa053d64631fff0f0c3ff2626d" Then
-			$model = 20
-		Else
-			$model = 666
-			$accept = IniRead($inifle, "gogcli.exe", "accept", "")
-			If $accept <> 1 Then
-				IniWrite($inifle, "gogcli.exe", "accept", 4)
-				$ans = MsgBox(262177 + 256, "WARNING", "The version of 'gogcli.exe' isn't recognized!" & @LF & @LF _
-					& "THIS VERSION MAY CAUSE PROBLEMS" & @LF & @LF _
-					& "Do you want to continue?" & @LF & @LF _
-					& "NOTE - If you are happy to continue and" & @LF _
-					& "want to avoid seeing this message every" & @LF _
-					& "program start, then you could manually" & @LF _
-					& "adjust the 'accept=4' value to 'accept=1'" & @LF _
-					& "in the 'Settings.ini' file.", 0, $GOGcliGUI)
-				If $ans = 2 Then Exit
-			EndIf
-		EndIf
-		IniWrite($inifle, "gogcli.exe", "version", $model)
-		If $model <> 666 Then IniWrite($inifle, "gogcli.exe", "accept", 4)
-		_Crypt_Shutdown()
+		GetGOGcliVersion()
 	EndIf
 	;
 	$minimize = IniRead($inifle, "DOS Console", "minimize", "")
@@ -2257,6 +1258,17 @@ Func MainGUI()
 					MsgBox(262192, "Web Error", "No connection detected!", 0, $GOGcliGUI)
 				EndIf
 			EndIf
+			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Button_ontop
+			; Toggle the ON TOP program window state
+			If GUICtrlRead($Button_ontop) = $GUI_CHECKED Then
+				$ontop = 1
+				WinSetOnTop($GOGcliGUI, "", 1)
+			Else
+				$ontop = 4
+				WinSetOnTop($GOGcliGUI, "", 0)
+			EndIf
+			IniWrite($inifle, "Program Window", "ontop", $ontop)
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
 		Case $msg = $Button_man
 			; Add selected game to manifest
@@ -7492,6 +6504,8 @@ Func FileSelectorGUI()
 	$lastid = $Item_remove_sel
 	;
 	; SETTINGS
+	If $ontop = 4 Then WinSetOnTop($SelectorGUI, "", 0)
+	;
 	$icofle = "C:\Windows\System32\netshell.dll"
 	If FileExists($icofle) Then
 		$icoDwn = -151
@@ -11565,6 +10579,91 @@ Func GetGameFolderNameAndPath($titleF, $slugF)
 	$gamefold = $gamefold & "\" & $name
 EndFunc ;=> GetGameFolderNameAndPath
 
+Func GetGOGcliVersion()
+	_Crypt_Startup()
+	$hash = _Crypt_HashFile($gogcli, $CALG_MD5)
+	$hash = StringTrimLeft($hash, 2)
+	; Win32 or Win64
+	If $hash = "3628874296eb56801d035ed94e08b3a5" Or $hash = "fed1bcfbee23cd70039836d49b97901d" Then
+		; Note - v0.1.1 (Win64 only) and v0.1.2 have the same Win 64 version.
+		$model = 1
+	ElseIf $hash = "0e14a4ecd72b1df04e7b5161edd09157" Or $hash = "6293d448cafabea81fd9ebef325be1c9" Then
+		$model = 2
+	ElseIf $hash = "7ea8487d664d77b17fba01654534b2a8" Or $hash = "663e7644144bb8dd69bdaf8d947d699b" Then
+		$model = 3
+	ElseIf $hash = "eb31b8e2e92f23b21fbec12a46bd018b" Or $hash = "1b415189123f4af596739a5b8e365a23" Then
+		$model = 4
+	ElseIf $hash = "2aaa0e08a43851e0d45dcd06467d4307" Or $hash = "d9ac73f14ff470683f3855125fcc4912" Then
+		$model = 5
+	ElseIf $hash = "426c2f4b9cc1598cd599b41443e8cb86" Or $hash = "0f8800e625c60a2f34b727596258cee3" Then
+		$model = 5.1
+	ElseIf $hash = "c2a8c97eb9072297922c5e8084039e33" Or $hash = "3b0eca66a859494307973a80e47524cd" Then
+		$model = 6
+	ElseIf $hash = "8277fd2044f922e7aff000596a56f39a" Or $hash = "5e0fe5090fc4d9f252c6e16e771bf8ae" Then
+		$model = 7
+	ElseIf $hash = "9d3cb9df6fae01ab13f608de5cbc8bbf" Or $hash = "2b0cea101bb12a00bd73dfd1b58f5253" Then
+		$model = 8
+	ElseIf $hash = "ba659ad7e3cc33b0bc0b600302fe308e" Or $hash = "336c9416f6dc6d28c8337ad8283173ad" Then
+		$model = 9
+	ElseIf $hash = "4e9024fafe084b48aab64dc079436e82" Or $hash = "d9caee3343f5dad898ceefff5860d8d8" Then
+		$model = 10
+	ElseIf $hash = "17798e152a4597f052c77bdda99367e5" Or $hash = "331166edd599fdbf36520fb02fde166b" Then
+		$model = 11
+	ElseIf $hash = "3ffc4aba6aa6e6c516d91cea7a414878" Or $hash = "68389e4853c935756653454caf5759d6" Then
+		$model = 12
+	ElseIf $hash = "9126ac9b680e00f807fcfff6d99ea356" Or $hash = "60cd1f616d728ad312b018e9c1ef4a5c" Then
+		$model = 13
+	ElseIf $hash = "80f1547577a94fd2f6bc7d131ce26bc1" Or $hash = "2b0dd2b5bc29571bdc8a1d03f59fabed" Then
+		$model = 14
+	ElseIf $hash = "3e8d0a996ea82c1425c8ba5f20e27958" Or $hash = "f89997c91ad8aafe7a7d8dbadd4bf30b" Then
+		$model = 15
+	ElseIf $hash = "5985b3d6feaf5ebe27a561b5e7999492" Or $hash = "28429b72767f9be987b374144a20481c" Then
+		$model = 16
+	ElseIf $hash = "81d4eaf7fa7e279482c65a1f4c8ce6fd" Or $hash = "545a2bb5c22d4d4116c86f0da6bfb987" Then
+		$model = 17
+	ElseIf $hash = "bf88af656e93aaa6869697edde22d9ca" Or $hash = "b1904e71553f70dd128d5adf38bcf113" Then
+		$model = 17.1
+	ElseIf $hash = "a8c49a20daf723544684f5e2a813b0fa" Or $hash = "29f5593a5993f7024ff23e0a98daf57d" Then
+		$model = 17.2
+	ElseIf $hash = "c3f422efbc162d72e836aaee101c1fdb" Or $hash = "741e7969744b0c464901ccafe35746e9" Then
+		$model = 17.3
+	ElseIf $hash = "9ea8bf488508fe35c3c4a4eeccb6d24c" Or $hash = "d26f00c1decb276a268e4dbb9c1ee014" Then
+		$model = 18
+	ElseIf $hash = "c91d0a06b97b55683a625a5fb68c0853" Or $hash = "de5a39cc8109301b034fc07ef4f4fd01" Then
+		$model = 19
+	ElseIf $hash = "bdc631180d7f119405e9b1661b251270" Or $hash = "d123409f6bc081b55f556b9d56480e85" Then
+		$model = 19.1
+	ElseIf $hash = "61981ec65200b47769548d5bb41e9ef2" Or $hash = "33c6c85bfff4e6d7156cd2ec37302d89" Then
+		$model = 19.2
+	ElseIf $hash = "8803552a6a8e76fe571fa219fdd0a43f" Or $hash = "1314f1e4ecbd68aa361adbd497bf30e9" Then
+		$model = 19.3
+	ElseIf $hash = "cbd9943f72844bb6f4da7ad4fdc5590c" Or $hash = "d5b7bec67307530ded9519ce997e7cbd" Then
+		$model = 19.4
+	ElseIf $hash = "52e9ac2dc4ea5707a23237a3f3b25082" Or $hash = "a799aafa053d64631fff0f0c3ff2626d" Then
+		$model = 20
+	ElseIf $hash = "ee32ace4919304b6ef1c0fa31f4c008b" Or $hash = "85afb4d42f1f7d29112b4be0acf9b070" Then
+		$model = 21
+	Else
+		$model = 666
+		$accept = IniRead($inifle, "gogcli.exe", "accept", "")
+		If $accept <> 1 Then
+			IniWrite($inifle, "gogcli.exe", "accept", 4)
+			$ans = MsgBox(262177 + 256, "WARNING", "The version of 'gogcli.exe' isn't recognized!" & @LF & @LF _
+				& "THIS VERSION MAY CAUSE PROBLEMS" & @LF & @LF _
+				& "Do you want to continue?" & @LF & @LF _
+				& "NOTE - If you are happy to continue and" & @LF _
+				& "want to avoid seeing this message every" & @LF _
+				& "program start, then you could manually" & @LF _
+				& "adjust the 'accept=4' value to 'accept=1'" & @LF _
+				& "in the 'Settings.ini' file.", 0, $GOGcliGUI)
+			If $ans = 2 Then Exit
+		EndIf
+	EndIf
+	IniWrite($inifle, "gogcli.exe", "version", $model)
+	If $model <> 666 Then IniWrite($inifle, "gogcli.exe", "accept", 4)
+	_Crypt_Shutdown()
+EndFunc ;=> GetGOGcliVersion
+
 Func GetManifestForTitle()
 	Local $ids, $l, $pos, $prior, $titleM
 	_FileWriteLog($logfle, "GET MANIFEST - " & $title, -1)
@@ -11760,6 +10859,950 @@ Func GetTheSize()
 	EndIf
 	;Return $size
 EndFunc ;=> GetTheSize
+
+Func HistoryCheckOne()
+	Local $block, $complete, $date, $finished, $hours, $mins, $secs, $started, $taken, $total
+	FileWriteLine($histfile, $entry)
+	$ans = MsgBox(262177 + 256, "Program Advice & Query", "This program now has a 'History.log' file and Viewer, which" _
+		& @LF & "is available via the right-click 'Games' list context menu." & @LF _
+		& @LF & "Downloads --> History Viewer" _
+		& @LF & "Downloads --> Open the History file" & @LF _
+		& @LF & "This file gets populated with every download, showing the" _
+		& @LF & "result (of the download and its validation) and details." & @LF _
+		& @LF & "If you currently have a 'Log.txt' file with download records," _
+		& @LF & "then that can be processed now to populate the 'History.log'" _
+		& @LF & "file already. Doing so could take a few minutes if there are" _
+		& @LF & "many records." & @LF _
+		& @LF & "OK = Read the Log file and attempt to extract records." _
+		& @LF & "CANCEL = Ignore the Log file." & @LF _
+		& @LF & "NOTE - This is a once only opportunity to extract records" _
+		& @LF & "from the Log file ... short of deleting the 'History.log' file" _
+		& @LF & "manually, and starting again, but with fewer details.", 0)
+	If $ans = 1 Then
+		If FileExists($logfle) Then
+			$cnt = _FileCountLines($logfle)
+			If $cnt > 1 Then
+				SplashTextOn("", "Creating History!", 200, 120, Default, Default, 33)
+				$entries = ""
+				; Need to read in the manifest file.
+				$manifests = FileRead($manifest)
+				If $manifests <> "" Then
+					;$games = StringSplit($manifests, '"Id":', 1)
+					;_FileReadToArray($logfle, $array, 1)
+					$read = FileRead($logfle)
+					If $read <> "" Then
+						$array = StringSplit($read, @CRLF & @CRLF, 1)
+						If IsArray($array) Then
+							For $a = 1 To $array[0]
+								;$line = $array[$a]
+								$block = $array[$a]
+								If $block <> "" Then
+									If StringInStr($block, ": DOWNLOADING -") > 0 And StringInStr($block, ": COMPLETED.") > 0 And StringInStr($block, "the File Size check.") > 0 Then
+										$started = StringSplit($block, " : DOWNLOADING - ", 1)
+										$block = $started[2]
+										$started = $started[1]
+										$started = StringStripWS($started, 7)
+										If StringInStr($started, " : ") > 0 Then
+											; Bad date
+											ContinueLoop
+										EndIf
+										$file = StringSplit($block, @CRLF, 1)
+										$file = $file[1]
+										$file = StringStripWS($file, 7)
+										If StringInStr($entries, $file) > 0 Or StringInStr($file, ":") > 0 Then
+											; Don't add the file more than once or Skip if file name is bad.
+											; Strictly speaking, you shouldn't need to add more than once, unless a failure occured,
+											; but then we only really want to create a record of passes.
+											ContinueLoop
+										;ElseIf StringInStr($file, "_metro_") > 0 Then
+										;	MsgBox(262208, "$file", $file)
+										EndIf
+										$finished = StringSplit($block, " : COMPLETED.", 1)
+										$block = $finished[2]
+										$finished = $finished[1]
+										$finished = StringSplit($finished, @CRLF, 1)
+										$finished = $finished[$finished[0]]
+										$finished = StringStripWS($finished, 7)
+										If StringInStr($finished, " : ") > 0 Then
+											; Bad date
+											ContinueLoop
+										EndIf
+										$size = StringSplit($block, " the File Size check.", 1)
+										$size = $size[1]
+										$size = StringSplit($size, " : ", 1)
+										$size = $size[$size[0]]
+										If $size = "Passed" Then
+											$size = "pass"
+										ElseIf $size = "Failed" Then
+											ContinueLoop
+											$size = "fail"
+										Else
+											; Bad size check value
+											ContinueLoop
+										EndIf
+										;
+										$games = StringSplit($manifests, $file, 1)
+										If $games[0] > 1 Then
+											$check = $games[1]
+											$games = $games[2]
+											$check = StringSplit($check, '"Id":', 1)
+											If $check[0] > 1 Then
+												$check = $check[$check[0]]
+												$ID = StringSplit($check, ',', 1)
+												$ID = $ID[1]
+												$ID = StringStripWS($ID, 3)
+												If StringInStr($ID, ":") > 0 Then
+													; Bad ID value
+													ContinueLoop
+												EndIf
+												$title = StringSplit($check, '"Title":', 1)
+												If $title[0] > 1 Then
+													$title = $title[2]
+													$title = StringSplit($title, ',', 1)
+													$title = $title[1]
+													$title = StringReplace($title, '"', '')
+													$title = StringReplace($title, '\u0026', '&')
+													$title = StringStripWS($title, 7)
+													;If StringInStr($title, ":") > 0 Then ContinueLoop
+													$check = StringSplit($games, '}', 1)
+													If $check[0] > 1 Then
+														$check = $check[1]
+														$bytes = StringSplit($check, '"VerifiedSize":', 1)
+														If $bytes[0] > 1 Then
+															$bytes = $bytes[2]
+															$bytes = StringSplit($bytes, ',', 1)
+															$bytes = $bytes[1]
+															$bytes = StringStripWS($bytes, 7)
+															If $bytes = "" Then $bytes = "na"
+															If StringInStr($bytes, ":") > 0 Then
+																; Bad bytes value
+																ContinueLoop
+															EndIf
+															$checksum = StringSplit($check, '"Checksum":', 1)
+															If $checksum[0] > 1 Then
+																$checksum = $checksum[2]
+																$checksum = StringReplace($checksum, '"', '')
+																$checksum = StringReplace($checksum, '}', '')
+																$checksum = StringStripWS($checksum, 7)
+																If $checksum = "" Then $checksum = "na"
+																If StringInStr($checksum, ":") > 0 Then
+																	; Bad checksum value
+																	ContinueLoop
+																EndIf
+																;MsgBox(262208, "$md5check", $md5check)
+																$entry = $file & @TAB & $title & @TAB & $ID & @TAB & $bytes & @TAB & $size & @TAB & $checksum
+																$verify = StringSplit($read, " : " & $file, 1)
+																If $verify[0] > 1 Then
+																	$date = $verify[1]
+																	$verify = $verify[2]
+																	$date = StringSplit($date, @CRLF & @CRLF, 1)
+																	If $date[0] > 1 Then
+																		; Should be left with just one line.
+																		$date = $date[$date[0]]
+																		$date = StringStripWS($date, 3)
+																		If StringInStr($date, @CRLF) > 0 Or StringInStr($date, " : ") > 0 Then
+																			; More than one line or bad date, so skip to next possible download entry.
+																			If StringInStr($date, "MD5 Check passed") > 0 Or StringInStr($date, "ZIP Check passed") > 0 _
+																				Or StringInStr($date, "MD5 Check failed") > 0 Or StringInStr($date, "ZIP Check failed") > 0 Then
+																				$date = StringSplit($date, @CRLF, 1)
+																				If $date[0] > 1 Then
+																					$date = $date[$date[0]]
+																					$date = StringStripWS($date, 7)
+																					;2021-12-14 10:21:00
+																					If StringLen($date) <> 19 Then
+																						; Bad date value
+																						;If StringInStr($file, "_metro_") > 0 Then MsgBox(262208, "$date", $date)
+																						ContinueLoop
+																					EndIf
+																				Else
+																					; Bad date value
+																					ContinueLoop
+																				EndIf
+																			Else
+																				; Bad date value
+																				ContinueLoop
+																			EndIf
+																		EndIf
+																		;MsgBox(262208, "$date", $date)
+																		$verify = StringSplit($verify, "." & @CRLF, 1)
+																		If $verify[0] > 1 Then
+																			$verify = $verify[1]
+																			$verify = StringSplit($verify, " : ", 1)
+																			If $verify[0] > 1 Then
+																				; NOTE - For this exercise in building from existing log entries, we really only want to record successes.
+																				$verify = $verify[$verify[0]]
+																				$verify = StringStripWS($verify, 7)
+																				If $verify = "MD5 Check passed" Then
+																					$md5check = "pass"
+																					$zipcheck = "na"
+																				ElseIf $verify = "MD5 Check failed" Then
+																					ContinueLoop
+																					$md5check = "fail"
+																					$zipcheck = "na"
+																				ElseIf $verify = "ZIP Check passed" Then
+																					$zipcheck = "pass"
+																					$md5check = "na"
+																				ElseIf $verify = "ZIP Check failed" Then
+																					ContinueLoop
+																					$zipcheck = "fail"
+																					$md5check = "na"
+																				Else
+																					; Bad MD5 or Zip check value
+																					;If StringInStr($file, "_metro_") > 0 Then MsgBox(262208, "$verify", $verify)
+																					ContinueLoop
+																				EndIf
+																				;MsgBox(262208, "$md5check", $md5check)
+																				$entry = $entry & @TAB & $md5check & @TAB & $zipcheck & @TAB & $started & @TAB & $finished
+																				$started = StringReplace($started, '-', '/')
+																				$finished = StringReplace($finished, '-', '/')
+																				$taken = _DateDiff('s', $started, $finished)
+																				$hours = "00"
+																				$mins = "00"
+																				$secs = "00"
+																				If $taken > 59 Then
+																					$mins = Floor($taken / 60)
+																					$secs = $taken - ($mins * 60)
+																					If $mins > 59 Then
+																						$hours = Floor($mins / 60)
+																						$mins = $mins - ($hours * 60)
+																						$hours = StringRight("0" & $hours, 2)
+																					EndIf
+																					$mins = StringRight("0" & $mins, 2)
+																					$secs = StringRight("0" & $secs, 2)
+																				Else
+																					;$taken = $taken & " secs"
+																					If $taken > 0 Then
+																						$secs = $taken
+																						$secs = StringRight("0" & $secs, 2)
+																					EndIf
+																				EndIf
+																				$taken = $hours & ":" & $mins & ":" & $secs
+																				$entry = $entry & @TAB & $taken & @TAB & "na" & @TAB & $date
+																				; No need to do the following, as no way to glean start time was registered in the log for validating after downloading.
+																				; Date is completion time for validation. The reason for this issue, is because all downloads occur first, then validate
+																				; occurs for all those downloads. NOTE - I should modify my code to write the validate start time for each file. DONE
+																				; Though it won't help at this point for the 'History.log' file, except where a deletion of that has occurred. Anyway,
+																				; it is not that great a benefit, so hardly worth bothering with it at this point.
+;~ 																				$date = StringReplace($date, '-', '/')
+;~ 																				$complete = _DateDiff('s', $finished, $date)
+;~ 																				$hours = "00"
+;~ 																				$mins = "00"
+;~ 																				$secs = "00"
+;~ 																				If $complete > 59 Then
+;~ 																					$mins = Floor($complete / 60)
+;~ 																					$secs = $complete - ($mins * 60)
+;~ 																					If $mins > 59 Then
+;~ 																						$hours = Floor($mins / 60)
+;~ 																						$mins = $mins - ($hours * 60)
+;~ 																						$hours = StringRight("0" & $hours, 2)
+;~ 																					EndIf
+;~ 																					$mins = StringRight("0" & $mins, 2)
+;~ 																					$secs = StringRight("0" & $secs, 2)
+;~ 																				Else
+;~ 																					;$complete = $complete & " secs"
+;~ 																					If $complete > 0 Then
+;~ 																						$secs = $complete
+;~ 																						$secs = StringRight("0" & $secs, 2)
+;~ 																					EndIf
+;~ 																				EndIf
+;~ 																				$complete = $hours & ":" & $mins & ":" & $secs
+;~ 																				$total = _DateDiff('s', $started, $date)
+;~ 																				$hours = "00"
+;~ 																				$mins = "00"
+;~ 																				$secs = "00"
+;~ 																				If $total > 59 Then
+;~ 																					$mins = Floor($total / 60)
+;~ 																					$secs = $total - ($mins * 60)
+;~ 																					If $mins > 59 Then
+;~ 																						$hours = Floor($mins / 60)
+;~ 																						$mins = $mins - ($hours * 60)
+;~ 																						$hours = StringRight("0" & $hours, 2)
+;~ 																					EndIf
+;~ 																					$mins = StringRight("0" & $mins, 2)
+;~ 																					$secs = StringRight("0" & $secs, 2)
+;~ 																				Else
+;~ 																					;$total = $total & " secs"
+;~ 																					If $total > 0 Then
+;~ 																						$secs = $total
+;~ 																						$secs = StringRight("0" & $secs, 2)
+;~ 																					EndIf
+;~ 																				EndIf
+;~ 																				$total = $hours & ":" & $mins & ":" & $secs
+																				$complete = "na"
+																				$total = "na"
+																				$entry = $entry & @TAB & $complete & @TAB & $total
+																				;FileWriteLine($histfile, $entry)
+																				If $entries = "" Then
+																					$entries = $entry
+																				Else
+																					$entries = $entries & @CRLF & $entry
+																				EndIf
+																				;If $a > 500 Then ExitLoop
+																			Else
+																				ContinueLoop
+																			EndIf
+																		Else
+																			ContinueLoop
+																		EndIf
+																	Else
+																		ContinueLoop
+																	EndIf
+																Else
+																	ContinueLoop
+																EndIf
+															Else
+																ContinueLoop
+															EndIf
+														Else
+															ContinueLoop
+														EndIf
+													Else
+														ContinueLoop
+													EndIf
+												Else
+													ContinueLoop
+												EndIf
+											Else
+												ContinueLoop
+											EndIf
+										Else
+											ContinueLoop
+										EndIf
+									EndIf
+								EndIf
+							Next
+							If $entries <> "" Then
+								FileWriteLine($histfile, $entries)
+							EndIf
+						EndIf
+					EndIf
+				EndIf
+				SplashOff()
+			EndIf
+		EndIf
+	EndIf
+EndFunc ;=> HistoryCheckOne
+
+Func HistoryCheckTwo()
+	Local $amount, $block, $finished, $hours, $mins, $secs, $started, $taken, $titles
+	FileWriteLine($valhistory, $entry)
+	$ans = MsgBox(262177 + 256, "Program Advice & Query", "This program now has a 'Validation.log' file and Viewer, which" _
+		& @LF & "is available via the right-click 'Games' list context menu." & @LF _
+		& @LF & "Validation --> History Viewer" _
+		& @LF & "Validation --> Open the Validation file" & @LF _
+		& @LF & "This file gets populated with every manual validation, showing" _
+		& @LF & "the result (of the validation) and some detail." & @LF _
+		& @LF & "If you currently have a 'Log.txt' file with some validation records," _
+		& @LF & "then that can be processed now to populate the 'Validation.log'" _
+		& @LF & "file already. Doing so could take a few minutes if there are many" _
+		& @LF & "records." & @LF _
+		& @LF & "OK = Read the Log file and attempt to extract records." _
+		& @LF & "CANCEL = Ignore the Log file." & @LF _
+		& @LF & "NOTE - This is a once only opportunity to extract records from" _
+		& @LF & "the Log file ... short of deleting the 'Validation.log' file manually," _
+		& @LF & "and starting again, but with fewer details.", 0)
+	If $ans = 1 Then
+		If FileExists($logfle) Then
+			$cnt = _FileCountLines($logfle)
+			If $cnt > 1 Then
+				SplashTextOn("", "Creating History!", 200, 120, Default, Default, 33)
+				$entries = ""
+				; Need to read in the manifest file.
+				$manifests = FileRead($manifest)
+				If $manifests <> "" Then
+					$titles = @LF & FileRead($titlist)
+					$read = FileRead($logfle)
+					If $read <> "" Then
+						$array = StringSplit($read, @CRLF & @CRLF, 1)
+						If IsArray($array) Then
+							For $a = 1 To $array[0]
+								$block = $array[$a]
+								If $block <> "" Then
+									If StringInStr($block, " : Validating Game File.") > 0 Then
+										; NOTE - When a ContinueLoop occurs, no record is created.
+										; Skipping records where Size or MD5 or ZIP have failed.
+										$started = StringSplit($block, " : Validating Game File.", 1)
+										$block = $started[2]
+										If StringInStr($block, "Validate cancelled.") > 0 Then ContinueLoop
+										$started = $started[1]
+										$started = StringStripWS($started, 7)
+										$lines = StringSplit($block, @CRLF, 1)
+										$title = $lines[2]
+										$title = StringSplit($title, ' : ', 1)
+										$title = $title[2]
+										$title = StringReplace($title, '\u0026', '&')
+										$title = StringStripWS($title, 7)
+										$file = $lines[4]
+										$file = StringSplit($file, ' : ', 1)
+										$file = $file[2]
+										$file = StringStripWS($file, 7)
+										If StringInStr($entries, $file) > 0 Then
+											; Already exists so skip
+											ContinueLoop
+										EndIf
+										$fext = StringRight($file, 4)
+										If $fext <> ".bin" And $fext <> ".dmg" And $fext <> ".exe" And $fext <> ".pkg" And $fext <> ".zip" Then
+											$fext = StringRight($file, 3)
+											If $fext <> ".sh" Then
+												; Bad file type
+												ContinueLoop
+												; WARNING - There are some other file types on occasion, that will likely have a file size record
+												; and may even be a zip based file (i.e. PDF, RAR and 7Z). So we should probably cater.
+											EndIf
+										EndIf
+										$size = $lines[5]
+										$size = StringSplit($size, " : ", 1)
+										$size = $size[2]
+										If $size = "File Size passed." Then
+											$size = "pass"
+										ElseIf $size = "File Size failed." Then
+											$size = "fail"
+											ContinueLoop
+										Else
+											; Bad size check value
+											ContinueLoop
+										EndIf
+										;MsgBox(262208, "$block", $block)
+										$finished = $lines[6]
+										$finished = StringSplit($finished, " : ", 1)
+										$verify = $finished[2]
+										$finished = $finished[1]
+										$finished = StringStripWS($finished, 7)
+										$verify = StringStripWS($verify, 7)
+										If $verify = "MD5 (checksum) passed." Then
+											$md5check = "pass"
+											$zipcheck = "na"
+										ElseIf $verify = "MD5 (checksum) failed." Then
+											$md5check = "fail"
+											$zipcheck = "na"
+											ContinueLoop
+										ElseIf $verify = "ZIP check passed." Then
+											$zipcheck = "pass"
+											$md5check = "na"
+										ElseIf $verify = "ZIP check failed." Then
+											$zipcheck = "fail"
+											$md5check = "na"
+											ContinueLoop
+										Else
+											; Bad MD5 or Zip check value
+											ContinueLoop
+										EndIf
+										;MsgBox(262208, "$md5check", $md5check)
+										$entry = $file & @TAB & $title
+										; We need to get Game ID, Bytes and Checksum from the Manifest.
+										$games = StringSplit($manifests, $file, 1)
+										If $games[0] > 1 Then
+											; FILE FOUND IN MANIFEST
+											$check = $games[1]
+											$games = $games[2]
+											$check = StringSplit($check, '"Id":', 1)
+											If $check[0] > 1 Then
+												$check = $check[$check[0]]
+												$ID = StringSplit($check, ',', 1)
+												$ID = $ID[1]
+												$ID = StringStripWS($ID, 3)
+												If StringInStr($ID, ":") > 0 Then
+													; Bad ID value
+													ContinueLoop
+												EndIf
+												$check = StringSplit($games, '}', 1)
+												If $check[0] > 1 Then
+													$check = $check[1]
+													$bytes = StringSplit($check, '"VerifiedSize":', 1)
+													If $bytes[0] > 1 Then
+														$bytes = $bytes[2]
+														$bytes = StringSplit($bytes, ',', 1)
+														$bytes = $bytes[1]
+														$bytes = StringStripWS($bytes, 7)
+														If $bytes = "" Then $bytes = "na"
+														If StringInStr($bytes, ":") > 0 Then
+															; Bad bytes value
+															ContinueLoop
+														EndIf
+														If $bytes < 1024 Then
+															$amount = $bytes & " bytes"
+														ElseIf $bytes < 1048576 Then
+															$amount = Round($bytes / 1024, 0) & " Kb"
+														ElseIf $bytes < 1073741824 Then
+															$amount = Round($bytes / 1048576, 0) & " Mb"
+														ElseIf $bytes < 1099511627776 Then
+															$amount = Round($bytes / 1073741824, 2) & " Gb"
+														Else
+															$amount = Round($bytes / 1099511627776, 3) & " Tb"
+														EndIf
+														$checksum = StringSplit($check, '"Checksum":', 1)
+														If $checksum[0] > 1 Then
+															$checksum = $checksum[2]
+															$checksum = StringReplace($checksum, '"', '')
+															$checksum = StringReplace($checksum, '}', '')
+															$checksum = StringStripWS($checksum, 7)
+															If $checksum = "" Then $checksum = "na"
+															If StringInStr($checksum, ":") > 0 Then
+																; Bad checksum value
+																ContinueLoop
+															EndIf
+														Else
+															; Checksum missing from manifest
+															ContinueLoop
+														EndIf
+													Else
+														; Bytes missing from manifest
+														ContinueLoop
+													EndIf
+												Else
+													; Bad manifest split
+													ContinueLoop
+												EndIf
+											Else
+												; IDs missing from manifest
+												ContinueLoop
+											EndIf
+										Else
+											; File missing from manifest (probably replaced in an update).
+											; Check the Database.
+											$ID = StringSplit($titles, @LF & $title & "|", 1)
+											If $ID[0] > 1 Then
+												$ID = $ID[2]
+												$ID = StringSplit($ID, "|", 1)
+												$ID = $ID[1]
+												$slug = IniRead($gamesini, $ID, "slug", "")
+												If $slug = "" Then
+													; Use a different method due to possible Game Title change.
+													$slug = IniReadSection($existDB, $file)
+													If @error Then
+														$slug = ""
+													Else
+														; Value
+														;$value = $slug[1][1]
+														; Key
+														$slug = $slug[1][0]
+													EndIf
+												EndIf
+											Else
+												$slug = ""
+											EndIf
+											If $slug <> "" Then
+												$checksum = IniRead($existDB, $file, $slug, "")
+												If $checksum <> "" Then
+													; FILE FOUND IN DATABASE
+													$checksum = StringSplit($checksum, "|", 1)
+													$bytes = $checksum[1]
+													$checksum = $checksum[2]
+													If $bytes < 1024 Then
+														$amount = $bytes & " bytes"
+													ElseIf $bytes < 1048576 Then
+														$amount = Round($bytes / 1024, 0) & " Kb"
+													ElseIf $bytes < 1073741824 Then
+														$amount = Round($bytes / 1048576, 0) & " Mb"
+													ElseIf $bytes < 1099511627776 Then
+														$amount = Round($bytes / 1073741824, 2) & " Gb"
+													Else
+														$amount = Round($bytes / 1099511627776, 3) & " Tb"
+													EndIf
+													$entry = $entry & @TAB & $ID & @TAB & $bytes & @TAB & $amount & @TAB & $size & @TAB & $checksum
+													$entry = $entry & @TAB & $md5check & @TAB & $zipcheck & @TAB & $started & @TAB & $finished
+													; Get time taken for validation.
+													$started = StringReplace($started, '-', '/')
+													$finished = StringReplace($finished, '-', '/')
+													$taken = _DateDiff('s', $started, $finished)
+													$hours = "00"
+													$mins = "00"
+													$secs = "00"
+													If $taken > 59 Then
+														$mins = Floor($taken / 60)
+														$secs = $taken - ($mins * 60)
+														$secs = StringRight("0" & $secs, 2)
+														If $mins > 59 Then
+															$hours = Floor($mins / 60)
+															$mins = $mins - ($hours * 60)
+															$hours = StringRight("0" & $hours, 2)
+														EndIf
+														$mins = StringRight("0" & $mins, 2)
+														$secs = StringRight("0" & $secs, 2)
+													Else
+														;$taken = $taken & " secs"
+														If $taken > 0 Then
+															$secs = $taken
+															$secs = StringRight("0" & $secs, 2)
+														EndIf
+													EndIf
+													$taken = $hours & ":" & $mins & ":" & $secs
+													$entry = $entry & @TAB & $taken
+													;MsgBox(262208, "$entry", $entry & @LF & @LF & "Block = " & $a)
+													If $entries = "" Then
+														$entries = $entry
+													Else
+														$entries = $entries & @CRLF & $entry
+													EndIf
+												EndIf
+											EndIf
+											ContinueLoop
+										EndIf
+										$entry = $entry & @TAB & $ID & @TAB & $bytes & @TAB & $amount & @TAB & $size & @TAB & $checksum
+										$entry = $entry & @TAB & $md5check & @TAB & $zipcheck & @TAB & $started & @TAB & $finished
+										; Get time taken for validation.
+										$started = StringReplace($started, '-', '/')
+										$finished = StringReplace($finished, '-', '/')
+										$taken = _DateDiff('s', $started, $finished)
+										$hours = "00"
+										$mins = "00"
+										$secs = "00"
+										If $taken > 59 Then
+											$mins = Floor($taken / 60)
+											$secs = $taken - ($mins * 60)
+											$secs = StringRight("0" & $secs, 2)
+											If $mins > 59 Then
+												$hours = Floor($mins / 60)
+												$mins = $mins - ($hours * 60)
+												$hours = StringRight("0" & $hours, 2)
+											EndIf
+											$mins = StringRight("0" & $mins, 2)
+											$secs = StringRight("0" & $secs, 2)
+										Else
+											;$taken = $taken & " secs"
+											If $taken > 0 Then
+												$secs = $taken
+												$secs = StringRight("0" & $secs, 2)
+											EndIf
+										EndIf
+										$taken = $hours & ":" & $mins & ":" & $secs
+										$entry = $entry & @TAB & $taken
+										;MsgBox(262208, "$entry", $entry & @LF & @LF & "Block = " & $a)
+										If $entries = "" Then
+											$entries = $entry
+										Else
+											$entries = $entries & @CRLF & $entry
+										EndIf
+									ElseIf StringInStr($block, " : Validating Game Files.") > 0 Then
+										; NOTE - When a ContinueLoop occurs, no record is created.
+										; Skipping records where Size or MD5 or ZIP have failed.
+										$block = StringSplit($block, " : Validating Game Files.", 1)
+										$block = $block[2]
+										If StringInStr($block, "Validate cancelled.") > 0 Then ContinueLoop
+										;MsgBox(262208, "$block", $block)
+										$game = ""
+										$ID = ""
+										$lines = StringSplit($block, @CRLF, 1)
+										$title = $lines[2]
+										If StringInStr($title, "\") > 0 Then
+											; Skipping for now, because it is an old style validation entry that doesn't include the Game Title.
+											; But in reality, when not testing, we need to get the title from either the manifest or path tail.
+											;ContinueLoop
+											$title = StringSplit($title, '\', 1)
+											$title = $title[$title[0]]
+										Else
+											$title = StringSplit($title, ' : ', 1)
+											$title = $title[2]
+											$title = StringReplace($title, '\u0026', '&')
+											$title = StringStripWS($title, 7)
+										EndIf
+										;MsgBox(262208, "$title", $title)
+										For $l = 2 To $lines[0]
+											$line = $lines[$l]
+											$file = ""
+											$fext = StringRight($line, 4)
+											If $fext = ".bin" Or $fext = ".dmg" Or $fext = ".exe" Or $fext = ".pkg" Or $fext = ".zip" Then
+												$file = $line
+											Else
+												$fext = StringRight($line, 3)
+												If $fext = ".sh" Then
+													$file = $line
+												EndIf
+											EndIf
+											If $file <> "" Then
+												;MsgBox(262208, "$line", $line)
+												$file = StringSplit($file, ' : ', 1)
+												$started = $file[1]
+												$started = StringStripWS($started, 7)
+												$file = $file[2]
+												$file = StringStripWS($file, 7)
+												If StringInStr($file, "\") > 0 Then
+													$file = StringSplit($file, '\', 1)
+													$file = $file[$file[0]]
+												EndIf
+												If StringInStr($entries, $file) > 0 Then
+													; Already exists so skip
+													ContinueLoop
+												EndIf
+												$l = $l + 1
+												$size = $lines[$l]
+												$size = StringSplit($size, " : ", 1)
+												$size = $size[2]
+												If $size = "File Size passed." Then
+													$size = "pass"
+												ElseIf $size = "File Size failed." Then
+													$size = "fail"
+													ContinueLoop
+												Else
+													; Bad size check value
+													ContinueLoop
+												EndIf
+												$l = $l + 1
+												$line = $lines[$l]
+												$line = StringSplit($line, " : ", 1)
+												$verify = $line[2]
+												$verify = StringStripWS($verify, 7)
+												If $verify = "MD5 (checksum) passed." Then
+													$md5check = "pass"
+													$zipcheck = "na"
+												ElseIf $verify = "MD5 (checksum) failed." Then
+													$md5check = "fail"
+													$zipcheck = "na"
+													ContinueLoop
+												ElseIf $verify = "ZIP check passed." Then
+													$zipcheck = "pass"
+													$md5check = "na"
+												ElseIf $verify = "ZIP check failed." Then
+													$zipcheck = "fail"
+													$md5check = "na"
+													ContinueLoop
+												Else
+													; Bad MD5 or Zip check value
+													ContinueLoop
+												EndIf
+												$finished = $line[1]
+												$finished = StringStripWS($finished, 7)
+												$entry = $file & @TAB & $title
+												; We need to get Game ID, Bytes and Checksum from the Manifest.
+												If $ID = "" Then
+													; FIRST GAME FILE
+													; NOTE - We should only need to get the ID once per block.
+													$games = StringSplit($manifests, $file, 1)
+													If $games[0] > 1 Then
+														$check = $games[1]
+														$games = $games[2]
+														$check = StringSplit($check, '"Id":', 1)
+														If $check[0] > 1 Then
+															$check = $check[$check[0]]
+															$ID = StringSplit($check, ',', 1)
+															$ID = $ID[1]
+															$ID = StringStripWS($ID, 3)
+															If StringInStr($ID, ":") > 0 Then
+																; Bad ID value
+																$ID = ""
+																ContinueLoop
+															EndIf
+															$game = StringSplit($manifests, '"Id": ' & $ID, 1)
+															$game = $game[2]
+															$game = StringSplit($game, '"Id":', 1)
+															$game = $game[1]
+														Else
+															; IDs missing from manifest
+															ContinueLoop
+														EndIf
+													Else
+														; File missing from manifest
+														ContinueLoop
+													EndIf
+													;MsgBox(262208, "$ID", $ID)
+												Else
+													; OTHER GAME FILES
+													;MsgBox(262208, "$game", $game)
+													If $game = "" Then
+														; Bad ID split
+														ContinueLoop
+													Else
+														;MsgBox(262208, "$file", $file)
+														$games = StringSplit($game, $file, 1)
+														If $games[0] > 1 Then
+															$games = $games[2]
+														Else
+															; File missing from manifest (probably replaced in an update).
+															; Check the Database
+															$ID = StringSplit($titles, @LF & $title & "|", 1)
+															If $ID[0] > 1 Then
+																$ID = $ID[2]
+																$ID = StringSplit($ID, "|", 1)
+																$ID = $ID[1]
+																$slug = IniRead($gamesini, $ID, "slug", "")
+																If $slug = "" Then
+																	; Use a different method due to possible Game Title change.
+																	$slug = IniReadSection($existDB, $file)
+																	If @error Then
+																		$slug = ""
+																	Else
+																		; Value
+																		;$value = $slug[1][1]
+																		; Key
+																		$slug = $slug[1][0]
+																	EndIf
+																EndIf
+															Else
+																$slug = ""
+															EndIf
+															If $slug <> "" Then
+																$checksum = IniRead($existDB, $file, $slug, "")
+																If $checksum <> "" Then
+																	; FILE FOUND IN DATABASE
+																	$checksum = StringSplit($checksum, "|", 1)
+																	$bytes = $checksum[1]
+																	$checksum = $checksum[2]
+																	If $bytes < 1024 Then
+																		$amount = $bytes & " bytes"
+																	ElseIf $bytes < 1048576 Then
+																		$amount = Round($bytes / 1024, 0) & " Kb"
+																	ElseIf $bytes < 1073741824 Then
+																		$amount = Round($bytes / 1048576, 0) & " Mb"
+																	ElseIf $bytes < 1099511627776 Then
+																		$amount = Round($bytes / 1073741824, 2) & " Gb"
+																	Else
+																		$amount = Round($bytes / 1099511627776, 3) & " Tb"
+																	EndIf
+																	$entry = $entry & @TAB & $ID & @TAB & $bytes & @TAB & $amount & @TAB & $size & @TAB & $checksum
+																	$entry = $entry & @TAB & $md5check & @TAB & $zipcheck & @TAB & $started & @TAB & $finished
+																	; Get time taken for validation.
+																	$started = StringReplace($started, '-', '/')
+																	$finished = StringReplace($finished, '-', '/')
+																	$taken = _DateDiff('s', $started, $finished)
+																	$hours = "00"
+																	$mins = "00"
+																	$secs = "00"
+																	If $taken > 59 Then
+																		$mins = Floor($taken / 60)
+																		$secs = $taken - ($mins * 60)
+																		$secs = StringRight("0" & $secs, 2)
+																		If $mins > 59 Then
+																			$hours = Floor($mins / 60)
+																			$mins = $mins - ($hours * 60)
+																			$hours = StringRight("0" & $hours, 2)
+																		EndIf
+																		$mins = StringRight("0" & $mins, 2)
+																		$secs = StringRight("0" & $secs, 2)
+																	Else
+																		;$taken = $taken & " secs"
+																		If $taken > 0 Then
+																			$secs = $taken
+																			$secs = StringRight("0" & $secs, 2)
+																		EndIf
+																	EndIf
+																	$taken = $hours & ":" & $mins & ":" & $secs
+																	$entry = $entry & @TAB & $taken
+																	;MsgBox(262208, "$entry", $entry & @LF & @LF & "Block = " & $a)
+																	If $entries = "" Then
+																		$entries = $entry
+																	Else
+																		$entries = $entries & @CRLF & $entry
+																	EndIf
+																EndIf
+															Else
+																;$games = $games[1]
+																;MsgBox(262208, "$file $games", $file & @LF & $games)
+																;$check = StringSplit($games, '"Name":', 1)
+																;For $c = 1 To $check[0]
+																;	$line = $check[$c]
+																;	MsgBox(262208, "$file $line", $file & @LF & $line)
+																;Next
+															EndIf
+															ContinueLoop
+														EndIf
+													EndIf
+												EndIf
+												If $ID <> "" Then
+													$check = StringSplit($games, '}', 1)
+													If $check[0] > 1 Then
+														$check = $check[1]
+														;MsgBox(262208, "$check", $check)
+														$bytes = StringSplit($check, '"VerifiedSize":', 1)
+														If $bytes[0] > 1 Then
+															$bytes = $bytes[2]
+															$bytes = StringSplit($bytes, ',', 1)
+															$bytes = $bytes[1]
+															$bytes = StringStripWS($bytes, 7)
+															If $bytes = "" Then $bytes = "na"
+															If StringInStr($bytes, ":") > 0 Then
+																; Bad bytes value
+																ContinueLoop
+															EndIf
+															If $bytes < 1024 Then
+																$amount = $bytes & " bytes"
+															ElseIf $bytes < 1048576 Then
+																$amount = Round($bytes / 1024, 0) & " Kb"
+															ElseIf $bytes < 1073741824 Then
+																$amount = Round($bytes / 1048576, 0) & " Mb"
+															ElseIf $bytes < 1099511627776 Then
+																$amount = Round($bytes / 1073741824, 2) & " Gb"
+															Else
+																$amount = Round($bytes / 1099511627776, 3) & " Tb"
+															EndIf
+															$checksum = StringSplit($check, '"Checksum":', 1)
+															If $checksum[0] > 1 Then
+																$checksum = $checksum[2]
+																$checksum = StringReplace($checksum, '"', '')
+																$checksum = StringReplace($checksum, '}', '')
+																$checksum = StringStripWS($checksum, 7)
+																If $checksum = "" Then $checksum = "na"
+																If StringInStr($checksum, ":") > 0 Then
+																	; Bad checksum value
+																	ContinueLoop
+																EndIf
+																;MsgBox(262208, "$bytes $checksum", $bytes & @LF & $checksum)$amount
+																$entry = $entry & @TAB & $ID & @TAB & $bytes & @TAB & $amount & @TAB & $size & @TAB & $checksum
+																;MsgBox(262208, "$entry", $entry)
+																$entry = $entry & @TAB & $md5check & @TAB & $zipcheck & @TAB & $started & @TAB & $finished
+																;MsgBox(262208, "$entry", $entry)
+																; Get time taken for validation.
+																$started = StringReplace($started, '-', '/')
+																$finished = StringReplace($finished, '-', '/')
+																$taken = _DateDiff('s', $started, $finished)
+																$hours = "00"
+																$mins = "00"
+																$secs = "00"
+																If $taken > 59 Then
+																	$mins = Floor($taken / 60)
+																	$secs = $taken - ($mins * 60)
+																	$secs = StringRight("0" & $secs, 2)
+																	If $mins > 59 Then
+																		$hours = Floor($mins / 60)
+																		$mins = $mins - ($hours * 60)
+																		$hours = StringRight("0" & $hours, 2)
+																	EndIf
+																	$mins = StringRight("0" & $mins, 2)
+																	$secs = StringRight("0" & $secs, 2)
+																Else
+																	;$taken = $taken & " secs"
+																	If $taken > 0 Then
+																		$secs = $taken
+																		$secs = StringRight("0" & $secs, 2)
+																	EndIf
+																EndIf
+																$taken = $hours & ":" & $mins & ":" & $secs
+																$entry = $entry & @TAB & $taken
+																;MsgBox(262208, "$entry", $entry & @LF & @LF & "Block = " & $a)
+																If $entries = "" Then
+																	$entries = $entry
+																Else
+																	$entries = $entries & @CRLF & $entry
+																EndIf
+															Else
+																; Checksum missing from manifest
+																ContinueLoop
+															EndIf
+														Else
+															; Bytes missing from manifest
+															ContinueLoop
+														EndIf
+													Else
+														; Bad manifest split
+														ContinueLoop
+													EndIf
+												EndIf
+											EndIf
+										Next
+										;Exit
+									EndIf
+								EndIf
+							Next
+							If $entries <> "" Then
+								FileWriteLine($valhistory, $entries)
+							EndIf
+						EndIf
+					EndIf
+				EndIf
+				SplashOff()
+			EndIf
+		EndIf
+	EndIf
+EndFunc ;=> HistoryCheckTwo
 
 Func ParseTheGamelist()
 	Local $new, $p, $split, $splits, $titles, $uplist
@@ -12149,6 +12192,7 @@ Func SetStateOfControls($state, $which = "")
 	GUICtrlSetState($Button_find, $state)
 	GUICtrlSetState($Button_sub, $state)
 	GUICtrlSetState($Button_last, $state)
+	GUICtrlSetState($Button_ontop, $state)
 	GUICtrlSetState($Button_pic, $state)
 	GUICtrlSetState($Checkbox_show, $state)
 	GUICtrlSetState($Button_get, $state)
