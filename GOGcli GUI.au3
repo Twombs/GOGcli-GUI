@@ -11,7 +11,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; FUNCTIONS
-; MainGUI(), SetupGUI(), FileSelectorGUI(), GameDetailsGUI(), GenreLists($action), OptionsWindow()
+; MainGUI(), SetupGUI(), FileSelectorGUI(), CreateSubFolderGUI(), GameDetailsGUI(), GenreLists($action), OptionsWindow()
 ;
 ; BackupManifestEtc(), ClearFieldValues(), CompareFilesToManifest($numb), FillTheGamesList(), FixAllText($text), FixText($text), FixTitle($text)
 ; FixUnicode($text), GetChecksumQuery($rat), GetFileDownloadDetails($listview), GetGameFolderNameAndPath($titleF, $slugF), GetGOGcliVersion()
@@ -49,8 +49,8 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $update, $version
 
-$update = "Updated in August 2022."
-$version = "v3.3"
+$update = "Updated in September 2022."
+$version = "v3.4"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -97,10 +97,10 @@ Global $ignore, $image, $imgfle, $include, $ind, $inifle, $json, $keep, $key, $l
 Global $listview, $log, $logfle, $lowid, $m, $manall, $manalt, $manifest, $manifests, $manlist, $md5check, $mini, $minimize, $model, $n, $name
 Global $num, $numb, $offline, $ontop, $OP, $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping, $pinged, $processed
 Global $progress, $pth, $purge, $r, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $rest, $results, $ret, $return, $row, $s, $same
-Global $savkeys, $savlog, $second, $selector, $session, $SetupGUI, $shell, $size, $slug, $slugF, $slugfld, $space, $splash, $state, $stop
-Global $style, $subfold, $SYS, $tag, $tagfle, $tail, $text, $title, $titleF, $titleID, $titleIDup, $titlist, $top, $type, $types, $typs
-Global $updated, $updates, $URL, $user, $valhistory, $validate, $verify, $warn, $web, $which, $width, $winpos, $xtra, $z, $zipcheck
-Global $zipfile, $zippath
+Global $savkeys, $savlog, $second, $selector, $session, $SetupGUI, $shell, $size, $slug, $slugF, $space, $splash, $state, $stop, $style
+Global $subfold, $SYS, $tag, $tagfle, $tail, $text, $title, $titleF, $titleID, $titleIDup, $titlist, $top, $type, $types, $typs, $updated
+Global $updates, $URL, $user, $valhistory, $validate, $verify, $warn, $web, $which, $width, $winpos, $xtra, $z, $zipcheck, $zipfile, $zippath
+
 ;, $foldzip, $resultfle
 
 $addlist = @ScriptDir & "\Added.txt"
@@ -247,9 +247,9 @@ Func MainGUI()
 	Local $compall, $compone, $ctrl, $delay, $description, $destfld, $destfle, $dir, $disable, $display, $dll, $e, $error
 	Local $everything, $exist, $existing, $fext, $filelist, $find, $finished, $fixed, $flename, $foldpth, $former, $gambak
 	Local $get, $hours, $IDD, $idlink, $ids, $l, $language, $languages, $last, $lastgame, $lastgen, $lastone, $latest, $loop
-	Local $manfold, $mans, $method, $mins, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $patchfld, $paths, $pos, $prior
-	Local $proceed, $query, $red, $rep, $result, $retrieve, $savtxt, $secs, $sect, $sects, $serial, $shift, $skipped, $slugD
-	Local $started, $tagtxt, $taken, $tested, $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
+	Local $manfold, $mans, $method, $mins, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $paths, $pos, $prior, $proceed
+	Local $query, $red, $rep, $result, $retrieve, $savtxt, $secs, $sect, $sects, $serial, $shift, $skipped, $slugD, $started
+	Local $tagtxt, $taken, $tested, $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
 	;
 	If Not FileExists($blackjpg) Then
 		Local $hBitmap, $hGraphic, $hImage
@@ -1153,41 +1153,7 @@ Func MainGUI()
 				If $title <> "" Then
 					GetGameFolderNameAndPath($title, $slug)
 					If FileExists($gamefold) Then
-						$ans = MsgBox(262177 + 256, "Create & Relocate Query - OS", _
-							"This option creates a sub-folder in the destination folder" & @LF & _
-							"of the selected game title, using the 'Slug' title as name." & @LF & @LF & _
-							"The process also copies any 'Folder.jpg' file to that new" & @LF & _
-							"sub-folder, along with moving (relocating) any Linux or" & @LF & _
-							"Mac files to it as well." & @LF & @LF & _
-							"Click OK to continue ... or CANCEL to skip to next." & @LF & @LF & _
-							"NOTE - Create a Patches sub-folder query comes next.", 0, $GOGcliGUI)
-						If $ans = 1 Then
-							$slugfld = $gamefold & "\" & $slug
-							If Not FileExists($slugfld) Then DirCreate($slugfld)
-							If FileExists($slugfld) Then
-								FileCopy($gamefold & "\Folder.jpg", $slugfld & "\")
-								FileMove($gamefold & "\*.sh", $slugfld & "\")
-								FileMove($gamefold & "\*.dmg", $slugfld & "\")
-								FileMove($gamefold & "\*.pkg", $slugfld & "\")
-							EndIf
-						EndIf
-						$ans = MsgBox(262177 + 256, "Create & Relocate Query - Patches", _
-							"This option creates a sub-folder in the destination folder of" & @LF & _
-							"the selected game title, using the text '_Patches' as name." & @LF & @LF & _
-							"The process also copies any 'patch' named files to that new" & @LF & _
-							"sub-folder." & @LF & @LF & _
-							"Click OK to continue ... or CANCEL to abort.", 0, $GOGcliGUI)
-						If $ans = 1 Then
-							$patchfld = $gamefold & "\_Patches"
-							If Not FileExists($patchfld) Then DirCreate($patchfld)
-							If FileExists($patchfld) Then
-								FileMove($gamefold & "\patch*.exe", $patchfld & "\")
-								FileMove($gamefold & "\patch*.bin", $patchfld & "\")
-								FileMove($gamefold & "\patch*.sh", $patchfld & "\")
-								FileMove($gamefold & "\patch*.dmg", $patchfld & "\")
-								FileMove($gamefold & "\patch*.pkg", $patchfld & "\")
-							EndIf
-						EndIf
+						CreateSubFolderGUI()
 					Else
 						MsgBox(262192, "Path Error", "Game folder does not exist!", 0, $GOGcliGUI)
 					EndIf
@@ -8973,6 +8939,119 @@ Func FileSelectorGUI()
 	WEnd
 EndFunc ;=> FileSelectorGUI
 
+Func CreateSubFolderGUI()
+	Local $Button_create, $Checkbox_extras, $Checkbox_linux, $Checkbox_patch, $Checkbox_sound, $Checkbox_update, $Group_subs
+	Local $Label_info, $CreateSubsGUI, $patchfld, $slugfld, $subfld
+	;
+	$CreateSubsGUI = GuiCreate("Create Sub-Folders", 490, 160, Default, Default, $WS_OVERLAPPED + $WS_CAPTION + $WS_SYSMENU _
+																+ $WS_VISIBLE + $WS_CLIPSIBLINGS, $WS_EX_TOPMOST, $GOGcliGUI)
+	GUISetBkColor(0xFFBB77, $CreateSubsGUI)
+	;
+	; CONTROLS
+	$Group_subs = GuiCtrlCreateGroup("Create the following Sub-Folders", 10, 10, 380, 50)
+	$Checkbox_linux = GUICtrlCreateCheckbox("Linux or Mac", 20, 30, 80, 20)
+	GUICtrlSetTip($Checkbox_linux, "Create a Slug title sub-folder and relocate applicable content!")
+	$Checkbox_patch = GUICtrlCreateCheckbox("Patches", 110, 30, 60, 20)
+	GUICtrlSetTip($Checkbox_patch, "Create a Patches sub-folder and relocate applicable content!")
+	$Checkbox_update = GUICtrlCreateCheckbox("Updates", 180, 30, 60, 20)
+	GUICtrlSetTip($Checkbox_update, "Create an Updates sub-folder and relocate applicable content!")
+	$Checkbox_sound = GUICtrlCreateCheckbox("Soundtrack", 249, 30, 70, 20)
+	GUICtrlSetTip($Checkbox_sound, "Create a Soundtrack sub-folder and relocate applicable content!")
+	$Checkbox_extras = GUICtrlCreateCheckbox("Extras", 332, 30, 50, 20)
+	GUICtrlSetTip($Checkbox_extras, "Create an Extras sub-folder and relocate applicable content!")
+	;
+	$Button_create = GuiCtrlCreateButton("CREATE", 400, 15, 80, 45)
+	GUICtrlSetFont($Button_create, 9, 600)
+	GUICtrlSetTip($Button_create, "Create selected sub-folders!")
+	;
+	$Label_info = GUICtrlCreateLabel("Depending on selected options, sub-folders are created in the game folder, based on the option" & @LF & _
+		"type. In the case of Linux or Mac that will be a sub-folder with the Slug title as its name, else it" & @LF & _
+		"will be the option name preceded by an underslash. All applicable game folder content will be" & @LF & _
+		"moved to the matching sub-folder, plus the cover image will be copied to the Slug title folder." & @LF & _
+		"NOTE - Success depends on how files are named, so manually relocate where needed." & @LF & _
+		"ADVICE - Left to Right relocation priority is used with the create options and process.", 15, 70, 460, 100, $SS_CENTER)
+
+	GuiSetState(@SW_SHOW, $CreateSubsGUI)
+	While 1
+		$msg = GuiGetMsg()
+		Select
+		Case $msg = $GUI_EVENT_CLOSE
+			; Exit / Close / Quit the window
+			GUIDelete($CreateSubsGUI)
+			ExitLoop
+		Case $msg = $Button_create
+			; Create selected sub-folders and relocate applicable content.
+			If GUICtrlRead($Checkbox_linux) = $GUI_CHECKED Then
+				$slugfld = $gamefold & "\" & $slug
+				If Not FileExists($slugfld) Then DirCreate($slugfld)
+				If FileExists($slugfld) Then
+					FileCopy($gamefold & "\Folder.jpg", $slugfld & "\")
+					FileMove($gamefold & "\*.sh", $slugfld & "\")
+					FileMove($gamefold & "\*.dmg", $slugfld & "\")
+					FileMove($gamefold & "\*.pkg", $slugfld & "\")
+					FileMove($gamefold & "\*_linux.zip", $slugfld & "\")
+					FileMove($gamefold & "\*_mac.zip", $slugfld & "\")
+				EndIf
+			EndIf
+			If GUICtrlRead($Checkbox_patch) = $GUI_CHECKED Then
+				$patchfld = $gamefold & "\_Patches"
+				If Not FileExists($patchfld) Then DirCreate($patchfld)
+				If FileExists($patchfld) Then
+					FileMove($gamefold & "\patch*.exe", $patchfld & "\")
+					FileMove($gamefold & "\patch*.bin", $patchfld & "\")
+					FileMove($gamefold & "\patch*.sh", $patchfld & "\")
+					FileMove($gamefold & "\patch*.dmg", $patchfld & "\")
+					FileMove($gamefold & "\patch*.pkg", $patchfld & "\")
+				EndIf
+			EndIf
+			If GUICtrlRead($Checkbox_update) = $GUI_CHECKED Then
+				$subfld = $gamefold & "\_Updates"
+				If Not FileExists($subfld) Then DirCreate($subfld)
+				If FileExists($subfld) Then
+					FileMove($gamefold & "\*.exe", $subfld & "\")
+					FileMove($gamefold & "\*.bin", $subfld & "\")
+					FileMove($gamefold & "\*.sh", $subfld & "\")
+					FileMove($gamefold & "\*.dmg", $subfld & "\")
+					FileMove($gamefold & "\*.pkg", $subfld & "\")
+				EndIf
+			EndIf
+			If GUICtrlRead($Checkbox_sound) = $GUI_CHECKED Then
+				$subfld = $gamefold & "\_Soundtrack"
+				If Not FileExists($subfld) Then DirCreate($subfld)
+				If FileExists($subfld) Then
+					FileMove($gamefold & "\*_soundtrack.zip", $subfld & "\")
+					FileMove($gamefold & "\soundtrack.zip", $subfld & "\")
+					FileMove($gamefold & "\*_music.zip", $subfld & "\")
+					FileMove($gamefold & "\music.zip", $subfld & "\")
+					FileMove($gamefold & "\*_flac.zip", $subfld & "\")
+					FileMove($gamefold & "\flac.zip", $subfld & "\")
+					FileMove($gamefold & "\*_mp3.zip", $subfld & "\")
+					FileMove($gamefold & "\mp3.zip", $subfld & "\")
+					FileMove($gamefold & "\*_wav.zip", $subfld & "\")
+					FileMove($gamefold & "\wav.zip", $subfld & "\")
+					FileMove($gamefold & "\*_ost.zip", $subfld & "\")
+					FileMove($gamefold & "\ost.zip", $subfld & "\")
+					FileMove($gamefold & "\*_ost_*.zip", $subfld & "\")
+					FileMove($gamefold & "\*_ogg.zip", $subfld & "\")
+					FileMove($gamefold & "\ogg.zip", $subfld & "\")
+				EndIf
+			EndIf
+			If GUICtrlRead($Checkbox_extras) = $GUI_CHECKED Then
+				$subfld = $gamefold & "\_Extras"
+				If Not FileExists($subfld) Then DirCreate($subfld)
+				If FileExists($subfld) Then
+					FileMove($gamefold & "\*.zip", $subfld & "\")
+					FileMove($gamefold & "\*.rar", $subfld & "\")
+					FileMove($gamefold & "\*.7z", $subfld & "\")
+					FileMove($gamefold & "\*.pdf", $subfld & "\")
+				EndIf
+			EndIf
+		Case Else
+			;;;
+		EndSelect
+	WEnd
+EndFunc ;=> CreateSubFolderGUI
+
 Func GameDetailsGUI()
 	Local $Button_all, $Button_cdkey, $Button_changelog, $Button_close, $Button_descript, $Button_general, $Button_ID, $Button_manifest
 	Local $Button_URL, $Checkbox_changelog, $Checkbox_descript, $Checkbox_game, $Checkbox_games, $Checkbox_local, $Checkbox_purge
@@ -9101,7 +9180,7 @@ Func GameDetailsGUI()
 			GUIDelete($DetailsGUI)
 			ExitLoop
 		Case $msg = $Button_URL
-			; Copy the Game PAge URL to clipboard
+			; Copy the Game Page URL to clipboard
 			$link = "https://www.gog.com" & $web
 			ClipPut($link)
 		Case $msg = $Button_manifest

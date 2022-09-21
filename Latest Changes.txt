@@ -1,2 +1,2 @@
 
-GOGcli GUI v3.3 update has an ON TOP button, to set the program window state for the main window and the 'Game Files Selector' window. Some code has been relocated to improve things for me. Added detection for gogcli.exe version 0.21.0.
+GOGcli GUI v3.4 update has some improvements to the sub-folder creation process used by the SUB button. A GUI is now presented rather than two query dialogs, and three additional sub-folders can be created, and applicable file content relocated to them, where suitably named.
