@@ -1153,7 +1153,10 @@ Func MainGUI()
 				If $title <> "" Then
 					GetGameFolderNameAndPath($title, $slug)
 					If FileExists($gamefold) Then
+						GuiSetState(@SW_DISABLE, $GOGcliGUI)
 						CreateSubFolderGUI()
+						GuiSetState(@SW_ENABLE, $GOGcliGUI)
+						GUICtrlSetState($Listview_games, $GUI_FOCUS)
 					Else
 						MsgBox(262192, "Path Error", "Game folder does not exist!", 0, $GOGcliGUI)
 					EndIf
