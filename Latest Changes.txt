@@ -1,2 +1,2 @@
 
-GOGcli GUI v3.4 update has some improvements to the sub-folder creation process used by the SUB button. A GUI is now presented rather than two query dialogs, and three additional sub-folders can be created, and applicable file content relocated to them, where suitably named.
+GOGcli GUI v3.5 update has bugfixes, plus another Games list right-click feature 'Title Search Lists' to create a text file with just the games with the search term you specify or select (i.e. Demos, Prologues, Deluxe Editions, etc). NOTE - Up to five specified search terms can be used with the Custom choices. The LAST button can also be used to cycle the results on the Games list, when enabled.

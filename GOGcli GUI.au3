@@ -50,7 +50,7 @@ Local $exe, $script, $status, $w, $wins
 Global $handle, $pid, $Scriptname, $update, $version
 
 $update = "Updated in September 2022."
-$version = "v3.4"
+$version = "v3.5"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -98,8 +98,9 @@ Global $listview, $log, $logfle, $lowid, $m, $manall, $manalt, $manifest, $manif
 Global $num, $numb, $offline, $ontop, $OP, $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping, $pinged, $processed
 Global $progress, $pth, $purge, $r, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $rest, $results, $ret, $return, $row, $s, $same
 Global $savkeys, $savlog, $second, $selector, $session, $SetupGUI, $shell, $size, $slug, $slugF, $space, $splash, $state, $stop, $style
-Global $subfold, $SYS, $tag, $tagfle, $tail, $text, $title, $titleF, $titleID, $titleIDup, $titlist, $top, $type, $types, $typs, $updated
-Global $updates, $URL, $user, $valhistory, $validate, $verify, $warn, $web, $which, $width, $winpos, $xtra, $z, $zipcheck, $zipfile, $zippath
+Global $subfold, $SYS, $tag, $tagfle, $tail, $text, $titcheck, $titfold, $title, $titleF, $titleID, $titleIDup, $titlist, $titslist, $top
+Global $type, $types, $typs, $updated, $updates, $URL, $user, $valhistory, $validate, $verify, $warn, $web, $which, $width, $winpos, $xtra
+Global $z, $zipcheck, $zipfile, $zippath
 
 ;, $foldzip, $resultfle
 
@@ -144,6 +145,7 @@ $reportexe = @ScriptDir & "\Report.exe"
 $results = @ScriptDir & "\Results.ini"
 $splash = @ScriptDir & "\Splash.jpg"
 $tagfle = @ScriptDir & "\Tags.ini"
+$titfold = @ScriptDir & "\Title Search Lists"
 $titlist = @ScriptDir & "\Titles.txt"
 $updated = @ScriptDir & "\Updated.txt"
 $valhistory = @ScriptDir & "\Validations.log"
@@ -171,6 +173,7 @@ If Not FileExists($descriptions) Then DirCreate($descriptions)
 If Not FileExists($downlist) Then _FileCreate($downlist)
 ;~ If Not FileExists($foldzip) Then DirCreate($foldzip)
 If Not FileExists($genfold) Then DirCreate($genfold)
+If Not FileExists($titfold) Then DirCreate($titfold)
 If Not FileExists($updated) Then _FileCreate($updated)
 
 If FileExists($manifest) Then
@@ -233,12 +236,13 @@ Func MainGUI()
 	Local $Item_compare_report, $Item_compare_view, $Item_compare_wipe, $Item_compare_yellow, $Item_database_display
 	Local $Item_database_prior, $Item_database_view, $Item_down_clear, $Item_down_history, $Item_down_view
 	Local $Item_exclude_bin, $Item_exclude_dmg, $Item_exclude_exe, $Item_exclude_pkg, $Item_exclude_sh
-	Local $Item_exclude_zip, $Item_lists_dlcs, $Item_lists_keys, $Item_lists_latest, $Item_lists_tags, $Item_man_clear
-	Local $Item_man_view, $Item_manifest_entry, $Item_manifest_fix, $Item_manifest_orphan, $Item_manifest_view
-	Local $Item_save_keys, $Item_updated_dupes, $Item_updated_list, $Item_updated_mark, $Item_validate_histfle
+	Local $Item_exclude_zip, $Item_genres_create, $Item_genres_enable, $Item_genres_view, $Item_lists_dlcs, $Item_lists_keys
+	Local $Item_lists_latest, $Item_lists_tags, $Item_man_clear, $Item_man_view, $Item_manifest_entry, $Item_manifest_fix
+	Local $Item_manifest_orphan, $Item_manifest_view, $Item_save_keys, $Item_titles_create, $Item_titles_enable
+	Local $Item_titles_view, $Item_updated_dupes, $Item_updated_list, $Item_updated_mark, $Item_validate_histfle
 	Local $Item_validate_history, $Label_progress, $Progress_valid, $Sub_menu_alerts, $Sub_menu_checklist
-	Local $Sub_menu_comparisons, $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_exclude, $Sub_menu_lists
-	Local $Sub_menu_manifest, $Sub_menu_manifests, $Sub_menu_save, $Sub_menu_updated, $Sub_menu_validate
+	Local $Sub_menu_comparisons, $Sub_menu_database, $Sub_menu_downloads, $Sub_menu_exclude, $Sub_menu_genres, $Sub_menu_lists
+	Local $Sub_menu_manifest, $Sub_menu_manifests, $Sub_menu_save, $Sub_menu_titles, $Sub_menu_updated, $Sub_menu_validate
 	;
 	Local $downall, $Sub_menu_downall, $Item_downall_clear, $Item_downall_create, $Item_downall_disable, $Item_downall_display
 	Local $Item_downall_info, $Item_downall_list, $Item_downall_log, $Item_downall_opts, $Item_downall_start, $Item_downall_view
@@ -246,10 +250,10 @@ Func MainGUI()
 	Local $addto, $alias, $amount, $aqua, $arraytits, $buttxt, $c, $changelog, $chunk, $col1, $col2, $col3, $col4
 	Local $compall, $compone, $ctrl, $delay, $description, $destfld, $destfle, $dir, $disable, $display, $dll, $e, $error
 	Local $everything, $exist, $existing, $fext, $filelist, $find, $finished, $fixed, $flename, $foldpth, $former, $gambak
-	Local $get, $hours, $IDD, $idlink, $ids, $l, $language, $languages, $last, $lastgame, $lastgen, $lastone, $latest, $loop
-	Local $manfold, $mans, $method, $mins, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $paths, $pos, $prior, $proceed
-	Local $query, $red, $rep, $result, $retrieve, $savtxt, $secs, $sect, $sects, $serial, $shift, $skipped, $slugD, $started
-	Local $tagtxt, $taken, $tested, $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
+	Local $get, $hours, $IDD, $idlink, $ids, $l, $language, $languages, $last, $lastgame, $lastgen, $lastone, $lasttit, $latest
+	Local $loop, $manfold, $mans, $method, $mins, $mpos, $nmb, $OPS, $orange, $orphans, $outline, $p, $paths, $pos, $prior
+	Local $proceed, $query, $red, $rep, $result, $retrieve, $savtxt, $secs, $sect, $sects, $serial, $shift, $skipped, $slugD
+	Local $started, $tagtxt, $taken, $tested, $titleD, $upd, $valfold, $valnow, $values, $xpos, $yellow, $ypos
 	;
 	If Not FileExists($blackjpg) Then
 		Local $hBitmap, $hGraphic, $hImage
@@ -588,6 +592,14 @@ Func MainGUI()
 	$Item_save_keys = GUICtrlCreateMenuItem("CDkey or Serial", $Sub_menu_save)
 	GUICtrlCreateMenuItem("", $Menu_list)
 	GUICtrlCreateMenuItem("", $Menu_list)
+	$Sub_menu_titles = GUICtrlCreateMenu("Title Search Lists", $Menu_list)
+	$Item_titles_create = GUICtrlCreateMenuItem("Create", $Sub_menu_titles)
+	GUICtrlCreateMenuItem("", $Sub_menu_titles)
+	$Item_titles_view = GUICtrlCreateMenuItem("View", $Sub_menu_titles)
+	GUICtrlCreateMenuItem("", $Sub_menu_titles)
+	$Item_titles_enable = GUICtrlCreateMenuItem("Enable", $Sub_menu_titles, -1, 0)
+	GUICtrlCreateMenuItem("", $Menu_list)
+	GUICtrlCreateMenuItem("", $Menu_list)
 	$Sub_menu_updated = GUICtrlCreateMenu("Updated", $Menu_list)
 	$Item_updated_mark = GUICtrlCreateMenuItem("Mark Orange", $Sub_menu_updated)
 	GUICtrlCreateMenuItem("", $Sub_menu_updated)
@@ -693,6 +705,7 @@ Func MainGUI()
 	;
 	$gencheck = 4
 	$listcheck = 4
+	$titcheck = 4
 	;
 	$ignore = IniRead($inifle, "Compare Options", "ignore", "")
 	If $ignore = "" Then
@@ -1027,6 +1040,7 @@ Func MainGUI()
 	$last = ""
 	$lastgen = ""
 	$lastone = ""
+	$lasttit = ""
 	$ratify = 4
 	$verify = 4
 	$valnow = ""
@@ -1650,41 +1664,83 @@ Func MainGUI()
 			; Find the latest added game(s)
 			If $listcheck = 4 Then
 				If $gencheck = 4 Then
-					If _IsPressed("11") Then $last = ""
-					If FileExists($addlist) Then
-						$res = _FileReadToArray($addlist, $latest)
-						If $res = 1 Then
-							If $last = "" Then
-								$last = $latest[0]
-								$title = $latest[$last]
-							Else
-								If $last > 1 Then
-									$last = $last - 1
-								Else
+					If $titcheck = 4 Then
+						; Last Added Check
+						If _IsPressed("11") Then $last = ""
+						If FileExists($addlist) Then
+							$res = _FileReadToArray($addlist, $latest)
+							If $res = 1 Then
+								If $last = "" Then
 									$last = $latest[0]
+									$title = $latest[$last]
+								Else
+									If $last > 1 Then
+										$last = $last - 1
+									Else
+										$last = $latest[0]
+									EndIf
+									$title = $latest[$last]
 								EndIf
-								$title = $latest[$last]
-							EndIf
-							$ind = -1
-							While 1
-								$ind = _GUICtrlListView_FindInText($Listview_games, $title, $ind, False, False)
-								If $ind = -1 Then ExitLoop
-								If _GUICtrlListView_GetItemText($Listview_games, $ind, 1) = $title Then ExitLoop
-							WEnd
-							If $ind > -1 Then
-								GUICtrlSetState($Listview_games, $GUI_FOCUS)
-								_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
-								ContinueLoop
+								$ind = -1
+								While 1
+									$ind = _GUICtrlListView_FindInText($Listview_games, $title, $ind, False, False)
+									If $ind = -1 Then ExitLoop
+									If _GUICtrlListView_GetItemText($Listview_games, $ind, 1) = $title Then ExitLoop
+								WEnd
+								If $ind > -1 Then
+									GUICtrlSetState($Listview_games, $GUI_FOCUS)
+									_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+									ContinueLoop
+								EndIf
+							Else
+								MsgBox(262192, "Read Error", "Added.txt file not read!", 0, $GOGcliGUI)
 							EndIf
 						Else
-							MsgBox(262192, "Read Error", "Added.txt file not read!", 0, $GOGcliGUI)
+							MsgBox(262192, "File Error", "Added.txt file not found!", 0, $GOGcliGUI)
 						EndIf
 					Else
-						MsgBox(262192, "File Error", "Added.txt file not found!", 0, $GOGcliGUI)
+						; Title Search List Check
+						If _IsPressed("11") Then $lasttit = ""
+						If FileExists($titslist) Then
+							$res = _FileReadToArray($titslist, $latest)
+							If $res = 1 Then
+								If $lasttit = "" Then
+									$lasttit = $latest[0]
+									$entry = $latest[$lasttit]
+								Else
+									If $lasttit > 1 Then
+										$lasttit = $lasttit - 1
+									Else
+										$lasttit = $latest[0]
+									EndIf
+									$entry = $latest[$lasttit]
+								EndIf
+								$title = StringSplit($entry, "|", 1)
+								$ID = $title[1]
+								$title = $title[2]
+								$ind = -1
+								While 1
+									$ind = _GUICtrlListView_FindInText($Listview_games, $title, $ind, False, False)
+									If $ind = -1 Then ExitLoop
+									If _GUICtrlListView_GetItemText($Listview_games, $ind, 1) = $title _
+										And _GUICtrlListView_GetItemText($Listview_games, $ind, 0) = $ID Then ExitLoop
+								WEnd
+								If $ind > -1 Then
+									GUICtrlSetState($Listview_games, $GUI_FOCUS)
+									_GUICtrlListView_ClickItem($Listview_games, $ind, "left", False, 1, 1)
+									ContinueLoop
+								EndIf
+							Else
+								MsgBox(262192, "Read Error", "Title Search List file not read!", 0, $GOGcliGUI)
+							EndIf
+						Else
+							MsgBox(262192, "File Error", "Title Search List file not found!", 0, $GOGcliGUI)
+						EndIf
 					EndIf
 				Else
+					; Genre List Check
 					If _IsPressed("11") Then $lastgen = ""
-					If FileExists($checklist) Then
+					If FileExists($genlist) Then
 						$res = _FileReadToArray($genlist, $latest)
 						If $res = 1 Then
 							If $lastgen = "" Then
@@ -1714,13 +1770,14 @@ Func MainGUI()
 								ContinueLoop
 							EndIf
 						Else
-							MsgBox(262192, "Read Error", "Checklist.txt file not read!", 0, $GOGcliGUI)
+							MsgBox(262192, "Read Error", "Genre List file not read!", 0, $GOGcliGUI)
 						EndIf
 					Else
-						MsgBox(262192, "File Error", "Checklist.txt file not found!", 0, $GOGcliGUI)
+						MsgBox(262192, "File Error", "Genre List file not found!", 0, $GOGcliGUI)
 					EndIf
 				EndIf
 			Else
+				; Checklist Check
 				If _IsPressed("11") Then $lastone = ""
 				If FileExists($checklist) Then
 					$res = _FileReadToArray($checklist, $latest)
@@ -4391,6 +4448,33 @@ Func MainGUI()
 				ShellExecute($updated)
 			EndIf
 			GUICtrlSetState($Listview_games, $GUI_FOCUS)
+		Case $msg = $Item_titles_view
+			; Title Search Lists - View
+			$lasttit = ""
+			TitleLists("View")
+		Case $msg = $Item_titles_enable
+			; Title Search Lists - Enable
+			If $titcheck = 4 Then
+				TitleLists("Enable")
+				If $titcheck = 1 Then
+					If $listcheck = 1 Then
+						$listcheck = 4
+						GUICtrlSetState($Item_checklist_enable, $listcheck)
+					ElseIf $gencheck = 1 Then
+						$gencheck = 4
+						GUICtrlSetState($Item_genres_enable, $gencheck)
+					EndIf
+					MsgBox(262208, "Advise", "The 'Last' button will now use that Title Search list.", 0, $GOGcliGUI)
+				EndIf
+			Else
+				$titcheck = 4
+				MsgBox(262208, "Advise", "The 'Last' button is restored to the Added list.", 0, $GOGcliGUI)
+			EndIf
+			GUICtrlSetState($Item_titles_enable, $titcheck)
+		Case $msg = $Item_titles_create
+			; Title Search Lists - Create
+			$lasttit = ""
+			TitleLists("Create")
 		Case $msg = $Item_save_keys
 			; Save To File - CDkey or Serial
 			If $title = "" Then
@@ -4990,6 +5074,9 @@ Func MainGUI()
 					If $listcheck = 1 Then
 						$listcheck = 4
 						GUICtrlSetState($Item_checklist_enable, $listcheck)
+					ElseIf $titcheck = 1 Then
+						$titcheck = 4
+						GUICtrlSetState($Item_titles_enable, $titcheck)
 					EndIf
 					MsgBox(262208, "Advise", "The 'Last' button will now use that Genre list.", 0, $GOGcliGUI)
 				EndIf
@@ -5810,6 +5897,9 @@ Func MainGUI()
 				If $gencheck = 1 Then
 					$gencheck = 4
 					GUICtrlSetState($Item_genres_enable, $gencheck)
+				ElseIf $titcheck = 1 Then
+					$titcheck = 4
+					GUICtrlSetState($Item_titles_enable, $titcheck)
 				EndIf
 				$listcheck = 1
 				MsgBox(262208, "Advise", "The 'Last' button will now use the Checklist.", 0, $GOGcliGUI)
@@ -9564,6 +9654,7 @@ Func GenreLists($action)
 				GUICtrlSetImage($Pic_cover, $blackjpg)
 				GUICtrlSetData($Label_top, $genre)
 				GUICtrlSetData($Label_mid, "Searching...")
+				GUICtrlSetData($Label_bed, "")
 				;
 				$titles = ""
 				$cnt = 0
@@ -9577,6 +9668,9 @@ Func GenreLists($action)
 						$game = IniRead($gamesini, $sect, "title", "")
 						$game = StringReplace($game, 'â„¢', '™')
 						$game = StringReplace($game, 'Â®', '®')
+						$game = StringReplace($game, "â€™", "'")
+						$game = StringReplace($game, 'Î”', 'Δ')
+						$game = StringReplace($game, 'â€“', '-')
 						If $titles = "" Then
 							$titles = $sect & "|" & $game
 						Else
@@ -9588,10 +9682,9 @@ Func GenreLists($action)
 				Next
 				If $cnt = 0 Then
 					GUICtrlSetData($Label_bed, "Nothing found!")
-					;SplashTextOn("", "Nothing found!", 180, 100, Default, Default, 33)
-					;Sleep(1000)
-					;SplashOff()
 				Else
+					GUICtrlSetData($Label_bed, $cnt & " found.")
+					_FileWriteLog($logfle, $cnt & " " & $genre & " games found.", -1)
 					FileWrite($genlist, $titles)
 					If FileExists($genlist) Then ShellExecute($genlist)
 				EndIf
@@ -9599,7 +9692,7 @@ Func GenreLists($action)
 				Sleep(1500)
 				GUICtrlSetData($Label_top, "")
 				GUICtrlSetData($Label_mid, "")
-				GUICtrlSetData($Label_bed, "")
+				;GUICtrlSetData($Label_bed, "")
 				GUISwitch($GenresGUI)
 			ElseIf $action = "Enable" Then
 				If FileExists($genlist) Then
@@ -9626,6 +9719,252 @@ Func GenreLists($action)
 	SetStateOfControls($GUI_ENABLE, "all")
 	GUICtrlSetState($Listview_games, $GUI_FOCUS)
 EndFunc ;=> GenreLists (GUI)
+
+Func TitleLists($action)
+	SetStateOfControls($GUI_DISABLE, "all")
+	Local $Button_close, $Combo_titles, $Group_titles
+	Local $five, $four, $lists, $one, $sect, $sects, $three, $TitlesGUI, $titlook, $two
+	;
+	$TitlesGUI = GuiCreate("Title Search List - " & $action, 220, 70, Default, Default, $WS_OVERLAPPED + $WS_CAPTION + $WS_SYSMENU _
+																	+ $WS_VISIBLE + $WS_CLIPSIBLINGS, $WS_EX_TOPMOST, $GOGcliGUI)
+	GUISetBkColor(0xF0D0F0, $TitlesGUI)
+	;
+	; CONTROLS
+	$Group_titles = GuiCtrlCreateGroup("Titles", 10, 10, 140, 50)
+	$Combo_titles = GUICtrlCreateCombo("", 20, 30, 120, 20)
+	GUICtrlSetTip($Combo_titles, "Select the Title text to work with!")
+	;
+	$Button_close = GuiCtrlCreateButton("EXIT", 160, 10, 50, 50, $BS_ICON)
+	GUICtrlSetTip($Button_close, "Exit / Close / Quit the window!")
+	;
+	; SETTINGS
+	GUICtrlSetImage($Button_close, $user, $icoX, 1)
+	;
+	$lists = IniRead($inifle, "Title List", "names", "")
+	If $lists = "" Then
+		$lists = "||Demos|Prologues|Demos & Prologues|Anthologies|Collections|Editions|Reloads|Remasters|Anniversary Editions|Complete Editions|Definitive Editions|Deluxe Editions|Enhanced Editions|" _
+			& "Gold Editions|GOTY Editions|Special Editions|Ultimate Editions|Developer's Cuts|Director's Cuts|Final Cuts|Custom One|Custom Two|Custom Three|Custom Four|Custom Five"
+		; Game of the Year Editions|
+		IniWrite($inifle,  "Title List", "names", $lists)
+	EndIf
+	GUICtrlSetData($Combo_titles, $lists, "")
+
+	GuiSetState(@SW_SHOW, $TitlesGUI)
+	While 1
+		$msg = GuiGetMsg()
+		Select
+		Case $msg = $GUI_EVENT_CLOSE Or $msg = $Button_close
+			; Exit / Close / Quit the window
+			$titcheck = 4
+			GUIDelete($TitlesGUI)
+			ExitLoop
+		Case $msg = $Combo_titles
+			; Select the Title text to work with & Close the window
+			GUISetState(@SW_HIDE, $TitlesGUI)
+			$titlook = GUICtrlRead($Combo_titles)
+			If $titlook = "" Then
+				$titlook = "none"
+			EndIf
+			;
+			$titslist = $titfold & "\" & $titlook & ".txt"
+			If $action = "Create" Then
+				If StringLeft($titlook, 7) = "Custom " Then
+					$val = InputBox("Custom Title Search", "Enter some text to search for in a title. Up to five search" & @LF & "terms can be used, separated by pipe characters. These" & @LF _
+						& "will be assessed based on either or.  i.e. Doom|Quake", "", "", 320, 155, Default, Default, 0, $TitlesGUI)
+					If @error Or $val = "" Then
+						GUISetState(@SW_SHOW, $TitlesGUI)
+						ContinueLoop
+					Else
+						$one = StringSplit($val, "|", 1)
+						If $one[0] = 1 Then
+							$one = $one[1]
+							$two = ""
+							$three = ""
+							$four = ""
+							$five = ""
+						ElseIf $one[0] = 2 Then
+							$two = $one[2]
+							$one = $one[1]
+							$three = ""
+							$four = ""
+							$five = ""
+						ElseIf $one[0] = 3 Then
+							$two = $one[2]
+							$three = $one[3]
+							$one = $one[1]
+							$four = ""
+							$five = ""
+						ElseIf $one[0] = 4 Then
+							$two = $one[2]
+							$three = $one[3]
+							$four = $one[4]
+							$one = $one[1]
+							$five = ""
+						ElseIf $one[0] = 5 Then
+							$two = $one[2]
+							$three = $one[3]
+							$four = $one[4]
+							$five = $one[5]
+							$one = $one[1]
+						EndIf
+						;MsgBox(262208, "$one $two $three", $one & "-" & $two & "-" & $three, 0, $TitlesGUI)
+					EndIf
+				EndIf
+				_FileCreate($titslist)
+				;
+				GUISwitch($GOGcliGUI)
+				GUICtrlSetImage($Pic_cover, $blackjpg)
+				GUICtrlSetData($Label_top, $titlook)
+				GUICtrlSetData($Label_mid, "Searching...")
+				GUICtrlSetData($Label_bed, "")
+				;
+				$titles = ""
+				$cnt = 0
+				$sects = IniReadSectionNames($gamesini)
+				For $s = 1 To $sects[0]
+					$sect = $sects[$s]
+					$game = IniRead($gamesini, $sect, "title", "")
+					$game = StringReplace($game, 'â„¢', '™')
+					$game = StringReplace($game, 'Â®', '®')
+					$game = StringReplace($game, "â€™", "'")
+					$game = StringReplace($game, 'Î”', 'Δ')
+					$game = StringReplace($game, 'â€“', '-')
+					If $titlook = "Demos" Then
+						If StringRight($game, 5) <> " Demo" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Prologues" Then
+						If StringRight($game, 9) <> " Prologue" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Demos & Prologues" Then
+						If StringRight($game, 5) <> " Demo" And StringRight($game, 9) <> " Prologue" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Anthologies" Then
+						If StringRight($game, 10) <> " Anthology" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Collections" Then
+						If StringRight($game, 11) <> " Collection" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Editions" Then
+						If StringRight($game, 8) <> " Edition" And StringRight($game, 9) <> " Edition " Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Reloads" Then
+						If StringRight($game, 9) <> " Reloaded" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Remasters" Then
+						If StringRight($game, 9) <> " Remaster" And StringRight($game, 11) <> " Remastered" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Anniversary Editions" Then
+						If StringRight($game, 20) <> " Anniversary Edition" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Complete Editions" Then
+						If StringRight($game, 17) <> " Complete Edition" And StringRight($game, 9) <> " Complete" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Definitive Editions" Then
+						If StringRight($game, 19) <> " Definitive Edition" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Deluxe Editions" Then
+						If StringRight($game, 15) <> " Deluxe Edition" And StringRight($game, 7) <> " Deluxe" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Enhanced Editions" Then
+						If StringRight($game, 17) <> " Enhanced Edition" And StringRight($game, 9) <> " Enhanced" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Gold Editions" Then
+						If StringRight($game, 13) <> " Gold Edition" And StringRight($game, 5) <> " Gold" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "GOTY Editions" Then
+						If StringRight($game, 13) <> " GOTY Edition" And StringRight($game, 25) <> " Game of the Year Edition" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Special Editions" Then
+						If StringRight($game, 16) <> " Special Edition" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Ultimate Editions" Then
+						If StringRight($game, 17) <> " Ultimate Edition" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Developer's Cuts" Then
+						If StringRight($game, 16) <> " Developer's Cut" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Director's Cuts" Then
+						If StringRight($game, 15) <> " Director's Cut" Then
+							$game = ""
+						EndIf
+					ElseIf $titlook = "Final Cuts" Then
+						If StringRight($game, 10) <> " Final Cut" Then
+							$game = ""
+						EndIf
+					ElseIf StringLeft($titlook, 7) = "Custom " Then
+						If StringInStr($game, $one) < 1 And ($two = "" Or StringInStr($game, $two) < 1) And ($three = "" Or StringInStr($game, $three) < 1) _
+							And ($four = "" Or StringInStr($game, $four) < 1) And ($five = "" Or StringInStr($game, $five) < 1) Then
+							$game = ""
+						EndIf
+					EndIf
+					If $game <> "" Then
+						If $titles = "" Then
+							$titles = $sect & "|" & $game
+						Else
+							$titles = $titles & @CRLF & $sect & "|" & $game
+						EndIf
+						$cnt = $cnt + 1
+						GUICtrlSetData($Label_bed, $cnt)
+					EndIf
+				Next
+				If $cnt = 0 Then
+					GUICtrlSetData($Label_bed, "Nothing found!")
+				Else
+					GUICtrlSetData($Label_bed, $cnt & " found.")
+					_FileWriteLog($logfle, $cnt & " " & $titlook & " found.", -1)
+					FileWrite($titslist, $titles)
+					If FileExists($titslist) Then ShellExecute($titslist)
+				EndIf
+				;
+				Sleep(1500)
+				GUICtrlSetData($Label_top, "")
+				GUICtrlSetData($Label_mid, "")
+				;GUICtrlSetData($Label_bed, "")
+				GUISwitch($TitlesGUI)
+			ElseIf $action = "Enable" Then
+				If FileExists($titslist) Then
+					$titcheck = 1
+				Else
+					$titcheck = 4
+				EndIf
+			ElseIf $action = "View" Then
+				If FileExists($titslist) Then
+					ShellExecute($titslist)
+				Else
+					SplashTextOn("", "No such list!", 180, 100, Default, Default, 33)
+					Sleep(1000)
+					SplashOff()
+				EndIf
+			EndIf
+			;
+			GUIDelete($TitlesGUI)
+			ExitLoop
+		Case Else
+			;;;
+		EndSelect
+	WEnd
+	SetStateOfControls($GUI_ENABLE, "all")
+	GUICtrlSetState($Listview_games, $GUI_FOCUS)
+EndFunc ;=> TitleLists (GUI)
+
 
 Func BackupManifestEtc()
 	Local $addbak, $bdate, $compbak, $cookbak, $databak, $dlcbak, $endadd, $endbak, $endcomp, $endcook, $enddata, $enddlc
