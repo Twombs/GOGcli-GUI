@@ -1,0 +1,18 @@
+How I use GOGcli GUI after every purchase etc.
+
+The following guide, is in addition to the Tutorial found in the GitHub Wiki, and and covers some of the same instruction etc. It is a guide that describes what I do after every purchase or addition to my GOG library or even if I just want an updated list of games there with an update. Before using this guide, ensure you have everything setup correctly as per the Tutorial etc.
+
+01. Start the GOGcli GUI program.
+02. Click on the open Games folder (Destination) button. This ensures the path is available, as a double check for me because I download to an external drive. It also means I can observe what is downloaded.
+03. Click the 'CHECK or GET GAMES LIST' button, and wait for that series of processes to finish.
+04. Then I click the LAST button repeatedly for each newly added game, also clicking on the 'ADD TO MANIFEST' button for each new game as it gets selected (plus add it to the download list as per Step 5).
+05. If only one new game has been added, then just click the DOWNLOAD button, and go on to Step 7. If however there is more than one, then hold the CTRL key down while clicking the DOWNLOAD button for each game, to add it to the downloads list. NOTE - The text on the DOWNLOAD button will change to DOWNLOAD LIST after the first use of the CTRL and button combination.
+06. After adding all new games to the download list, click the DOWNLOAD LIST button again on its own, and not with CTRL.
+07. Because of my settings, I now get prompted to choose one of three choices. I select the third one, which is the CANCEL button. Then I wait for the 'Game Files Selector' window to open and be populated by all the files for the selected games on the download list.
+08. Once all files have been loaded, I then set the checkbox for each file I want to download. NOTE - You have some choices of file types to reduce the number of clicks you need to make, including one click of the ALL option if you just want to download everything.
+09. Then I click the DOWNLOAD button, and wait for each selected file to be downloaded and verified.
+10. Then after visually checking all was successful, I close the 'Game Files Selector' window.
+11. If one or more of the games have suitable content, I select the game and then click the SUB button on the main program window. This allows creation of sub-folders in the game folder for things like Extras, Soundtrack, Patches and even a Linux based slug named game sub-folder which I later relocate to my GoG Linux folder drives.
+12. If you wish you can also click the LOG button to see the results of downloading etc. In addition to that, the 'Games' list has some right-click History options etc.
+
+NOTES - In Step 4 above, you can also do Step 5 for each game if cycling through more than one with the LAST button. If CTRL is held down while clicking the LAST button, the selection cycle starts over. If desired, while the DOWNLOAD button is in the DOWNLOAD LIST state, you can remove a game from the download list by simply selecting the game again and clicking the button again, and clicking OK for removal when prompted. If a download list was used, then after closing the 'Game Files Selector' window you will be prompted if you want the list cleared, and if you select OK then the DOWNLOAD LIST button will also get renamed back to just DOWNLOAD. You may also get a dialog message if the program detected any file name changes that occurred during the download process or if a game entry in the Manifest wasn't up-to-date.
