@@ -49,8 +49,8 @@ Local $exe, $script, $status, $w, $wins
 
 Global $handle, $pid, $Scriptname, $update, $version
 
-$update = "Updated in September 2022."
-$version = "v3.5"
+$update = "Updated in March 2023."
+$version = "v3.7"
 $Scriptname = "GOGcli GUI " & $version
 
 $status = _Singleton("gog-cli-gui-timboli", 1)
@@ -90,17 +90,17 @@ Global $backups, $bigcover, $bigpic, $blackjpg, $blurb, $bytes, $caption, $categ
 Global $checklist, $checksum, $checkval, $cnt, $compare, $completed, $cookie, $cookies, $cover, $covers, $covimg, $datafold, $DBfile
 Global $declare, $descript, $descriptions, $dest, $details, $DetailsGUI, $DLC, $dlcfile, $done, $down, $downfiles, $downlist, $download
 Global $downloads, $downlog, $drv, $endgame, $entries, $entry, $erred, $existDB, $exists, $extbin, $extdmg, $extexe, $extpkg, $extsh
-Global $extzip, $f, $file, $fileinfo, $filepth, $files, $filesize, $final, $flag, $fold, $found, $free, $game, $gamefold, $gamelist
-Global $gamepic, $games, $gamesfold, $gamesini, $gametxt, $gams, $gencheck, $genfold, $genlist, $getlatest, $gmefold, $gmesfld, $gogcli
-Global $GOGcliGUI, $hash, $head, $height, $histfile, $history, $htmlfle, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID, $identry
-Global $ignore, $image, $imgfle, $include, $ind, $inifle, $json, $keep, $key, $lang, $left, $line, $lines, $link, $list, $listcheck, $listed
-Global $listview, $log, $logfle, $lowid, $m, $manall, $manalt, $manifest, $manifests, $manlist, $md5check, $mini, $minimize, $model, $n, $name
-Global $num, $numb, $offline, $ontop, $OP, $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping, $pinged, $processed
-Global $progress, $pth, $purge, $r, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $rest, $results, $ret, $return, $row, $s, $same
-Global $savkeys, $savlog, $second, $selector, $session, $SetupGUI, $shell, $size, $slug, $slugF, $space, $splash, $state, $stop, $style
-Global $subfold, $SYS, $tag, $tagfle, $tail, $text, $titcheck, $titfold, $title, $titleF, $titleID, $titleIDup, $titlist, $titslist, $top
-Global $type, $types, $typs, $updated, $updates, $URL, $user, $valhistory, $validate, $verify, $warn, $web, $which, $width, $winpos, $xtra
-Global $z, $zipcheck, $zipfile, $zippath
+Global $extzip, $f, $file, $fileinfo, $filepth, $filecheck, $files, $filesize, $final, $flag, $fold, $found, $free, $game, $gamefold
+Global $gamelist, $gamepic, $games, $gamesfold, $gamesini, $gametxt, $gams, $gencheck, $genfold, $genlist, $getlatest, $gmefold, $gmesfld
+Global $gogcli, $GOGcliGUI, $hash, $head, $height, $histfile, $history, $htmlfle, $i, $icoD, $icoF, $icoI, $icoS, $icoT, $icoW, $icoX, $ID
+Global $identry, $ignore, $image, $imgfle, $include, $ind, $inifle, $json, $keep, $key, $lang, $left, $line, $lines, $link, $list, $listcheck
+Global $listed, $listview, $log, $logfle, $lowid, $m, $manall, $manalt, $manifest, $manifests, $manlist, $md5check, $mini, $minimize, $model
+Global $n, $name, $num, $numb, $offline, $ontop, $OP, $open, $OS, $OSes, $outfold, $overlook, $params, $part, $parts, $percent, $ping, $pinged
+Global $processed, $progress, $pth, $purge, $r, $rat, $ratify, $read, $record, $relax, $reportexe, $res, $rest, $results, $ret, $return, $row
+Global $s, $same, $savkeys, $savlog, $second, $selector, $session, $SetupGUI, $shell, $size, $slug, $slugF, $space, $splash, $state, $stop
+Global $style, $subfold, $SYS, $tag, $tagfle, $tail, $text, $titcheck, $titfold, $title, $titleF, $titleID, $titleIDup, $titlist, $titslist
+Global $top, $type, $types, $typs, $updated, $updates, $URL, $user, $valhistory, $validate, $verify, $warn, $web, $which, $width, $winpos
+Global $xtra, $z, $zipcheck, $zipfile, $zippath
 
 ;, $foldzip, $resultfle
 
@@ -2685,6 +2685,7 @@ Func MainGUI()
 		Case $msg = $Button_down Or $valnow = 1
 			; Download the selected game
 			$alert = 0
+			$filecheck = ""
 			$buttxt = GUICtrlRead($Button_down)
 			If $title = "" And ($buttxt = "DOWNLOAD" Or $buttxt = "VALIDATE" & @LF & "GAME" Or $buttxt = "VALIDATE" & @LF & "FILE") Then
 				MsgBox(262192, "Title Error", "A game is not selected!", 0, $GOGcliGUI)
@@ -2791,7 +2792,18 @@ Func MainGUI()
 					If $getlatest = 1 Then
 						; Get Latest Is Enabled
 						If $warn = 1 Then
-							$ans = MsgBox(262209 + 256, "Download Latest Is Enabled", "Get latest entries for the manifest for game(s)?", 0, $GOGcliGUI)
+							;$ans = MsgBox(262209 + 256, "Download Latest Is Enabled", "Get latest entries for the manifest for game(s)?", 0, $GOGcliGUI)
+							$ans = MsgBox(262147 + 32 + 512, "Download Latest Is Enabled", "Get latest entries for the manifest for game(s)?" & @LF & @LF _
+								& "YES = Get latest entries for the manifest." & @LF _
+								& "NO = Don't get latest entries, but check filenames." & @LF _
+								& "CANCEL = Don't get latest entries or check filenames." & @LF & @LF _
+								& "NOTE - Checking of file names, can take a long while" & @LF _
+								& "as a group using the NO option before any download" & @LF _
+								& "starts. If however you select CANCEL instead, they will" & @LF _
+								& "get checked individually at the start of every download," & @LF _
+								&  "which is more useful if file names get changed by GOG" & @LF _
+								& "during the downloading of multiple files.", 0, $GOGcliGUI)
+							If $ans = 6 Then $ans = 1
 						Else
 							$ans = 1
 						EndIf
@@ -2803,6 +2815,8 @@ Func MainGUI()
 						RetrieveDataFromGOG($downloads, "download")
 						$ans = 1
 					EndIf
+					$filecheck = $ans
+					If $ans = 7 Then $ans = 2
 					If $ans = 2 Then
 						; Retrieve game file data where needed from GOG
 						$read = FileRead($manifest)
@@ -3217,10 +3231,22 @@ Func MainGUI()
 					$ans = 2
 					If $getlatest = 1 Then
 						If $warn = 1 Then
-							$ans = MsgBox(262144 + 33 + 256, "Download Latest Is Enabled", "Get latest entries for the manifest for game?", 0, $GOGcliGUI)
-							If $ans = 1 Then
+							;$ans = MsgBox(262144 + 33 + 256, "Download Latest Is Enabled", "Get latest entries for the manifest for game?", 0, $GOGcliGUI)
+							;If $ans = 1 Then
+							$ans = MsgBox(262147 + 32 + 512, "Download Latest Is Enabled", "Get latest entries for the manifest for game?" & @LF & @LF _
+								& "YES = Get latest entries for the manifest." & @LF _
+								& "NO = Don't get latest entries, but check filenames." & @LF _
+								& "CANCEL = Don't get latest entries or check filenames." & @LF & @LF _
+								& "NOTE - Checking of file names, can take a long while" & @LF _
+								& "as a group using the NO option before any download" & @LF _
+								& "starts. If however you select CANCEL instead, they will" & @LF _
+								& "get checked individually at the start of every download," & @LF _
+								&  "which is more useful if file names get changed by GOG" & @LF _
+								& "during the downloading of multiple files.", 0, $GOGcliGUI)
+							If $ans = 6 Then
 								; Retrieve game file data
 								$retrieve = 1
+								$ans = 1
 							EndIf
 						Else
 							; Retrieve game file data
@@ -3228,6 +3254,7 @@ Func MainGUI()
 							$retrieve = 1
 						EndIf
 					EndIf
+					$filecheck = $ans
 					If $verify = 1 Or $ratify = 1 Then
 						GUICtrlSetState($Button_pic, $GUI_HIDE)
 						GUICtrlSetState($Progress_valid, $GUI_SHOW)
@@ -3237,6 +3264,7 @@ Func MainGUI()
 						GUICtrlSendMsg($Progress_valid, $PBM_SETMARQUEE, 1, 50) ; Start
 						;GUICtrlSetData($Label_progress, "0%")
 					EndIf
+					If $ans = 7 Then $ans = 2
 					If $ans = 2 Then
 						If FileExists($json) Then
 							; Check for single game entry.
@@ -6574,7 +6602,29 @@ Func FileSelectorGUI()
 		If FileExists($icofle) Then
 			$icoDwn = -27
 			$icoUp = -26
+		Else
+			$icofle = ""
+			$icoDwn = ""
+			$icoUp = ""
 		EndIf
+	EndIf
+	$val = IniRead($inifle, "File Selector Arrows", "file", "")
+	If $val = "" Then
+		IniWrite($inifle, "File Selector Arrows", "file", $icofle)
+	Else
+		$icofle = $val
+	EndIf
+	$val = IniRead($inifle, "File Selector Arrows", "down", "")
+	If $val = "" Then
+		IniWrite($inifle, "File Selector Arrows", "down", $icoDwn)
+	Else
+		$icoDwn = $val
+	EndIf
+	$val = IniRead($inifle, "File Selector Arrows", "up", "")
+	If $val = "" Then
+		IniWrite($inifle, "File Selector Arrows", "up", $icoUp)
+	Else
+		$icoUp = $val
 	EndIf
 	GUICtrlSetImage($Button_dwn, $icofle, $icoDwn, 0)
 	GUICtrlSetImage($Button_up, $icofle, $icoUp, 0)
@@ -6623,7 +6673,7 @@ Func FileSelectorGUI()
 		;GUISetState(@SW_SHOW, $SelectorGUI)
 		GuiSetState(@SW_RESTORE, $SelectorGUI)
 		$visible = "noneed"
-		If $getlatest = 4 And $exists = 1 Then
+		If ($getlatest = 4 Or $filecheck = 7) And $exists = 1 Then
 			$ping = Ping("gog.com", 4000)
 			If $ping = 0 Then
 				MsgBox(262192, "Warning", "File names could not be checked, no web connection!" & @LF & @LF _
@@ -6636,6 +6686,7 @@ Func FileSelectorGUI()
 		Else
 			$ping = 0
 		EndIf
+		;MsgBox(262208, "Got Here", $ping, 0, $SelectorGUI)
 		If $ping = 0 Then SplashTextOn("", "Please Wait!" & @LF & @LF & "(Loading List)", 180, 130, Default, Default, 33)
 		$col1 = 0
 		$prior = ""
@@ -6666,6 +6717,7 @@ Func FileSelectorGUI()
 						Sleep(500)
 						_FileReadToArray($fileinfo, $array)
 						If @error = 0 Then
+							;_ArrayDisplay($array)
 							If $array[0] = 3 Then
 								$val = StringReplace($array[1], "File Name: ", "")
 								If $val = $file Then
@@ -7147,7 +7199,7 @@ Func FileSelectorGUI()
 										Else
 											GUICtrlSetData($Progress_bar, 0)
 											;GUICtrlSetData($Label_percent, "0%")
-											If $getlatest = 4 And $pinged = "" Then
+											If ($getlatest = 4 Or $filecheck = 2) And $pinged = "" Then
 												; Check for correct file name
 												GUICtrlSetData($Label_percent, "checking")
 												_FileWriteLog($logfle, "CHECKING FILENAME - " & $file, -1)
@@ -7469,8 +7521,19 @@ Func FileSelectorGUI()
 																		$text = StringReplace($text, ":", ": ")
 																		$text = StringReplace($text, "  ", " ")
 																		$cdkey = $cdkey & @CRLF & @CRLF & "(Converted)" & @CRLF & $text
+																	Else
+																		$text = StringStripWS($text, 8)
+																		$text = StringReplace($text, "<span>", "")
+																		$text = StringReplace($text, "</span>", @CRLF)
+																		$text = StringReplace($text, "<br>\t", " ", 0, 1)
+																		$text = StringReplace($text, "\t<br>", @CRLF, 0, 1)
+																		$text = StringReplace($text, "<br>", " ")
+																		$text = StringReplace($text, ":", ": ")
+																		$text = StringReplace($text, "  ", " ")
+																		$cdkey = $text
 																	EndIf
-																	FileWriteLine($serial, $title & @CRLF & $cdkey)
+																	;FileWriteLine($serial, $title & @CRLF & $cdkey)
+																	FileWriteLine($serial, $titleD & @CRLF & $cdkey)
 																	_FileWriteLog($logfle, "Saved cdkey or serial.", -1)
 																	IniWrite($inifle, "Last Serial", "saved", $titleD)
 																EndIf
@@ -10639,7 +10702,7 @@ Func GetFileDownloadDetails($listview = "")
 	Sleep(500)
 	If $listview <> "" Then
 		IniWrite($downfiles, "Title", "caption", $caption)
-		If $getlatest = 4 And $exists = 1 And $pinged = "" And $allgames = "" Then
+		If ($getlatest = 4 Or $filecheck = 7) And $exists = 1 And $pinged = "" And $allgames = "" Then
 			$ping = Ping("gog.com", 4000)
 			If $ping = 0 Then
 				MsgBox(262192, "Warning", "File names could not be checked, no web connection!" & @LF & @LF _
@@ -10648,7 +10711,7 @@ Func GetFileDownloadDetails($listview = "")
 			Else
 				$pinged = 1
 				;SplashTextOn("", "Please Wait!" & @LF & @LF & "(Checking File Names)" & @LF & "(Loading List)", 200, 140, Default, Default, 33)
-				SplashTextOn("", "Please Wait! 1" & @LF & @LF & "(Checking Database)" & @LF & "(Loading List)", 200, 140, Default, Default, 33)
+				SplashTextOn("", "Please Wait! *" & @LF & @LF & "(Checking Database)" & @LF & "(Loading List)", 200, 140, Default, Default, 33)
 				;Sleep(2000)
 			EndIf
 		Else

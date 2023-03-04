@@ -1,2 +1,7 @@
 
-GOGcli GUI v3.5 update has bugfixes, plus another Games list right-click feature 'Title Search Lists' to create a text file with just the games with the search term you specify or select (i.e. Demos, Prologues, Deluxe Editions, etc). NOTE - Up to five specified search terms can be used with the Custom choices. The LAST button can also be used to cycle the results on the Games list, when enabled.
+GOGcli GUI v3.6 update has the icon file path and icon numbers, for the UP and DOWN arrows on the 'Game Files Selector' window, written to and read from the 'Settings.ini' file. This allows a savvy user to manually set their own choice, especially where values are missing or incorrect. NOTE - Numbers should start with a leading minus character (i.e. -25), and the path needs to be full.
+
+----------------------------
+
+
+GOGcli GUI v3.7 update has a bugfix for Serial text saved to file. I have also changed when file names are checked if the WARN option is enabled. NOTE - File names can be checked as a group when populating the 'Game Files Selector' window download list, or just before each download occurs. With the latter being more useful if GOG etc change file names during the download period of multiple file downloads. Previously the WARN option meant no checking occurred. Now when WARN is enabled, the user will get presented with three choices instead of two.
