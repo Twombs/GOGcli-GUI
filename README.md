@@ -10,7 +10,7 @@ https://github.com/Magnitus-/gogcli
 
 Downloading from the 'Game Files Selector' window now supported.
 
-Checksum (MD5) checking is now supported.
+Checksum (MD5) checking is supported.
 
 ZIP file checking is now supported.
 
