@@ -37,3 +37,5 @@ DOWNLOAD ALL option now available.
 See the Wiki link above, for more information and a tutorial.
 
 BIG BIG THANKS to TerriblePurpose for their support and encouragement.
+
+See the Wiki for more information and a tutorial - https://github.com/Twombs/GOGcli-GUI/wiki
